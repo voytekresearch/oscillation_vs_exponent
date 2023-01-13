@@ -6,7 +6,8 @@ Created on Wed Sep 22 11:46:53 2021
 """
 
 # ===== Imports =====
-from os.path import join
+from os.path import join, exists
+from os import makedirs
 import numpy as np
 import pandas as pd
 from fooof import FOOOFGroup
@@ -19,7 +20,7 @@ from fooof.utils import trim_spectrum
 # project params
 
 # paths and filenames
-PROJECT_PATH = 'C:/Users/micha/tilt_vs_fingerprint/'
+PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 DIR_FIG = join(PROJECT_PATH, 'figures/manuscript_figures')
 DIR_STATS = join(PROJECT_PATH, 'data/ieeg_stats/permutation_test')
 FNAME_STATS = join(PROJECT_PATH, 'data/fellner_stats/fellner_stats_df.pkl')
@@ -42,6 +43,10 @@ AP_MODE = 'knee'
 SIG_LEVEL = 0.01
 
 def main():
+    # id directories
+    dir_output = join(PROJECT_PATH, 'data/results')
+    if not exists(dir_output):
+        makedirs(dir_output)
 
     # Identify channels with reported effects (Fellner, 2019) 
     df_stats = np.load(FNAME_STATS, allow_pickle=True)
@@ -61,7 +66,7 @@ def main():
     df_ols = gen_df_ols(df_alpha_w, df_alpha_f, df_exp_w, df_exp_f, sig_chans)
     
     # save dataframe for OLS analysis
-    df_ols.to_csv(join(PROJECT_PATH, 'data/results', 'df_ols.csv'))
+    df_ols.to_csv(join(dir_output, 'df_ols.csv'))
     
     
 def gen_df_ols(df_alpha_w, df_alpha_f, df_exp_w, df_exp_f, sig_chans):
@@ -76,9 +81,9 @@ def gen_df_ols(df_alpha_w, df_alpha_f, df_exp_w, df_exp_f, sig_chans):
     df['diff_exp_f'] = df_exp_f['exp_diff']
     
     # add intersection freqeuncy results
-    data_in_word = np.load(join(PROJECT_PATH,'data/ieeg_intersection_results/simulation_approach', 
+    data_in_word = np.load(join(PROJECT_PATH,'data/ieeg_intersection_results/from_params', 
                                  'intersection_results_%s_%s.npz' %('word', AP_MODE)), allow_pickle=True)
-    data_in_face = np.load(join(PROJECT_PATH,'data/ieeg_intersection_results/simulation_approach', 
+    data_in_face = np.load(join(PROJECT_PATH,'data/ieeg_intersection_results/from_params', 
                                  'intersection_results_%s_%s.npz' %('face', AP_MODE)), allow_pickle=True)
     df['f_rot_w'] = data_in_word['intersection'][sig_chans]
     df['f_rot_f'] = data_in_face['intersection'][sig_chans]

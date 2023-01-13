@@ -22,7 +22,7 @@ from fooof import FOOOFGroup
 from fooof.utils.data import interpolate_spectrum
 
 # Parameters
-PROJECT_PATH = 'C:/Users/micha/tilt_vs_fingerprint/'
+PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 LINE_NOISE_RANGE = [45,55] # freq range to interpolate
 
 # NAPP parameters

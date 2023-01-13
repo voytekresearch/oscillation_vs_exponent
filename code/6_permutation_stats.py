@@ -18,7 +18,7 @@ from fooof.analysis import get_band_peak_fg
 
 # Settings
 # paths
-PROJECT_PATH = 'C:/Users/micha/tilt_vs_fingerprint/'
+PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 DIR_STATS = join(PROJECT_PATH, 'data/ieeg_stats/permutation_test')
 
 # If False, analyze channels with reported effect only (Fellner, 2019; n=139)
@@ -66,7 +66,7 @@ def run_stats():
         makedirs(dir_output)
         
     # load spectral param results
-    df = pd.read_pickle(PROJECT_PATH + 'data/results/' + 'df_ols.pkl')
+    df = pd.read_csv(PROJECT_PATH + 'data/results/' + 'df_ols.csv')
 
     # loop through materials
     for material in ['word','face']:

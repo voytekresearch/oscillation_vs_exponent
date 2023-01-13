@@ -11,7 +11,7 @@ Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journ
 This script executes the primary time-frequnecy analyses. 
 The power spectral density (PSD) is computed for each epoch, the pre-stimulus 
 time window, and the post-stimulus time window. 
-The time-frequnecy representation or power (TFR) is computed for the epoch 
+The time-frequnecy representation of power (TFR) is computed for the epoch 
 using either Morlet wavelet or multitapers. 
 
 """
@@ -24,7 +24,7 @@ from mne import read_epochs, create_info, EpochsArray
 from mne.time_frequency import psd_multitaper, tfr_multitaper, tfr_morlet
 
 # Parameters
-PROJECT_PATH = 'C:/Users/micha/tilt_vs_fingerprint/'
+PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
             'pat17','pat19','pat20','pat21','pat22']
 

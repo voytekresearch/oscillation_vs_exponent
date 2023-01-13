@@ -24,8 +24,8 @@ import numpy as np
 import pandas as pd
 
 # Set directories
-PROJECT_PATH = 'C:/Users/micha/tilt_vs_fingerprint/'
-DATASET_PATH = 'C:/Users/micha/SpectraltiltvsOscillations/'
+PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
+DATASET_PATH = 'C:/Users/micha/datasets/SpectraltiltvsOscillations/'
 
 # Parameters
 PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',

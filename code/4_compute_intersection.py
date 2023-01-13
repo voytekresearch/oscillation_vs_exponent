@@ -24,7 +24,7 @@ from fooof.sim import gen_power_spectrum
 from neurodsp.spectral import rotate_powerlaw
 
 # Parameters
-PROJECT_PATH = 'C:/Users/micha/tilt_vs_fingerprint/'
+PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 
 # optimization settings
 N_ITER = 10
@@ -49,18 +49,16 @@ def main():
     
     
             # calc intersection 
-            # psd_pre, psd_post, intersection, intersection_idx = \
-            #     comp_intersection_from_params(param_pre, param_post)
+            psd_pre, psd_post, intersection, intersection_idx = \
+                comp_intersection_from_params(param_pre, param_post)
             
-            # calc intersection using optimization
-            psd_pre, psd_post, intersection = solve_for_rotation_freq(N_ITER, param_pre, param_post, average=AVERAGE_METHOD)
-            intersection_idx = np.zeros_like(intersection)
-            intersection_idx[:] = np.nan
+            # # calc intersection using optimization
+            # psd_pre, psd_post, intersection = solve_for_rotation_freq(N_ITER, param_pre, param_post, average=AVERAGE_METHOD)
     
             # save results
             fname_out = 'intersection_results_%s_%s' %(material, ap_mode)
             np.savez(join(dir_output, fname_out), psd_pre=psd_pre, psd_post=psd_post, 
-                     intersection=intersection, intersection_idx=intersection_idx)
+                     intersection=intersection)
     
 
 def comp_intersection_from_params(param_pre, param_post):
