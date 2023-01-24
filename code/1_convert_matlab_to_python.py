@@ -7,11 +7,9 @@ Created on Thu Apr  8 17:29:53 2021
 Data Repo: https://osf.io/3csku/
 Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
 
-The provided dataset is formatted as Fieldtrip data structures (.mat).  
-This script reformats the iEEG dataset into MNE epochsArrays. An arary is 
-created for each file in the dataset; a second array is created and saved
-after dropping unsuccessful trials. The time-series are also saved as
-matrices (.npy).
+The provided dataset is formatted as Fieldtrip data structures (.mat);  
+this script reformats the iEEG dataset into MNE epochsArrays (.fif). The 
+time-series are also saved as numpy arrays (.npy).
 
 """
 
@@ -26,9 +24,6 @@ import pandas as pd
 # Set directories
 PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 DATASET_PATH = 'C:/Users/micha/datasets/SpectraltiltvsOscillations/'
-
-# Analysis settings
-DROP_UNSUCCESSFUL = False
 
 # Dataset info
 PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
@@ -127,7 +122,6 @@ def save_epochs(epochs, fname):
     if not exists(join(dir_dataset, 'fif')): makedirs(join(dir_dataset, 'fif'))
     if not exists(join(dir_dataset, 'npy')): makedirs(join(dir_dataset, 'npy'))
 
-
     # save data as .fif 
     epochs.save(join(dir_dataset, 'fif', fname.replace('.mat','_epo.fif')),
                 overwrite=True)
@@ -136,13 +130,13 @@ def save_epochs(epochs, fname):
     lfp = epochs.get_data()
     np.save(join(dir_dataset, 'npy', fname.replace('.mat', '.npy')), lfp)
     
-    # drop unsuccessful trials
-    if DROP_UNSUCCESSFUL:
-        epochs.drop(~epochs.metadata['recalled'].values.astype('bool'))
+    # split successful and unsuccessful trials
+    epochs_hit = epochs[epochs.metadata['recalled'].values.astype('bool')]
+    epochs_miss = epochs[~epochs.metadata['recalled'].values.astype('bool')]
 
     # save data as .fif - after dropping unsuccessful trials 
-    epochs.save(join(dir_output, fname.replace('.mat', '_hit_epo.fif')),
-                overwrite=True)
+    epochs_hit.save(join(dir_output, fname.replace('.mat', '_hit_epo.fif')), overwrite=True)
+    epochs_miss.save(join(dir_output, fname.replace('.mat', '_miss_epo.fif')), overwrite=True)
     
 def collect_channel_info(dir_input, fname):
     """
