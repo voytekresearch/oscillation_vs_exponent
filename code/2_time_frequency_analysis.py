@@ -213,7 +213,8 @@ def aggregate_spectra(dir_input, dir_output):
     freq = data_in['freq']
     
     # aggregate psd data for each condition
-    conditions = ['words_hit_prestim', 'words_hit_poststim', 'faces_hit_prestim', 'faces_hit_poststim']
+    conditions = ['words_hit_prestim', 'words_hit_poststim', 'faces_hit_prestim', 'faces_hit_poststim',
+                  'words_miss_prestim', 'words_miss_poststim', 'faces_miss_prestim', 'faces_miss_poststim']
     for cond in conditions:    
         # create placeholder for output data
         spectra = np.zeros(len(freq))
@@ -244,23 +245,23 @@ def aggregate_tfr(dir_input, dir_output):
                    allow_pickle=True)
     
     # aggregate psd data for each condition
-    for condition in ['words', 'faces']:
+    for condition in ['words_hit', 'faces_hit', 'words_miss', 'faces_miss']:
         for method in TFR_METHOD:
             # create array for output data
             tfr = np.zeros([len(meta), len(time), len(freq)])
             
             # loop through rows of metadata
             for ii in range(len(meta)):
-                fname_in = '%s_%s_hit_chan%d_tfr_%s.npz' %(meta['patient'][ii], condition, meta['chan_idx'][ii], method)
+                fname_in = '%s_%s_chan%d_tfr_%s.npz' %(meta['patient'][ii], condition, meta['chan_idx'][ii], method)
                 # skip missing channels
                 if not fname_in in files: continue
             
-                # load psd data               
+                # load tfr data               
                 data_in = np.load(join(dir_input, fname_in))
                 tfr[ii] = np.squeeze(np.nanmedian(data_in['tfr'], axis=0).T)
 
         #  save results
-        fname_out = 'tfr_%s_hit_%s' %(condition, method)
+        fname_out = 'tfr_%s_%s' %(condition, method)
         np.savez(join(dir_output, fname_out), freq=freq, time=time, tfr=tfr)
 
 
