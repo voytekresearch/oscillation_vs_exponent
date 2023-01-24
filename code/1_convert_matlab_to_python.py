@@ -27,7 +27,10 @@ import pandas as pd
 PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 DATASET_PATH = 'C:/Users/micha/datasets/SpectraltiltvsOscillations/'
 
-# Parameters
+# Analysis settings
+DROP_UNSUCCESSFUL = False
+
+# Dataset info
 PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
             'pat17','pat19','pat20','pat21','pat22']
 FS = 512
@@ -120,10 +123,9 @@ def save_epochs(epochs, fname):
     dir_dataset = join(PROJECT_PATH, 'data/ieeg_dataset')
     dir_output = join(PROJECT_PATH, 'data/ieeg_epochs')
     
-    if not exists(dir_output): 
-        makedirs(dir_output)
-        makedirs(join(dir_dataset, 'fif'))
-        makedirs(join(dir_dataset, 'npy'))
+    if not exists(dir_output): makedirs(dir_output)
+    if not exists(join(dir_dataset, 'fif')): makedirs(join(dir_dataset, 'fif'))
+    if not exists(join(dir_dataset, 'npy')): makedirs(join(dir_dataset, 'npy'))
 
 
     # save data as .fif 
@@ -134,8 +136,11 @@ def save_epochs(epochs, fname):
     lfp = epochs.get_data()
     np.save(join(dir_dataset, 'npy', fname.replace('.mat', '.npy')), lfp)
     
+    # drop unsuccessful trials
+    if DROP_UNSUCCESSFUL:
+        epochs.drop(~epochs.metadata['recalled'].values.astype('bool'))
+
     # save data as .fif - after dropping unsuccessful trials 
-    epochs.drop(~epochs.metadata['recalled'].values.astype('bool'))
     epochs.save(join(dir_output, fname.replace('.mat', '_hit_epo.fif')),
                 overwrite=True)
     
