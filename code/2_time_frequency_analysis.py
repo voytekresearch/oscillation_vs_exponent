@@ -39,10 +39,11 @@ TIME_RANGE_LABELS = np.array(['epoch',
                               'poststim'])
 
 # parameters for tfr analysis
+RUN_TFR = True # set to False to skip tfr analysis
 TFR_METHOD = ['multitaper']
 
 
-def main(run_tfr=False):
+def main():
     # identify / create directories
     dir_input = join(PROJECT_PATH, 'data/ieeg_epochs')
     dir_psd = join(PROJECT_PATH, 'data/ieeg_psd')
@@ -65,14 +66,14 @@ def main(run_tfr=False):
     
         # compute time-frequency representation of power,
         # for each trial/channel
-        if run_tfr:
+        if RUN_TFR:
             compute_channel_tfr(epochs, fname, dir_tfr)
     
     # aggregate psd results. average over trials
     aggregate_spectra(dir_psd, dir_results)
     
     # aggregate tfr results. average over trials
-    if run_tfr:
+    if RUN_TFR:
         aggregate_tfr(dir_tfr, dir_results)
     
 def comp_psd(epochs, fname, dir_output):
