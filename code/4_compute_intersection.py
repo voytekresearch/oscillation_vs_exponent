@@ -39,27 +39,28 @@ def main():
         
         
     # loop through conditions
-    for material in ['word', 'face']:
-        for ap_mode in ['fixed', 'knee']:
-            # load parameterization results
-            param_pre = FOOOFGroup()
-            param_pre.load(join(dir_input, 'psd_pre_%s_params_%s.json' %(material, ap_mode)))
-            param_post = FOOOFGroup()
-            param_post.load(join(dir_input, 'psd_post_%s_params_%s.json' %(material, ap_mode)))
-    
-    
-            # calc intersection 
-            psd_pre, psd_post, intersection, intersection_idx = \
-                comp_intersection_from_params(param_pre, param_post)
-            
-            # # calc intersection using optimization
-            # psd_pre, psd_post, intersection = solve_for_rotation_freq(N_ITER, param_pre, param_post, average=AVERAGE_METHOD)
-    
-            # save results
-            fname_out = 'intersection_results_%s_%s' %(material, ap_mode)
-            np.savez(join(dir_output, fname_out), psd_pre=psd_pre, psd_post=psd_post, 
-                     intersection=intersection)
-    
+    for material in ['words', 'faces']:
+        for memory in ['hit', 'miss']:
+            for ap_mode in ['fixed', 'knee']:
+                # load parameterization results
+                param_pre = FOOOFGroup()
+                param_pre.load(join(dir_input, '%s_%s_prestim_params_%s.json' %(material, memory, ap_mode)))
+                param_post = FOOOFGroup()
+                param_post.load(join(dir_input, '%s_%s_poststim_params_%s.json' %(material, memory, ap_mode)))
+        
+        
+                # calc intersection 
+                psd_pre, psd_post, intersection, intersection_idx = \
+                    comp_intersection_from_params(param_pre, param_post)
+                
+                # # calc intersection using optimization
+                # psd_pre, psd_post, intersection = solve_for_rotation_freq(N_ITER, param_pre, param_post, average=AVERAGE_METHOD)
+        
+                # save results
+                fname_out = 'intersection_results_%s_%s_%s' %(material, memory, ap_mode)
+                np.savez(join(dir_output, fname_out), psd_pre=psd_pre, psd_post=psd_post, 
+                        intersection=intersection)
+        
 
 def comp_intersection_from_params(param_pre, param_post):
     """ Calculate intersection of pre and post stim psd
