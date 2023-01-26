@@ -52,8 +52,14 @@ def param_group_psd_results():
     
     # loop through conditions
     files = ['psd_words_hit_prestim.npz', 'psd_words_hit_poststim.npz',
-             'psd_faces_hit_prestim.npz', 'psd_faces_hit_poststim.npz']
-    conditions = ['psd_pre_word', 'psd_post_word', 'psd_pre_face', 'psd_post_face']
+             'psd_faces_hit_prestim.npz', 'psd_faces_hit_poststim.npz',
+             'psd_words_miss_prestim.npz', 'psd_words_miss_poststim.npz',
+             'psd_faces_miss_prestim.npz', 'psd_faces_miss_poststim.npz']
+    conditions = ['words_hit_prestim', 'words_hit_poststim', 
+                  'faces_hit_prestim', 'faces_hit_poststim',
+                  'words_miss_prestim', 'words_miss_poststim', 
+                  'faces_miss_prestim', 'faces_miss_poststim']
+    
     for file, cond in zip(files, conditions):
         # load results for condition
         data_in =  np.load(join(dir_input, file))
