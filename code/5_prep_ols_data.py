@@ -57,19 +57,19 @@ def main():
                                 'ieeg_channel_info.pkl'))
 
     # get data for each parameter and condition (sig chans only)
-    df_alpha_w = gen_df_alpha(chan_info, 'word', 'knee', SIG_LEVEL)[sig_chans]
-    df_alpha_f = gen_df_alpha(chan_info, 'face', 'knee', SIG_LEVEL)[sig_chans]
-    df_exp_w = gen_df_exp(chan_info, 'word', 'knee', SIG_LEVEL)[sig_chans]
-    df_exp_f = gen_df_exp(chan_info, 'face', 'knee', SIG_LEVEL)[sig_chans]
-    
+    df_list = []
+    for material in ['word', 'face']:
+        df_list.append(gen_df_alpha(chan_info, material, AP_MODE, SIG_LEVEL)[sig_chans])
+        df_list.append(gen_df_exp(chan_info, material, AP_MODE, SIG_LEVEL)[sig_chans])
+        
     # aggregate data for all params and conditions 
-    df_ols = gen_df_ols(df_alpha_w, df_alpha_f, df_exp_w, df_exp_f, sig_chans)
+    df_ols = gen_df_ols(df_list[0],df_list[1],df_list[2],df_list[3],sig_chans)
     
     # save dataframe for OLS analysis
     df_ols.to_csv(join(dir_output, 'df_ols.csv'))
     
     
-def gen_df_ols(df_alpha_w, df_alpha_f, df_exp_w, df_exp_f, sig_chans):
+def gen_df_ols(df_alpha_w, df_exp_w, df_alpha_f, df_exp_f, sig_chans):
     # add alpha results
     df = df_alpha_w.copy()
     df['diff_alpha_w'] = df["power_diff"]
@@ -114,49 +114,50 @@ def gen_df_ols(df_alpha_w, df_alpha_f, df_exp_w, df_exp_f, sig_chans):
     return df
 
 def gen_df_exp(chan_info, material, ap_mode, sig_level):
-    # load spectral results
-    param_pre = FOOOFGroup()
-    param_pre.load(join(PROJECT_PATH, 'data/ieeg_psd_param', 
-                        'psd_pre_%s_params_%s.json' %(material, ap_mode)))
-    param_post = FOOOFGroup()
-    param_post.load(join(PROJECT_PATH, 'data/ieeg_psd_param', 
-                         'psd_post_%s_params_%s.json' %(material, ap_mode)))
-    
-    # aggregate in dataframe with chan info
+    # initialize dataframe
     df = chan_info.copy()
-    df['exp_pre'] = param_pre.get_params('aperiodic','exponent')
-    df['exp_post'] = param_post.get_params('aperiodic','exponent')
+
+    # add exponent results for each epoch
+    for epoch in ['pre', 'post']:
+        # load spectral results
+        param = FOOOFGroup()
+        param.load(join(PROJECT_PATH, 'data/ieeg_psd_param', 
+                        'psd_%s_%s_params_%s.json' %(epoch, material, ap_mode)))
+    
+        # aggregate in dataframe with chan info
+        df['exp_%s' %epoch] = param.get_params('aperiodic','exponent')
+
+    # compute change in exponent
     df['exp_diff'] = df['exp_post'] - df['exp_pre']
     
     return df
 
-def gen_df_alpha(chan_info, material, ap_mode, sig_level):
-    # load spectral results
-    param_pre = FOOOFGroup()
-    param_pre.load(join(PROJECT_PATH, 'data/ieeg_psd_param', 
-                        'psd_pre_%s_params_%s.json' %(material, ap_mode)))
-    param_post = FOOOFGroup()
-    param_post.load(join(PROJECT_PATH, 'data/ieeg_psd_param', 
-                         'psd_post_%s_params_%s.json' %(material, ap_mode)))
-    
-    # get alpha peak info
-    alpha_pre = get_band_peak_fg(param_pre, [8, 20])
-    alpha_post = get_band_peak_fg(param_post, [8, 20])
-    
-    # aggregate in dataframe with chan info
+def gen_df_alpha(chan_info, material, ap_mode):
+    # initialize dataframe
     df_alpha = chan_info.copy()
-    df_alpha['power_pre'] = alpha_pre[:,1]
-    df_alpha['power_post'] = alpha_post[:,1]
-    df_alpha['power_diff'] = alpha_post[:,1] - alpha_pre[:,1]
+
+    # add alpha peak results for each epoch
+    for epoch in ['pre', 'post']:
+        # load spectral results
+        param = FOOOFGroup()
+        param.load(join(PROJECT_PATH, 'data/ieeg_psd_param',
+                        'psd_%s_%s_params_%s.json' %(epoch, material, ap_mode)))
+        
+        # get alpha peak info and add to dataframe
+        alpha = get_band_peak_fg(param, [8, 20])
+        df_alpha['power_%s' %epoch] = alpha['power']
+        
+    # compute change in alpha
+    df_alpha['power_diff'] = df_alpha['power_post'] - df_alpha['power_pre']
     
-    # label (un)detected alpha peaks 
+    # label (un)detected alpha peaks (NaN handling)
     df_alpha['peak_present'] = np.nan
     df_alpha.loc[(np.isnan(df_alpha['power_pre']) & np.isnan(df_alpha['power_post'])), 'peak_present'] = 0
     df_alpha.loc[(~np.isnan(df_alpha['power_pre']) & np.isnan(df_alpha['power_post'])), 'peak_present'] = 1
     df_alpha.loc[(np.isnan(df_alpha['power_pre']) & ~np.isnan(df_alpha['power_post'])), 'peak_present'] = 2
     df_alpha.loc[(~np.isnan(df_alpha['power_pre']) & ~np.isnan(df_alpha['power_post'])), 'peak_present'] = 3
 
-    # correct for undected peaks
+    # correct significance for undected peaks (NaN handling)
     df_alpha.loc[(np.isnan(df_alpha['power_pre']) & np.isnan(df_alpha['power_post'])), 'sig'] = False
     df_alpha.loc[(~np.isnan(df_alpha['power_pre']) & np.isnan(df_alpha['power_post'])), 'sign'] = -1
     df_alpha.loc[(np.isnan(df_alpha['power_pre']) & ~np.isnan(df_alpha['power_post'])), 'sign'] = 1
