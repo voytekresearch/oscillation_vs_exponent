@@ -53,75 +53,49 @@ def main():
 
     # load channel info
     chan_info = pd.read_pickle(F"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.pkl")
+    chan_info.drop(columns=['index'], inplace=True)
+    chan_info['unique_id'] = chan_info['patient'] + '_' + chan_info['chan_idx'].astype(str)
 
-    # get data for each parameter and condition (sig chans only)
-    dfs = []
+    # get data for each parameter and condition
+    df_list = []
     for memory in ['hit', 'miss']:
-        df_list = []
         for material in ['words', 'faces']:
-            df_list.append(gen_df_alpha(chan_info, material, memory, AP_MODE)[sig_chans])
-            df_list.append(gen_df_exp(chan_info, material, memory, AP_MODE, SIG_LEVEL)[sig_chans])
+            # get exponent and alpha results
+            df_alpha = gen_df_alpha(chan_info, material, memory, AP_MODE)
+            df = gen_df_exp(chan_info, material, memory, AP_MODE, SIG_LEVEL)
             
-        # aggregate data for all params and conditions 
-        df_mem = gen_df_ols(df_list[0],df_list[1],df_list[2],df_list[3], memory, sig_chans)
+            # join exponent and alpha results
+            df['alpha_pre'] = df_alpha['power_pre']
+            df['alpha_post'] = df_alpha['power_post']
+            df['alpha_diff'] = df_alpha['power_diff']
+            df['peak_present'] = df_alpha['peak_present']
 
-        # add column for memory condition
-        df_mem['memory'] = memory
+            # add intersection frequnecy results
+            fname_in = f"intersection_results_{material}_{memory}_{AP_MODE}.npz"
+            data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname_in}", allow_pickle=True)
+            df['f_rot'] = data_in['intersection']
 
-        # add to list of dataframes
-        dfs.append(df_mem)
+            # add alpha/beta bandpower results
+            df['alpha_bp_diff'] = comp_bandpower_change(material, memory)
+
+            # add condition info (material, memory, ap_mode)
+            df['material'] = material
+            df['memory'] = memory
+            df['ap_mode'] = AP_MODE
+        
+            # add to list
+            df_list.append(df)
 
     # join dataframes for hit and miss conditions
-    df_ols = pd.concat(dfs, ignore_index=True)
+    df_ols = pd.concat(df_list, ignore_index=True)
         
     # save dataframe for OLS analysis
-    df_ols.to_csv(f"{dir_output}/df_ols.csv")
-    
-    
-def gen_df_ols(df_alpha_w, df_exp_w, df_alpha_f, df_exp_f, memory, sig_chans):
-    # add alpha results
-    df = df_alpha_w.copy()
-    df['diff_alpha_w'] = df["power_diff"]
-    df.drop(columns=["power_pre","power_post","power_diff"], inplace=True)
-    df['diff_alpha_f'] = df_alpha_f['power_diff']
-    
-    # add exp results
-    df['diff_exp_w'] = df_exp_w['exp_diff']
-    df['diff_exp_f'] = df_exp_f['exp_diff']
-    
-    # add intersection freqeuncy results
-    fname_in = f"intersection_results_words_{memory}_{AP_MODE}.npz"
-    data_in_word = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname_in}", allow_pickle=True)
-    fname_in = f"intersection_results_faces_{memory}_{AP_MODE}.npz"
-    data_in_face = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname_in}", allow_pickle=True)
+    df_ols.to_csv(f"{dir_output}/df_ols_allchans.csv")
 
-    df['f_rot_w'] = data_in_word['intersection'][sig_chans]
-    df['f_rot_f'] = data_in_face['intersection'][sig_chans]
-    
-    # add alpha/beta bandpower results
-    # laod psd results
-    psd_pre_word = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_words_hit_prestim.npz")
-    psd_post_word = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_words_hit_poststim.npz")
-    psd_pre_face = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_faces_hit_prestim.npz")
-    psd_post_face = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_faces_hit_poststim.npz")
-    freq = psd_post_face['freq']
-    diff_psd_word = np.log10(psd_post_word['spectra']) - np.log10(psd_pre_word['spectra'])
-    diff_psd_face = np.log10(psd_post_face['spectra']) - np.log10(psd_pre_face['spectra'])
-    # trim in alpha band
-    _, temp_w = trim_spectrum(freq, diff_psd_word, f_range=bands['alpha'])
-    _, temp_f = trim_spectrum(freq, diff_psd_face, f_range=bands['alpha'])
-    # average across band
-    diff_alpha_bp_word = np.nanmean(temp_w, axis=1)
-    diff_alpha_bp_face = np.nanmean(temp_f, axis=1)
-    # add to df
-    df['diff_alpha_bp_w'] = diff_alpha_bp_word[sig_chans]
-    df['diff_alpha_bp_f'] = diff_alpha_bp_face[sig_chans]
-    
-    # reset index
-    df.drop(columns='index', inplace=True)
-    df.reset_index(inplace=True)
-    
-    return df
+    # save dataframe for OLS analysis (significant channels only)
+    df_ols_sig = df_ols[np.tile(sig_chans, 4)]
+    df_ols_sig.to_csv(f"{dir_output}/df_ols.csv")
+
 
 def gen_df_exp(chan_info, material, memory, ap_mode, sig_level):
     # initialize dataframe
@@ -167,14 +141,22 @@ def gen_df_alpha(chan_info, material, memory, ap_mode):
     df_alpha.loc[(np.isnan(df_alpha['power_pre']) & ~np.isnan(df_alpha['power_post'])), 'peak_present'] = 2
     df_alpha.loc[(~np.isnan(df_alpha['power_pre']) & ~np.isnan(df_alpha['power_post'])), 'peak_present'] = 3
 
-    # correct significance for undected peaks (NaN handling)
-    df_alpha.loc[(np.isnan(df_alpha['power_pre']) & np.isnan(df_alpha['power_post'])), 'sig'] = False
-    df_alpha.loc[(~np.isnan(df_alpha['power_pre']) & np.isnan(df_alpha['power_post'])), 'sign'] = -1
-    df_alpha.loc[(np.isnan(df_alpha['power_pre']) & ~np.isnan(df_alpha['power_post'])), 'sign'] = 1
-    
     return df_alpha
+
+def comp_bandpower_change(material, memory):
+    # laod psd results
+    psd_pre = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_{material}_{memory}_prestim.npz")
+    psd_post = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_{material}_{memory}_poststim.npz")
+    
+    # trim in alpha band
+    _, alpha_bp_pre = trim_spectrum(psd_pre['freq'], psd_pre['spectra'], f_range=bands['alpha'])
+    _, alpha_bp_post = trim_spectrum(psd_post['freq'], psd_post['spectra'], f_range=bands['alpha'])
+
+    # compute change in average power across band
+    diff_alpha_bp = np.nanmean(alpha_bp_post, axis=1) - np.nanmean(alpha_bp_pre, axis=1)
+    
+    return diff_alpha_bp
 
 
 if __name__ == "__main__":
     main()
-
