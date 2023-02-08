@@ -20,10 +20,13 @@ import os
 import numpy as np
 from fooof import FOOOFGroup
 from fooof.utils.data import interpolate_spectrum
+from time import time as timer
+from time import ctime as time_now
 
 # Settings
 LINE_NOISE_RANGE = [45,55] # freq range to interpolate
-RUN_TFR = False # run TFR parameterization
+RUN_TFR = True # run TFR parameterization
+TFR_METHOD = 'multitaper' # method used in ieeg_2_time_frequency_analysis.py
 
 # SpecParam hyperparameters
 N_JOBS = -1 # number of jobs for parallel processing
@@ -36,11 +39,13 @@ SPEC_PARAM_SETTINGS = {
 def main():
     
     # parameterize PSDs
+    print('\nParameterizing PSDs...')
     # parameterize_psd()
     param_group_psd_results()
 
     # parameterize TFRs
     if RUN_TFR:
+        print('\nParameterizing TFRs...')
         # parameterize_tfr()
         param_group_tfr_results()
     
@@ -62,6 +67,10 @@ def param_group_psd_results():
                   'faces_miss_prestim', 'faces_miss_poststim']
     
     for file, cond in zip(files, conditions):
+        # display progress
+        t_start = timer()
+        print(f"\tAnalyzing condition: \t{cond.replace('_', ', ')}...")
+
         # load results for condition
         data_in =  np.load(f"{dir_input}/{file}")
         spectra_raw = data_in['spectra']
@@ -75,6 +84,7 @@ def param_group_psd_results():
         
         # parameterize (fit both with and without knee parametere)
         for ap_mode in ['fixed', 'knee']:
+            print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
             fg.fit(freq, spectra, n_jobs=N_JOBS)
@@ -85,8 +95,17 @@ def param_group_psd_results():
                     save_settings=True)
             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
 
+        # display progress
+        hour, min, sec = hour_min_sec(timer() - t_start)
+        print(f"\t\tCondition completed in {hour} hour, {min} min, and {sec :0.1f} s")
+
+    # display progress
+    hour, min, sec = hour_min_sec(timer() - t_start)
+    print(f"Total PSD analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
 
 def param_group_tfr_results():
+    # time it
+    t_start = timer()
 
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_spectral_results"
@@ -97,8 +116,12 @@ def param_group_tfr_results():
     # loop through conditions
     conditions = ['words_hit', 'faces_hit','words_miss', 'faces_miss']
     for cond in conditions:
+        # display progress
+        print(f"\tAnalyzing condition: \t{cond.replace('_', ', ')}...")
+        t_start_c = timer()
+    
         # load group TFR results
-        data_in = np.load(f"{dir_input}/'tfr_{cond}_hit_multitaper.npz")
+        data_in = np.load(f"{dir_input}/tfr_{cond}_{TFR_METHOD}.npz")
         freq = data_in['freq']
         tfr_in = data_in['tfr']
         
@@ -110,6 +133,7 @@ def param_group_tfr_results():
         
         # parameterize (fit both with and without knee parametere)
         for ap_mode in ['fixed', 'knee']:
+            print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
             fg.fit(freq, tfr, n_jobs=N_JOBS)
@@ -119,7 +143,14 @@ def param_group_tfr_results():
             fg.save(f"{dir_output}/{fname_out}", save_results=True, 
                     save_settings=True)
             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
-        
+
+        # display progress
+        hour, min, sec = hour_min_sec(timer() - t_start_c)
+        print(f"\t\tCondition ompleted in {hour} hour, {min} min, and {sec :0.1f} s")
+
+    # display progress
+    hour, min, sec = hour_min_sec(timer() - t_start)
+    print(f"Total TFR analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
 
 # def parameterize_psd():
 #     # identify / create directories
@@ -215,6 +246,12 @@ def downsample_tfr(tfr, n=2**7):
     
     return tfr_ds
 
+def hour_min_sec(duration):
+    hours = int(np.floor(duration / 3600))
+    mins = int(np.floor(duration%3600 / 60))
+    secs = duration % 60
+    
+    return hours, mins, secs
      
         
 if __name__ == "__main__":
