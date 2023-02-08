@@ -21,7 +21,6 @@ import numpy as np
 from fooof import FOOOFGroup
 from fooof.utils.data import interpolate_spectrum
 from time import time as timer
-from time import ctime as time_now
 
 # Settings
 LINE_NOISE_RANGE = [45,55] # freq range to interpolate
@@ -36,6 +35,10 @@ SPEC_PARAM_SETTINGS = {
     'max_n_peaks'       :   4, # (default: inf)
     'peak_threshold'    :   2.0} # (default: 2.0)
 
+# FOOOF is causing some warnings about ragged arrays
+import warnings
+warnings.filterwarnings("ignore")
+
 def main():
     
     # parameterize PSDs
@@ -46,8 +49,8 @@ def main():
     # parameterize TFRs
     if RUN_TFR:
         print('\nParameterizing TFRs...')
-        # parameterize_tfr()
-        param_group_tfr_results()
+        parameterize_tfr()
+        # param_group_tfr_results()
     
 def param_group_psd_results():
     # identify / create directories
@@ -132,8 +135,8 @@ def param_group_tfr_results():
         tfr = tfr_ds.reshape([tfr_ds.shape[0]*tfr_ds.shape[1],tfr_ds.shape[2]])
         
         # parameterize (fit both with and without knee parametere)
-        for ap_mode in ['fixed', 'knee']:
-            print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
+        for ap_mode in ['knee']: # ['fixed', 'knee']:
+            # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
             fg.fit(freq, tfr, n_jobs=N_JOBS)
@@ -192,45 +195,58 @@ def param_group_tfr_results():
 #             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
      
                 
-# def parameterize_tfr():
+def parameterize_tfr():
+    # time it
+    t_start = timer()
 
-#     # identify / create directories
-#     dir_input = f"{PROJECT_PATH}/data/ieeg_tfr"
-#     dir_output = f"{PROJECT_PATH}/data/ieeg_tfr_param"
-#     if not os.path.exists(dir_output): 
-#         os.makedirs(f"{dir_output}/fooof_reports")
+    # identify / create directories
+    dir_input = f"{PROJECT_PATH}/data/ieeg_tfr"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_tfr_param"
+    if not os.path.exists(f"{dir_output}/fooof_reports"): 
+        os.makedirs(f"{dir_output}/fooof_reports")
     
-#     # load each file
-#     for fname in os.path.listdir(dir_input):
-#         # use multitaper decomposition 
-#         fparts = fname.split('_')
-#         if not fparts[-1] == 'multitaper.npz': continue
+    # load each file
+    for fname in os.listdir(dir_input):
+        # use multitaper decomposition 
+        fparts = fname.split('_')
+        if not fparts[-1] == f'{TFR_METHOD}.npz': continue
         
-#         # display progress
-#         print('Analyzing: %s' %fname)
+        # display progress
+        print(f"    Analyzing: {fname}")
+        t_start_c = timer()
         
-#         # load tfr
-#         data_in = np.load(f"{dir_input}/{fname}")
-#         tfr_in = data_in['tfr']
-#         freq = data_in['freq']
+        # load tfr
+        data_in = np.load(f"{dir_input}/{fname}")
+        tfr_in = data_in['tfr']
+        freq = data_in['freq']
         
-#         # average over trials
-#         tfr_mean = np.squeeze(np.mean(tfr_in, axis=0))
+        # average over trials
+        tfr_mean = np.squeeze(np.mean(tfr_in, axis=0))
         
-#         # downsample tfr
-#         tfr = downsample_tfr(tfr_mean)
+        # downsample tfr
+        tfr = downsample_tfr(tfr_mean)
         
-#         # parameterize
-#         for ap_mode in ['fixed', 'knee']:
-#             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
-#             fg.set_check_data_mode(False)
-#             fg.fit(freq, tfr, n_jobs=N_JOBS)
+        # parameterize
+        for ap_mode in ['knee']: # ['fixed', 'knee']:
+            # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
+            fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+            fg.set_check_data_mode(False)
+            fg.fit(freq, tfr, n_jobs=N_JOBS)
             
-#             # save results and report
-#             fname_out = fname.replace('.npz','_param_%s' %ap_mode)
-#             fg.save(f"{dir_output}/{fname_out}", save_results=True, 
-#                     save_settings=True)
-#             fg.save_report(f"{dir_output}/'fooof_reports/{fname_out}")
+            # save results and report
+            fname_out = fname.replace('.npz','_param_%s' %ap_mode)
+            fg.save(f"{dir_output}/{fname_out}", save_results=True, 
+                    save_settings=True)
+            fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
+
+        # display progress
+        hour, min, sec = hour_min_sec(timer() - t_start_c)
+        print(f"\tFile completed in {hour} hour, {min} min, and {sec :0.1f} s")
+
+    # display progress
+    hour, min, sec = hour_min_sec(timer() - t_start)
+    print(f"Total TFR analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
+
         
         
 def downsample_tfr(tfr, n=2**7):
