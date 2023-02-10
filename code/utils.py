@@ -61,13 +61,29 @@ def crop_tfr(tfr, time, time_range):
 
 def downsample_tfr(tfr, time, n):
     """
-    Downsample time-frequency representation (TFR) to n time bins
-    """
+    Downsample time-frequency representation (TFR) to n time bins.
+    Can be use on 2D or 3D TFRs (time must be last dimension)
 
-    #downsample, 128 time bins (creates square tfr)
-    step = int(np.floor(tfr.shape[1]/n))
-    tfr = tfr[:, np.arange(1, tfr.shape[1], step)] 
-    time = time[np.arange(1, len(time), step)] 
+    Parameters
+    ----------
+    tfr : 2D or 3D array
+        Time-frequency representation of power (spectrogram).
+    time : 1D array
+        Associated time vector (length should be equal to that of 
+        the last dimension of tfr).
+    n : int
+        Desired number of time bins after downsampling.
+
+    Returns
+    ------- 
+    tfr, time : array, array
+        Downsampled TFR and time vector.
+    """
+    
+    n_samples = len(time)
+    step = int(np.floor(tfr.shape[-1]/n))
+    tfr = tfr[..., np.arange(0, n_samples-1, step)] 
+    time = time[np.arange(0, n_samples-1, step)] 
     
     return tfr, time
 
