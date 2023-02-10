@@ -16,6 +16,8 @@ from fooof import FOOOFGroup
 from fooof.bands import Bands
 from fooof.analysis import get_band_peak_fg
 
+from stats import gen_random_order, comp_resampling_pval
+
 # Settings
 # paths
 PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
@@ -221,24 +223,15 @@ def rand_perm_stats_sub(freq, spectra_pre, spectra_post, exp_diff, alpha_diff,
         distr_exp[i_chan], distr_alpha[i_chan] = results
 
         # comp p-value
-        pval_exp[i_chan], sign_exp[i_chan] = comp_rand_perm_p_val(distr_exp[i_chan], 
+        pval_exp[i_chan], sign_exp[i_chan] = comp_resampling_pval(distr_exp[i_chan], 
                                                            exp_diff[i_chan])
-        pval_alpha[i_chan], sign_alpha[i_chan] = comp_rand_perm_p_val(distr_alpha[i_chan], 
+        pval_alpha[i_chan], sign_alpha[i_chan] = comp_resampling_pval(distr_alpha[i_chan], 
                                                            alpha_diff[i_chan])        
         # time it
         end = timer()
         print('channel %d / %d: %0.1f seconds' %(i_chan+1, n_chans, end-start))
         
     return pval_exp, sign_exp, distr_exp, pval_alpha, sign_alpha, distr_alpha
-
-def gen_random_order(n_iterations, length):
-    # generate pseudo-random order for trials
-    order = np.zeros([n_iterations, length])
-    for i_iter in range(n_iterations):
-        order[i_iter] = np.random.permutation(np.linspace(0, length-1, length))
-    order = order.astype(int)
-    
-    return order
     
 def shuffle_spectra(spectra_0, spectra_1, order):
     # concatenate 2 groups of spectra
@@ -283,24 +276,6 @@ def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=1):
     alpha_diff = alpha_1[:,1] - alpha_0[:,1] 
     
     return exp_diff, alpha_diff
-
-def comp_rand_perm_p_val(distribution, value):
-    n_iterations = np.size(distribution)
-    n_less = np.sum(distribution < value)
-    n_more = np.sum(distribution > value)
-    
-    # calc 2-sided p value
-    p_value = np.min([n_less, n_more]) / n_iterations * 2
-    
-    # determine direction of effect
-    if n_less < n_more: 
-        sign = -1
-    elif n_less > n_more: 
-        sign = 1
-    elif n_less == n_more: 
-        sign = 0
-        
-    return p_value, sign
 
 def aggregate_stats_by_condition():
 # load stats and aggregate group results
