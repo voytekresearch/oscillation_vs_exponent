@@ -8,7 +8,18 @@ import numpy as np
 
 def zscore_tfr(tfr):
     """
-    Normalize time-frequency representation (TFR) by z-scoring each frequency
+    Normalize time-frequency representation (TFR) by z-scoring each frequency.
+    TFR should be 2D (frequency x time).
+
+    Parameters
+    ----------
+    tfr : 2D array
+        Time-frequency representation of power (spectrogram).
+
+    Returns
+    -------
+    tfr_norm : 2D array
+        Z-score normalized TFR.
     """
     
     # initialize 
@@ -23,7 +34,8 @@ def zscore_tfr(tfr):
 def subtract_baseline(signals, time, t_baseline):
     """
     Subtract baseline from signals. Baseline is defined as the mean of the
-    signal between t_baseline[0] and t_baseline[1]. 
+    signal between t_baseline[0] and t_baseline[1]. Signals should be 2D
+    (signals x time).
 
     Parameters
     ----------
@@ -40,8 +52,10 @@ def subtract_baseline(signals, time, t_baseline):
         Baseline corrected signals.
     """
     
+    # initialize
     signals_bl = np.zeros_like(signals)
     
+    # subtract baseline from each signal
     for ii in range(len(signals)):
         mask_bl = ((time>t_baseline[0]) & (time<t_baseline[1]))
         bl = np.mean(signals[ii, mask_bl])
@@ -96,8 +110,11 @@ def downsample_tfr(tfr, time, n):
         Downsampled TFR and time vector.
     """
 
+    # determine step size for downsampling and counnt number of samples
     n_samples = len(time)
     step = int(np.floor(tfr.shape[-1]/n))
+
+    # downsample
     tfr = tfr[..., np.arange(0, n_samples-1, step)] 
     time = time[np.arange(0, n_samples-1, step)] 
     
