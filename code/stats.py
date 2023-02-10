@@ -51,12 +51,17 @@ def shuffle_rows(matrix_a, matrix_b, order):
     """
     
     # concatenate 2 groups of spectra and shuffle rows
-    matrix_ab = np.concatenate([matrix_a, matrix_b])[order]
+    matrix_ab = np.vstack([matrix_a, matrix_b])
 
     # split matrix into 2 groups
+    n_iter = order.shape[0]
     n_rows = matrix_a.shape[0]
-    matrix_as = matrix_ab[:n_rows]
-    matrix_bs = matrix_ab[n_rows:]
+    matrix_as = np.zeros([n_iter,*matrix_a.shape])
+    matrix_bs = np.zeros([n_iter,*matrix_a.shape])
+    for i_iter in range(n_iter):
+        matrix_shuffled = matrix_ab[order[i_iter]]
+        matrix_as[i_iter] = matrix_shuffled[:n_rows]
+        matrix_bs[i_iter] = matrix_shuffled[n_rows:]
     
     return matrix_as, matrix_bs
 
