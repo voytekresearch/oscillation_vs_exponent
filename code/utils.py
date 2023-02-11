@@ -121,3 +121,10 @@ def downsample_tfr(tfr, time, n):
     return tfr, time
 
 
+def hour_min_sec(duration):
+    hours = int(np.floor(duration / 3600))
+    mins = int(np.floor(duration%3600 / 60))
+    secs = duration % 60
+    
+    return hours, mins, secs
+
