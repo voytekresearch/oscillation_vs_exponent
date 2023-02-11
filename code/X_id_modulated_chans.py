@@ -132,6 +132,10 @@ def task_modulation(fname_in, n_iter):
     # load tfr
     data_in = np.load(fname_in)
 
+    # skip if only a single trial exists for channel (TEMP - should be handled in step 2)
+    if np.ndim(np.squeeze(data_in['tfr'])) < 3: 
+        return np.nan, np.nan
+
     # compute alpha bandpower for pre/post-stim time window
     alpha_pre, alpha_post = comp_alpha_bandpower(np.squeeze(data_in['tfr']), data_in['freq'], 
                                                 data_in['time'], f_range=ALPHA_BAND, 
