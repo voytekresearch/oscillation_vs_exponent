@@ -18,6 +18,10 @@ from fooof import FOOOFGroup
 from fooof.bands import Bands
 from fooof.analysis import get_band_peak_fg
 
+# FOOOF is causing some warnings about ragged arrays
+import warnings
+warnings.filterwarnings("ignore")
+
 # Imports - custom
 from stats import gen_random_order, comp_resampling_pval
 
@@ -56,54 +60,59 @@ def main():
     
     # loop through materials
     for material in ['word','face']:
-        # display progress
-        print('---------------------------------------')
-        print('Condition: %s' %material)
-        print('---------------------------------------')
-        
-        # load spectral parameterization results
-        param_pre = FOOOFGroup()
-        param_pre.load(f"{PROJECT_PATH}/data/ieeg_psd_param/psd_pre_{material}_params_{AP_MODE}.json")
-        param_post = FOOOFGroup()
-        param_post.load(f"{PROJECT_PATH}/'data/ieeg_psd_param/psd_post_{material}_params_{AP_MODE}.json")
-        
-        # change NaN to 0 (no detectable alpha peak)
-        alpha_pre = get_band_peak_fg(param_pre, BANDS.alpha)
-        alpha_post = get_band_peak_fg(param_post, BANDS.alpha)
-        # alpha_pre[np.isnan(alpha_pre)] == 0
-        # alpha_post[np.isnan(alpha_post)] == 0
-        
-        # calc change in parameters (exponent and adjusted alpha power)
-        exp_diff = param_post.get_params('aperiodic','exponent') - \
-            param_pre.get_params('aperiodic','exponent')
-        alpha_diff = alpha_post[:,1] - alpha_pre[:,1] 
-
-        # loop through patients
-        for i_pat, patient in enumerate(PATS):
+        # loop through memory conditions
+        for memory in ['hit','miss']:
             # display progress
-            print('Analyzing: %s - %s' %(patient, material))
-
-            # load subject data (pre/post-stim PSDs)
-            fname = '%s_%ss_hit_xxx_psd.npz' %(patient, material)
-            data_pre = np.load(f"{dir_input}/{fname.replace('xxx','prestim')}")
-            data_post = np.load(f"{dir_input}/{fname.replace('xxx','poststim')}")
-    
-            # run permutation stats
-            exp_diff_pat = exp_diff[chan_info['patient']==patient]
-            alpha_diff_pat = alpha_diff[chan_info['patient']==patient]
-            df_i = resampling_analysis(data_pre['freq'], data_pre['psd'], 
-                                          data_post['psd'], exp_diff_pat,
-                                          alpha_diff_pat, AP_MODE, BANDS,
-                                          n_iterations=N_ITER, n_jobs=N_JOBS)
-
-            # aggregate
-            df_i['patient'] = patient
-            df_i['material'] = material
-            dfs.append(df_i)
+            print('---------------------------------------')
+            print(f'Condition: {material} - {memory}')
+            print('---------------------------------------')
             
-            # save results for patient-material
-            fname_out = f'\stats_{patient}_{material}_{AP_MODE}'
-            df.to_csv(f"{dir_output}/{fname_out}.csv")
+            # load spectral parameterization results
+            param_pre = FOOOFGroup()
+            param_pre.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{material}s_{memory}_prestim_params_{AP_MODE}.json")
+            param_post = FOOOFGroup()
+            param_post.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{material}s_{memory}_poststim_params_{AP_MODE}.json")
+            
+            # change NaN to 0 (no detectable alpha peak)
+            alpha_pre = get_band_peak_fg(param_pre, BANDS.alpha)
+            alpha_post = get_band_peak_fg(param_post, BANDS.alpha)
+            # alpha_pre[np.isnan(alpha_pre)] == 0
+            # alpha_post[np.isnan(alpha_post)] == 0
+            
+            # calc change in parameters (exponent and adjusted alpha power)
+            exp_diff = param_post.get_params('aperiodic','exponent') - \
+                param_pre.get_params('aperiodic','exponent')
+            alpha_diff = alpha_post[:,1] - alpha_pre[:,1] 
+
+            # loop through patients
+            for patient in PATS:
+                # display progress
+                print(f'Analyzing: {patient}, {material}, {memory}' )
+
+                # load subject data (pre/post-stim PSDs)
+                fname = f'{patient}_{material}s_{memory}_xxx_psd.npz'
+                data_pre = np.load(f"{dir_input}/{fname.replace('xxx','prestim')}")
+                data_post = np.load(f"{dir_input}/{fname.replace('xxx','poststim')}")
+        
+                # get parameters for this patient
+                exp_diff_pat = exp_diff[chan_info['patient']==patient]
+                alpha_diff_pat = alpha_diff[chan_info['patient']==patient]
+
+                # run permutation stats
+                df_i = resampling_analysis(data_pre['freq'], data_pre['psd'], 
+                                            data_post['psd'], exp_diff_pat,
+                                            alpha_diff_pat, AP_MODE, BANDS,
+                                            n_iterations=N_ITER, n_jobs=N_JOBS)
+
+                # aggregate
+                df_i['patient'] = patient
+                df_i['material'] = material
+                df_i['memory'] = memory
+                dfs.append(df_i)
+                
+                # save results for patient-material-memory
+                fname_out = f'\stats_{patient}_{material}_{memory}_{AP_MODE}'
+                df.to_csv(f"{dir_output}/{fname_out}.csv")
             
     # aggregate statistical results and save
     df = pd.concat(dfs)
@@ -153,7 +162,7 @@ def resampling_analysis(freq, spectra_pre, spectra_post, exp_diff, alpha_diff,
 
         # time it
         end = timer()
-        print('channel %d / %d: %0.1f seconds' %(i_chan+1, n_chans, end-start))
+        print('    channel %d / %d: %0.1f seconds' %(i_chan+1, n_chans, end-start))
         
     return df
     
@@ -173,7 +182,7 @@ def shuffle_spectra(spectra_0, spectra_1, order):
 
 def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=1):
     # initialize model
-    sp_0 = FOOOFGroup(*SPEC_PARAM_SETTINGS, aperiodic_mode=AP_MODE, verbose=False)
+    sp_0 = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=AP_MODE, verbose=False)
     sp_1 = sp_0.copy()
 
     # fit
