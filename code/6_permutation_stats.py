@@ -157,10 +157,8 @@ def shuffle_spectra(spectra_0, spectra_1, order):
     spectra_0s = np.zeros([order.shape[0], spectra.shape[1]])
     spectra_1s = spectra_0s.copy()
     for i_iter in range(order.shape[0]):
-        spectra_0s[i_iter] = np.nanmean(spectra[order[i_iter, :n_spectra]], 0)
-        spectra_1s[i_iter] = np.nanmean(spectra[order[i_iter, n_spectra:]], 0)
-        # spectra_0s[i_iter] = np.nanmedian(spectra[order[i_iter, :n_spectra]], 0)
-        # spectra_1s[i_iter] = np.nanmedian(spectra[order[i_iter, n_spectra:]], 0)
+        spectra_0s[i_iter] = np.nanmedian(spectra[order[i_iter, :n_spectra]], 0)
+        spectra_1s[i_iter] = np.nanmedian(spectra[order[i_iter, n_spectra:]], 0)
 
     return spectra_0s, spectra_1s
 
