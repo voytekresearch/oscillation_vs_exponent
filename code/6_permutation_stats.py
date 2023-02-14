@@ -79,8 +79,6 @@ def main():
             # change NaN to 0 (no detectable alpha peak)
             alpha_pre = get_band_peak_fg(param_pre, BANDS.alpha)
             alpha_post = get_band_peak_fg(param_post, BANDS.alpha)
-            # alpha_pre[np.isnan(alpha_pre)] == 0
-            # alpha_post[np.isnan(alpha_post)] == 0
             
             # calc change in parameters (exponent and adjusted alpha power)
             exp_diff = param_post.get_params('aperiodic','exponent') - \
@@ -195,7 +193,7 @@ def shuffle_spectra(spectra_0, spectra_1, order):
 def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=1):
     # initialize model
     sp_0 = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=AP_MODE, verbose=False)
-    # sp_0.set_check_data_mode(False)
+    sp_0.set_check_data_mode(False)
     sp_1 = sp_0.copy()
 
     # fit
@@ -209,8 +207,6 @@ def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=1):
     # calculate change in alpha amplitude
     alpha_0 = get_band_peak_fg(sp_0, bands.alpha)
     alpha_1 = get_band_peak_fg(sp_1, bands.alpha)
-    # alpha_0[np.isnan(alpha_0)] == 0
-    # alpha_1[np.isnan(alpha_1)] == 0
     alpha_diff = alpha_1[:,1] - alpha_0[:,1] 
     
     return exp_diff, alpha_diff
