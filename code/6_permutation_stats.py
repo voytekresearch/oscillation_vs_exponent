@@ -89,7 +89,7 @@ def main():
             for patient in PATS:
                 # display progress
                 start_time_p = timer()
-                print(f'Analyzing: {patient}, {material}, {memory}' )
+                print(f'\nAnalyzing: {patient}, {material}, {memory}' )
 
                 # load subject data (pre/post-stim PSDs)
                 fname = f'{patient}_{material}s_{memory}_xxx_psd.npz'
@@ -114,14 +114,14 @@ def main():
                 
                 # save results for patient-material-memory
                 fname_out = f'\stats_{patient}_{material}_{memory}_{AP_MODE}'
-                df_i.to_csv(f"{dir_output}/{fname_out}.csv")
+                df_i.to_csv(f"{dir_output}/{fname_out}.csv", index=False)
 
                 # display progress
                 print(f'Patient complete. Time: {timer() - start_time_p}')
             
     # aggregate statistical results and save
-    df = pd.concat(dfs, axis=0, ignore_index=True)
-    df.to_csv(f"{dir_output}/stats_all.csv")
+    df = pd.concat(dfs)
+    df.to_csv(f"{dir_output}/stats_all.csv", index=False)
 
     # display progress
     print('---------------------------------------')
