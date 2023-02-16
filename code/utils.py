@@ -128,3 +128,37 @@ def hour_min_sec(duration):
     
     return hours, mins, secs
 
+
+def knee_freq(knee, exponent):
+    knee_hz = np.zeros_like(knee)
+    for ii in range(len(knee)):
+        knee_hz[ii] = knee[ii]**(1/exponent[ii])
+    
+    return knee_hz
+
+
+def extract_ap_params(fg):
+    # get aperiodic parameter time-series
+    offset = fg.get_params('aperiodic', 'offset')
+    exponent = fg.get_params('aperiodic', 'exponent')
+    
+    # check if knee data exists
+    try:
+        # convert k to Hz
+        k = fg.get_params('aperiodic', 'knee')
+        knee = knee_freq(k, exponent)
+    except:
+        knee = [np.nan] * len(offset)
+    
+    return offset, knee, exponent
+
+
+def load_ap_params(fname):
+    # imports
+    from fooof import FOOOFGroup
+
+    # import specparam results
+    fg = FOOOFGroup()
+    fg.load(fname)
+    
+    return extract_ap_params(fg)
