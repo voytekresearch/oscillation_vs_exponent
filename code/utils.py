@@ -122,14 +122,41 @@ def downsample_tfr(tfr, time, n):
 
 
 def hour_min_sec(duration):
+    """
+    Convert duration in seconds to hours, minutes, and seconds.
+
+    Parameters
+    ----------
+    duration : float
+        Duration in seconds.
+
+    Returns
+    -------
+    hours, mins, secs : int
+        Duration in hours, minutes, and seconds.
+    """
+
     hours = int(np.floor(duration / 3600))
     mins = int(np.floor(duration%3600 / 60))
-    secs = duration % 60
+    secs = int(duration % 60)
     
     return hours, mins, secs
 
 
 def knee_freq(knee, exponent):
+    """
+    Convert specparam knee parameter to Hz.
+
+    Parameters
+    ----------
+    knee, exponent : 1D array
+        Knee and exponent parameters from specparam.
+
+    Returns
+    -------
+    knee_hz : 1D array
+        Knee in Hz.
+    """
     knee_hz = np.zeros_like(knee)
     for ii in range(len(knee)):
         knee_hz[ii] = knee[ii]**(1/exponent[ii])
@@ -137,15 +164,29 @@ def knee_freq(knee, exponent):
     return knee_hz
 
 
-def extract_ap_params(fg):
+def extract_ap_params(params):
+    """
+    Extract aperiodic parameters from FOOOFGroup object.
+
+    Parameters
+    ----------
+    params : FOOOFGroup object
+        FOOOFGroup object containing aperiodic parameters.
+
+    Returns
+    -------
+    offset, knee, exponent : 1D array
+        Offset, knee, and exponent parameters.
+    
+    """
     # get aperiodic parameter time-series
-    offset = fg.get_params('aperiodic', 'offset')
-    exponent = fg.get_params('aperiodic', 'exponent')
+    offset = params.get_params('aperiodic', 'offset')
+    exponent = params.get_params('aperiodic', 'exponent')
     
     # check if knee data exists
     try:
         # convert k to Hz
-        k = fg.get_params('aperiodic', 'knee')
+        k = params.get_params('aperiodic', 'knee')
         knee = knee_freq(k, exponent)
     except:
         knee = [np.nan] * len(offset)
@@ -154,6 +195,20 @@ def extract_ap_params(fg):
 
 
 def load_ap_params(fname):
+    """
+    Load specparam results from file and extract aperiodic parameters.
+
+    Parameters
+    ----------
+    fname : str
+        Filename to load.
+
+    Returns
+    -------
+    offset, knee, exponent : 1D array
+        Offset, knee, and exponent parameters.
+    """
+
     # imports
     from fooof import FOOOFGroup
 

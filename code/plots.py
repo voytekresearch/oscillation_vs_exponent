@@ -212,3 +212,36 @@ def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary,
     else:
         plotter.close()
 
+
+def plot_ap_params(params, time):
+    """
+    Plot time-series of aperiodic parameters.
+    
+    Parameters
+    ----------
+    params : FOOOFGroup object
+        FOOOFGroup object containing aperiodic parameters.
+    time : numpy array
+        Time points corresponding to each aperiodic parameter.
+
+    Returns
+    -------
+    None.
+    """
+    
+    # imports
+    from utils import get_ap_params
+    from neurodsp.plts import plot_time_series
+    
+    # get ap params
+    offset, knee, exponent = get_ap_params(params)
+    
+    # plot each ap param
+    for var, variable in zip([offset, knee, exponent], 
+                             ['offset', 'knee', 'exponent']):
+        
+        # skip knee if not fit
+        if np.isnan(var).all(): continue
+        
+        # plot
+        plot_time_series(time, var, title=variable)
