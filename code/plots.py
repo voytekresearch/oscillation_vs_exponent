@@ -68,4 +68,147 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
 
     return fig, ax
 
+def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
+                       cpos=None, fname_out=None, off_screen=False,
+                       elec_size=8, elec_color='r', cmap=None,
+                       brain_color='w', brain_opacity=1, 
+                       backgrouond_color='k', backend='static'):
+    """
+    Plot data at electrode locations on brain surface. If value is not None, electrodes 
+    are plotted as spheres with color determined by 'elec_color.'
+
+    Parameters
+    ----------
+    brain_pos : numpy array
+        Brain surface vertices.
+    brain_tri : numpy array
+        Brain surface triangles.
+    elec_pos : numpy array
+        Electrode positions.
+    value : numpy array, optional
+        Values to plot at electrodes. The default is None.
+    cpos : list, optional
+        Camera position (Pyvista). The default is None.
+    fname_out : str, optional
+        File name to save figure. The default is None.
+    off_screen : bool, optional
+        Whether to plot off screen. The default is False.
+    elec_size and elec_color : int, optional
+        Electrode size and color for plotting. The default is 8 and 'r'.
+    cmap : str, optional
+        Colormap for electrodes plotted. The default is None.
+    brain_color and brain_opacity: str, optional
+        Brain color and opacity for plotting. The default is 'w' and 1.
+    backgrouond_color : str, optional
+        Background color of plot. The default is 'k'.
+    backend : str, optional
+        Jupyter backend for plotting. The default is 'static'.
+    """
+    # imports
+    import pyvista as pv
+    
+    # create pyvista object for brain
+    faces = np.hstack((3*np.ones((brain_tri.shape[0],1)), brain_tri))
+    brain_mesh = pv.PolyData(brain_pos, faces.astype(int))
+    
+    # create figure and add brain mesh
+    plotter = pv.Plotter(off_screen=off_screen)
+    plotter.set_background(backgrouond_color)
+    plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
+    
+    # plot electrodes
+    if value is None:
+        plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, color=elec_color, \
+                        render_points_as_spheres=True)
+    else:
+        # set colormap
+        if cmap is None:
+            cmap = pv.themes.DefaultTheme().cmap
+        # plot electrodes
+        print('plotting electrodes')
+        plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, scalars=value, \
+                        cmap=cmap, render_points_as_spheres=True)  
+    # set camera position
+    if cpos is not None:
+        plotter.camera_position = cpos
+
+    # save figure
+    if fname_out is not None:
+        plotter.screenshot(fname_out)
+
+    # plot
+    if not off_screen:
+        plotter.show(jupyter_backend=backend)
+    else:
+        plotter.close()
+
+        
+def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary, 
+                        cpos=None, fname_out=None, off_screen=False,
+                        elec_size=8, elec_colors=['r','grey'], 
+                        brain_color='w', brain_opacity=1, 
+                        backgrouond_color='k', backend='static'):
+    """
+    Plot binary data at electrode locations on brain surface. 
+
+    Parameters
+    ----------
+    brain_pos : numpy array
+        Brain surface vertices.
+    brain_tri : numpy array
+        Brain surface triangles.
+    elec_pos : numpy array
+        Electrode positions.
+    binary : numpy array of bool
+        Binary values to plot at electrodes. (True = elec_color[0], False = elec_color[1])
+    cpos : list, optional
+        Camera position (Pyvista). The default is None.
+    fname_out : str, optional
+        File name to save figure. The default is None.
+    off_screen : bool, optional
+        Whether to plot off screen. The default is False.
+    elec_size and elec_color : int, optional
+        Electrode size and color for plotting. The default is 8 and 'r'.
+    cmap : str, optional
+        Colormap for electrodes plotted. The default is None.
+    brain_color and brain_opacity: str, optional
+        Brain color and opacity for plotting. The default is 'w' and 1.
+    backgrouond_color : str, optional
+        Background color of plot. The default is 'k'.
+    backend : str, optional
+        Jupyter backend for plotting. The default is 'static'.
+    """
+    # imports
+    import pyvista as pv
+    
+    # create pyvista object for brain
+    faces = np.hstack((3*np.ones((brain_tri.shape[0],1)), brain_tri))
+    brain_mesh = pv.PolyData(brain_pos, faces.astype(int))
+    
+    # create figure and add brain mesh
+    plotter = pv.Plotter(off_screen=off_screen)
+    plotter.set_background(backgrouond_color)
+    plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
+    
+    # plot electrodes - color according to significance value
+    chans_sig = pv.PolyData(elec_pos[binary])
+    plotter.add_mesh(chans_sig, point_size=elec_size, color=elec_colors[0], \
+                     render_points_as_spheres=True)
+    chans_ns = pv.PolyData(elec_pos[~binary])
+    plotter.add_mesh(chans_ns, point_size=elec_size, color=elec_colors[1], \
+                    render_points_as_spheres=True)
+    
+    # set camera position
+    if cpos is not None:
+        plotter.camera_position = cpos
+
+    # save figure
+    if fname_out is not None:
+        plotter.screenshot(fname_out)
+
+    # plot
+    if not off_screen:
+        plotter.show(jupyter_backend=backend)
+    else:
+        plotter.close()
 
