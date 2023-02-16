@@ -230,11 +230,11 @@ def plot_ap_params(params, time):
     """
     
     # imports
-    from utils import get_ap_params
+    from utils import extract_ap_params
     from neurodsp.plts import plot_time_series
     
     # get ap params
-    offset, knee, exponent = get_ap_params(params)
+    offset, knee, exponent = extract_ap_params(params)
     
     # plot each ap param
     for var, variable in zip([offset, knee, exponent], 
