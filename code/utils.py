@@ -213,7 +213,37 @@ def load_ap_params(fname):
     from fooof import FOOOFGroup
 
     # import specparam results
-    fg = FOOOFGroup()
-    fg.load(fname)
+    params = FOOOFGroup()
+    params.load(fname)
     
-    return extract_ap_params(fg)
+    return extract_ap_params(params)
+
+def generate_ap_spectra(params):
+    """
+    Simulate aperiodic power spectra from FOOOFGroup object.
+
+    Parameters
+    ----------
+    params : FOOOFGroup object
+        FOOOFGroup object containing aperiodic parameters.
+
+    Returns
+    -------
+    spectra: array
+        Aperiodic power spectra.
+
+    """
+    # imports
+    from fooof.sim import gen_power_spectrum
+
+    # init
+    spectra = np.zeros([len(params), len(params.freqs)])
+    
+    # simulate aperiodic spectra for each 
+    for ii in range(len(params)):
+        _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+                                              params[ii].aperiodic_params, [], 
+                                              freq_res=params.freq_res, nlv=0)
+ 
+
+    return spectra
