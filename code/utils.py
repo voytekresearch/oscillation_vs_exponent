@@ -218,7 +218,8 @@ def load_ap_params(fname):
     
     return extract_ap_params(params)
 
-def generate_ap_spectra(params):
+
+def params_to_spectra(params, component='both'):
     """
     Simulate aperiodic power spectra from FOOOFGroup object.
 
@@ -226,6 +227,8 @@ def generate_ap_spectra(params):
     ----------
     params : FOOOFGroup object
         FOOOFGroup object containing aperiodic parameters.
+    component : str
+        Component to simulate ('both', 'aperiodic', or 'peak'). Default is 'both'.
 
     Returns
     -------
@@ -239,11 +242,24 @@ def generate_ap_spectra(params):
     # init
     spectra = np.zeros([len(params), len(params.freqs)])
     
-    # simulate aperiodic spectra for each 
-    for ii in range(len(params)):
-        _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
-                                              params[ii].aperiodic_params, [], 
-                                              freq_res=params.freq_res, nlv=0)
- 
-
+    # simulate aperiodic spectra for each
+    if component == 'both':
+        for ii in range(len(params)):
+            _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+                                                params[ii].aperiodic_params, params[ii].peak_params, 
+                                                freq_res=params.freq_res, nlv=0)
+    elif component == 'periodic':
+        for ii in range(len(params)):
+            _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+                                                params[ii].aperiodic_params, [], 
+                                                freq_res=params.freq_res, nlv=0)
+    # simulate aperiodic spectra for each
+    elif component == 'peak':
+        for ii in range(len(params)):
+            _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+                                                [], params[ii].peak_params, 
+                                                freq_res=params.freq_res, nlv=0)
+    else:
+        raise ValueError('Invalid component specified. Must be "both", "aperiodic", or "peak".')
+    
     return spectra
