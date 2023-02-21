@@ -21,10 +21,14 @@ mpl.rcParams['legend.fontsize'] = 10
 mpl.rcParams['font.size'] = 10
 
 def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
-             norm_type=None, vmin=None, vmax=None):
+             norm_type=None, vmin=None, vmax=None, fig=None, ax=None,
+             cax=None, cbar_label=None):
     """
     Plot time-frequency representation (TFR)
     """
+
+    # imports
+    from matplotlib.cm import ScalarMappable
 
     # Define a color map and normalization of values
     if vmin is None:
@@ -47,8 +51,14 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
     else:
         print("norm_type must be 'linear', 'log', 'centered', or 'two_slope'")
     
-    # plot
-    fig, ax = plt.subplots(constrained_layout=True)
+    # create figure
+    if ax is None:
+        fig, ax = plt.subplots(constrained_layout=True)
+        return_fig = True
+    else:
+        return_fig = False
+
+    # plot tfr
     ax.pcolor(time, freqs, tfr, cmap=cmap, norm=norm)
 
     # set labels and scale
@@ -59,20 +69,29 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
     if not title is None:
         ax.set_title(title)
 
+    # add colorbar
+    if cax is None:
+        cbar = fig.colorbar(ScalarMappable(cmap=cmap, norm=norm), ax=ax)
+    else:
+        cbar = fig.colorbar(ScalarMappable(cmap=cmap, norm=norm), cax=cax)
+    if not cbar_label is None:
+        cbar.set_label(cbar_label)
+
     # save fig
     if not fname_out is None:
         plt.savefig(fname_out)
 
-    # show fig
-    plt.show()
-
-    return fig, ax
+    if return_fig:
+        return fig, ax
+    else:
+        return ax
 
 def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
                        cpos=None, fname_out=None, off_screen=False,
                        elec_size=8, elec_color='r', cmap=None,
                        brain_color='w', brain_opacity=1, 
-                       backgrouond_color='k', backend='static'):
+                       backgrouond_color='k', backend='static',
+                       return_plotter=False):
     """
     Plot data at electrode locations on brain surface. If value is not None, electrodes 
     are plotted as spheres with color determined by 'elec_color.'
@@ -103,6 +122,8 @@ def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
         Background color of plot. The default is 'k'.
     backend : str, optional
         Jupyter backend for plotting. The default is 'static'.
+    return_plotter : bool, optional
+        Whether to return the plotter object. The default is False.
     """
     # imports
     import pyvista as pv
@@ -139,6 +160,10 @@ def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
     # plot
     if not off_screen:
         plotter.show(jupyter_backend=backend)
+
+    # return plotter
+    if return_plotter:
+        return plotter.screenshot()
     else:
         plotter.close()
 
@@ -211,6 +236,43 @@ def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary,
         plotter.show(jupyter_backend=backend)
     else:
         plotter.close()
+
+def find_cpos_interactive():
+    """
+    Plot brain mesh as interactive pyvista plot, then return and print 
+    final camera position.
+    NOTE: must be in base director of Fellner data repository.
+
+    Returns
+    -------
+    cpos : 1x3 array
+        final campera position of interactive pyvista plot
+
+    """
+    # imports
+    import pyvista as pv
+    from scipy.io import loadmat
+
+    # Load brain mesh data
+    fname_in = r"C:\Users\micha\datasets\SpectraltiltvsOscillations\Scripts\additional scripts\surface_pial_both.mat"
+    data_mesh = loadmat(fname_in, variable_names=('mesh'))
+    pos = data_mesh['mesh']['pos'][0][0]
+    tri = data_mesh['mesh']['tri'][0][0] - 1 # matlab index begins at 1
+    
+    # create pyvista object for hemisphere
+    faces = np.hstack((3*np.ones((tri.shape[0],1)),tri))
+    brain = pv.PolyData(pos,faces.astype(int))
+    
+    # create figure and add brain mesh
+    plotter = pv.Plotter()
+    plotter.add_mesh(brain)
+    
+    # show
+    cpos = plotter.show(interactive=True)
+    print(plotter.camera_position)
+    plotter.close()
+    
+    return cpos
 
 
 def plot_ap_params(params, time):
