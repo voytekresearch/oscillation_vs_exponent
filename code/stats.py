@@ -65,6 +65,42 @@ def shuffle_rows(matrix_a, matrix_b, order):
     
     return matrix_as, matrix_bs
 
+def shuffle_arrays(array_a, array_b, order):
+    """
+    Perform resampling by shuffling samples of 2 arrays.
+
+    Parameters
+    ----------
+    array_a, array_b : numpy.ndarray
+        Arrays to shuffle.
+    order : numpy.ndarray
+        Array of shape (n_iterations, length) containing random orders of
+        integers from 0 to length, where n_interations is the number of
+        shuffles and length is the number of rows in eahc matrix.
+
+    Returns
+    -------
+    matriarray_as, array_bs : numpy.ndarray
+        Shuffled arrays.
+    """
+    
+    # concatenate 2 groups 
+    array_ab = np.concatenate([array_a, array_b])
+
+    # initialize arrays
+    n_iter = int(len(order))
+    array_as = np.zeros([n_iter, len(array_a)])
+    array_bs = np.zeros([n_iter, len(array_a)])
+
+    # shuffle samples
+    n_samples = int(len(array_a))
+    for i_iter in range(n_iter):
+        array_shuffled = array_ab[order[i_iter]]
+        array_as[i_iter] = array_shuffled[:n_samples]
+        array_bs[i_iter] = array_shuffled[n_samples:]
+    
+    return array_as, array_bs
+
 def comp_resampling_pval(distribution, value):
     """
     Compute p-value for resampling analysis.
@@ -100,3 +136,23 @@ def comp_resampling_pval(distribution, value):
         sign = 0
         
     return p_value, sign
+
+def run_resampling_analysis(data_a, data_b , n_iter):
+
+    # get random order for trials
+    order = gen_random_order(n_iter, len(data_a)*2)
+
+    # shuffle conditions
+    shuffled_a, shuffled_b = shuffle_arrays(data_a, data_b, order)
+
+    # average shuffled power values over time windows and trials, then compute difference
+    mean_a = np.nanmean(shuffled_a, axis=1)
+    mean_b = np.nanmean(shuffled_b, axis=1)
+    distr = mean_a - mean_b
+
+    # compute p value
+    diff = np.nanmean(data_a) - np.nanmean(data_b)
+    p_val, sign = comp_resampling_pval(distr, diff)
+
+    return p_val, sign
+
