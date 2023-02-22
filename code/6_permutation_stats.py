@@ -34,7 +34,7 @@ N_JOBS = -1 # run in parrallel
 FS = 512 # meg sampling frequency
 TMIN = -1.5 # epoch start time
 PATS = ['pat02','pat04','pat05','pat08','pat10','pat11',
-         'pat15','pat16','pat17','pat19','pat20','pat21','pat22'];
+         'pat15','pat16','pat17','pat19','pat20','pat21','pat22']
 
 # analysis parameters used to generate results
 BANDS = Bands({'alpha' : [8, 20]})
@@ -62,7 +62,7 @@ def main():
         allow_pickle=True)
     
     # loop through materials
-    for material in ['word','face']:
+    for material in ['face','word']:
         # loop through memory conditions
         for memory in ['hit','miss']:
             # display progress
@@ -87,9 +87,16 @@ def main():
 
             # loop through patients
             for patient in PATS:
+                # TEMP - skip files that have already been processed
+                files_completed = os.listdir(dir_output)
+                fname_out = f'stats_{patient}_{material}_{memory}_{AP_MODE}.csv'
+                if fname_out in files_completed:
+                    print(f'Skipping {fname_out} -  already processed')
+                    continue
+
                 # display progress
                 start_time_p = timer()
-                print(f'\nAnalyzing: {patient}, {material}, {memory}' )
+                print(f'\nAnalyzing patient: {patient}' )
 
                 # load subject data (pre/post-stim PSDs)
                 fname = f'{patient}_{material}s_{memory}_xxx_psd.npz'
@@ -113,8 +120,8 @@ def main():
                 dfs.append(df_i)
                 
                 # save results for patient-material-memory
-                fname_out = f'\stats_{patient}_{material}_{memory}_{AP_MODE}'
-                df_i.to_csv(f"{dir_output}/{fname_out}.csv", index=False)
+                fname_out = f'stats_{patient}_{material}_{memory}_{AP_MODE}.csv'
+                df_i.to_csv(f"{dir_output}/{fname_out}", index=False)
 
                 # display progress
                 print(f'Patient complete. Time: {timer() - start_time_p}')
@@ -124,12 +131,12 @@ def main():
     df.to_csv(f"{dir_output}/stats_all.csv", index=False)
 
     # display progress
-    print('---------------------------------------')
+    print('\n---------------------------------------')
     print('Analysis complete!')
     print(f'Total time: {timer() - start_time}')
         
 def resampling_analysis(freq, spectra_pre, spectra_post, exp_diff, alpha_diff, 
-                        ap_mode, bands, n_iterations=1000, n_jobs=1):
+                        ap_mode, bands, n_iterations=1000, n_jobs=-1):
     
     # size up data
     n_trials = spectra_pre.shape[0]
@@ -147,6 +154,8 @@ def resampling_analysis(freq, spectra_pre, spectra_post, exp_diff, alpha_diff,
     for i_chan in range(n_chans):
         # display progress
         start = timer()
+        print(f'    Analyzing channel: {i_chan}/{n_chans}')
+
         
         # shuffle spectra
         order = gen_random_order(n_iterations, int(n_trials*2))
@@ -162,10 +171,16 @@ def resampling_analysis(freq, spectra_pre, spectra_post, exp_diff, alpha_diff,
                                                            exp_diff[i_chan])
         pval_alpha[i_chan], sign_alpha[i_chan] = comp_resampling_pval(distr_alpha[i_chan], 
                                                            alpha_diff[i_chan])
+        
+        # check if all distr_alpha values are NaN
+        if np.isnan(distr_alpha[i_chan]).all():
+            pval_alpha[i_chan] = np.nan
+            sign_alpha[i_chan] = np.nan
+            print('\tall NaN values for alpha power distribution...')
 
         # time it
         end = timer()
-        print('    channel %d / %d: %0.1f seconds' %(i_chan+1, n_chans, end-start))
+        print(f"\tcomplete in: {end-start:0.0f} seconds")
 
     # create dataframe of reults
     df = pd.DataFrame({ 'pval_exp' : pval_exp, 
@@ -190,9 +205,9 @@ def shuffle_spectra(spectra_0, spectra_1, order):
 
     return spectra_0s, spectra_1s
 
-def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=1):
+def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=-1):
     # initialize model
-    sp_0 = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=AP_MODE, verbose=False)
+    sp_0 = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
     sp_0.set_check_data_mode(False)
     sp_1 = sp_0.copy()
 
