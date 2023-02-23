@@ -21,10 +21,44 @@ mpl.rcParams['legend.fontsize'] = 10
 mpl.rcParams['font.size'] = 10
 
 def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
-             norm_type=None, vmin=None, vmax=None, fig=None, ax=None,
+             norm_type='log', vmin=None, vmax=None, fig=None, ax=None,
              cax=None, cbar_label=None):
     """
     Plot time-frequency representation (TFR)
+
+    Parameters
+    ----------
+    time : 1D array
+        Time vector.
+    freqs : 1D array
+        Frequency vector.
+    tfr : 2D array
+        Time-frequency representation of power (spectrogram).
+    fname_out : str, optional
+        File name to save figure. The default is None.
+    title : str, optional
+        Title of plot. The default is None.
+    norm_type : str, optional
+        Type of normalization for color scale. Options are 'linear', 'log',
+        'centered', and 'two_slope'. The default is 'log'.
+    vmin, vmax : float, optional
+        Minimum/maximum value for color scale. The default is None, which
+        sets the min/max to the min/max of the TFR.
+    fig : matplotlib figure, optional
+        Figure to plot on. The default is None, which creates a new figure.
+    ax : matplotlib axis, optional
+        Axis to plot on. The default is None, which creates a new axis.
+    cax : matplotlib axis, optional
+        Axis to plot colorbar on. The default is None.
+    cbar_label : str, optional
+        Label for colorbar. The default is None.
+
+    Returns
+    -------
+    fig : matplotlib figure
+        Figure with plot.
+    ax : matplotlib axis
+        Axis with plot.
     """
 
     # imports

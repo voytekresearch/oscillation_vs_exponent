@@ -63,24 +63,27 @@ def main():
         
 
 def comp_intersection_from_params(param_pre, param_post):
-    """ Calculate intersection of pre and post stim psd
+    """ 
+    Calculate intersection of pre and post stim psd
 
     Parameters
     ----------
     param_pre : FOOOFGroup
-        
+        FOOOFGroup object containing pre-stimulus parameters
     param_post : FOOOFGroup
-        
+        FOOOFGroup object containing post-stimulus parameters        
 
     Returns
     -------
+    psd_pre : 1d array
+        pre-stimulus spectra
+    psd_post : 1d array
+        post-stimulus spectra
     intersection : 1d array
         intersection frequency
     intersection_idx : 1d array
-        index on intersection frequency
+        index of intersection frequency
 
-    Notes
-    -----
     """
     
     # count channels
@@ -134,6 +137,32 @@ def comp_intersection_from_params(param_pre, param_post):
     return psd_pre, psd_post, intersection, intersection_idx
 
 def rotate_psd(f_rotation, freqs, psd_0, psd_1, delta_exp):
+    """
+    Rotate power spectrum and compute the difference betweeen the rotated spectrum and a 
+    second spectrum. This function is used to minimize the difference between the rotated
+    and second spectrum. Spectra are log-transformed before teh difference is computed.
+    The error between the two spectra is squared.
+
+    Parameters
+    ----------
+    f_rotation : float
+        frequency at which to rotate the power spectrum
+    freqs : 1d array
+        frequency vector
+    psd_0 : 1d array
+        power spectrum to rotate
+    psd_1 : 1d array
+        power spectrum to compare rotated spectrum to
+    delta_exp : float
+        degree of rotation (change in exponent)
+
+    Returns
+    -------
+    diff : float
+        difference between rotated and second spectrum (squared error)
+
+    """
+
     # rotate
     psd_rot = rotate_powerlaw(freqs, psd_0, delta_exponent=delta_exp, f_rotation=f_rotation)
     

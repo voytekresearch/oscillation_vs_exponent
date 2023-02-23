@@ -138,6 +138,25 @@ def comp_resampling_pval(distribution, value):
     return p_value, sign
 
 def run_resampling_analysis(data_a, data_b , n_iter):
+    """
+    Run resampling analysis.
+
+    Parameters
+    ----------
+    data_a, data_b : numpy.ndarray
+        Data to compare.
+    n_iter : int
+        Number of iterations/shuffles.
+
+    Returns
+    -------
+    p_val : float
+        P-value for resampling analysis.
+    sign : int
+        Sign of effect (1   :   positive (a<b), 
+                        -1  :   negative (a>b), 
+                        0   :   no difference (a=b)).
+    """
 
     # get random order for trials
     order = gen_random_order(n_iter, len(data_a)*2)
