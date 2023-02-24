@@ -121,11 +121,12 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         return ax
 
 def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
+                       x_offset=None, y_offset=None, z_offset=None,
                        cpos=None, fname_out=None, off_screen=False,
                        elec_size=8, elec_color='r', cmap=None,
                        brain_color='w', brain_opacity=1, 
                        backgrouond_color='k', backend='static',
-                       return_plotter=False):
+                       return_plotter=False, divide_hemispheres=False):
     """
     Plot data at electrode locations on brain surface. If value is not None, electrodes 
     are plotted as spheres with color determined by 'elec_color.'
@@ -140,6 +141,9 @@ def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
         Electrode positions.
     value : numpy array, optional
         Values to plot at electrodes. The default is None.
+    x_offset, y_offset, z_offset : float, optional
+        Offset for electrode positions to avoid overlap with brain surface. 
+        The default is None.
     cpos : list, optional
         Camera position (Pyvista). The default is None.
     fname_out : str, optional
@@ -158,10 +162,20 @@ def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
         Jupyter backend for plotting. The default is 'static'.
     return_plotter : bool, optional
         Whether to return the plotter object. The default is False.
+    divide_hemispheres : bool, optional
+        Whether to divide hemispheres with a plane. The default is False.
     """
     # imports
     import pyvista as pv
     
+    # shift electrode positions to avoid overlap with brain surface
+    if not x_offset is None:
+        elec_pos[:, 0] = elec_pos[:, 0] + x_offset
+    if not y_offset is None:
+        elec_pos[:, 1] = elec_pos[:, 1] + y_offset
+    if not z_offset is None:
+        elec_pos[:, 2] = elec_pos[:, 2] + z_offset
+
     # create pyvista object for brain
     faces = np.hstack((3*np.ones((brain_tri.shape[0],1)), brain_tri))
     brain_mesh = pv.PolyData(brain_pos, faces.astype(int))
@@ -183,6 +197,15 @@ def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
         print('plotting electrodes')
         plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, scalars=value, \
                         cmap=cmap, render_points_as_spheres=True)  
+        
+    # add plane to divide hemisphers
+    if divide_hemispheres:
+        l = 400
+        verts = np.array([[0,l,l], [0,l,-l], [0,-l,-l], [0,-l,l]])
+        faces = np.array([4,0,1,2,3])
+        divider = pv.PolyData(verts, faces)
+        plotter.add_mesh(divider, color='k')
+
     # set camera position
     if cpos is not None:
         plotter.camera_position = cpos
@@ -203,10 +226,12 @@ def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
 
         
 def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary, 
+                        x_offset=None, y_offset=None, z_offset=None,
                         cpos=None, fname_out=None, off_screen=False,
                         elec_size=8, elec_colors=['r','grey'], 
                         brain_color='w', brain_opacity=1, 
-                        backgrouond_color='k', backend='static'):
+                        backgrouond_color='k', backend='static',
+                        divide_hemispheres=False):
     """
     Plot binary data at electrode locations on brain surface. 
 
@@ -220,6 +245,9 @@ def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary,
         Electrode positions.
     binary : numpy array of bool
         Binary values to plot at electrodes. (True = elec_color[0], False = elec_color[1])
+    x_offset, y_offset, z_offset : float, optional
+        Offset for electrode positions to avoid overlap with brain surface. 
+        The default is None.
     cpos : list, optional
         Camera position (Pyvista). The default is None.
     fname_out : str, optional
@@ -236,10 +264,20 @@ def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary,
         Background color of plot. The default is 'k'.
     backend : str, optional
         Jupyter backend for plotting. The default is 'static'.
+    divide_hemispheres : bool, optional
+        Whether to divide hemispheres with a plane. The default is False.
     """
     # imports
     import pyvista as pv
     
+    # shift electrode positions to avoid overlap with brain surface
+    if not x_offset is None:
+        elec_pos[:, 0] = elec_pos[:, 0] + x_offset
+    if not y_offset is None:
+        elec_pos[:, 1] = elec_pos[:, 1] + y_offset
+    if not z_offset is None:
+        elec_pos[:, 2] = elec_pos[:, 2] + z_offset
+
     # create pyvista object for brain
     faces = np.hstack((3*np.ones((brain_tri.shape[0],1)), brain_tri))
     brain_mesh = pv.PolyData(brain_pos, faces.astype(int))
@@ -257,6 +295,14 @@ def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary,
     plotter.add_mesh(chans_ns, point_size=elec_size, color=elec_colors[1], \
                     render_points_as_spheres=True)
     
+    # add plane to divide hemisphers
+    if divide_hemispheres:
+        l = 400
+        verts = np.array([[0,l,l], [0,l,-l], [0,-l,-l], [0,-l,l]])
+        faces = np.array([4,0,1,2,3])
+        divider = pv.PolyData(verts, faces)
+        plotter.add_mesh(divider, color='k')
+
     # set camera position
     if cpos is not None:
         plotter.camera_position = cpos
