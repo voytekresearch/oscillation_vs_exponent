@@ -76,12 +76,20 @@ def main():
                 df['material'] = material
                 df['memory'] = memory
 
-                # trim in alpha band
+                # initialize arrays for alpha band power
                 alpha_pre = np.zeros([n_chans, n_trials])
                 alpha_post = np.zeros([n_chans, n_trials])
+
                 # loop through channels
                 for i_chan in range(n_chans):
-                    # trim
+                    # check if data is missing (contains all NaN)
+                    if np.isnan(data_pre['psd'][:,i_chan]).all() or np.isnan(data_post['psd'][:,i_chan]).all():
+                        # save results and continue to next channel
+                        df.loc[i_chan, 'p_val'] = np.nan
+                        df.loc[i_chan, 'sign'] = np.nan
+                        continue
+
+                    # trim in alpha band
                     _, alpha_band_pre = trim_spectrum(data_pre['freq'], data_pre['psd'][:,i_chan], f_range=ALPHA_BAND)
                     _, alpha_band_post = trim_spectrum(data_post['freq'], data_post['psd'][:,i_chan], f_range=ALPHA_BAND)
                     alpha_pre[i_chan] = np.nanmean(alpha_band_pre, axis=1)
