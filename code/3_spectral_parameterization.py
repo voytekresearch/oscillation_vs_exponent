@@ -18,6 +18,7 @@ PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 # Imports
 import os
 import numpy as np
+import pandas as pd
 from fooof import FOOOFGroup
 from fooof.utils.data import interpolate_spectrum
 from time import time as timer
@@ -51,7 +52,7 @@ def main():
         print('\nParameterizing TFRs...')
         parameterize_tfr()
         # param_group_tfr_results()
-    
+
 def param_group_psd_results():
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_spectral_results"
@@ -192,9 +193,8 @@ def param_group_tfr_results():
 #             fname_out = fname.replace('.npz','_param_%s' %ap_mode)
 #             fg.save(f"{dir_output}/{fname_out}", save_results=True, 
 #                     save_settings=True)
-#             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
-     
-                
+#             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")   
+
 def parameterize_tfr():
     # time it
     t_start = timer()
@@ -204,13 +204,18 @@ def parameterize_tfr():
     dir_output = f"{PROJECT_PATH}/data/ieeg_tfr_param"
     if not os.path.exists(f"{dir_output}/fooof_reports"): 
         os.makedirs(f"{dir_output}/fooof_reports")
+
+    # load alpha/beta bandpower modulation results (resampling ananlysis)
+    results = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv")
+    df = results[results['sig']==1]
     
-    # load each file
-    for fname in os.listdir(dir_input):
-        # use multitaper decomposition 
-        fparts = fname.split('_')
-        if not fparts[-1] == f'{TFR_METHOD}.npz': continue
-        
+    # loop through significant channels
+    for i_chan in range(len(df)):
+        # Check for TFR results
+        fname = f"{df.loc[i_chan, 'patient']}_{df.loc[i_chan, 'material']}_" + \
+                    f"{df.loc[i_chan, 'memory']}_chan{df.loc[i_chan, 'chan_idx']}_" + \
+                    f"tfr_{TFR_METHOD}.npz"
+
         # display progress
         print(f"    Analyzing: {fname}")
         t_start_c = timer()
@@ -246,9 +251,7 @@ def parameterize_tfr():
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
     print(f"Total TFR analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
-
-        
-        
+       
 def downsample_tfr(tfr, n=2**7):
     # downsample tfr in time dimension
     # n: number of samples after downsampling
