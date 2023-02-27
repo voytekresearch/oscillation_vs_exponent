@@ -33,6 +33,7 @@ PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11',
 # anlysis parameters
 ALPHA_BAND = [8, 20] # alpha/beta frequnecy range
 N_ITER = 10000 # random permutation iterations/shuffles
+ALPHA = 0.05 # significance level
 
 def main():
    # time it
@@ -111,10 +112,19 @@ def main():
                 print(f"    file complete in {hour} hour, {min} min, and {sec :0.1f} s")
 
     # concatenate results
-    df = pd.concat(dfs)
+    results = pd.concat(dfs, ignore_index=True)
+
+    # find channels that are task modulated in both material conditions (successful trials)
+    results['sig_tm'] = results['p_val'] < ALPHA # determine significance within condition
+    sig = results[results['memory']=='hit'].groupby(['patient','chan_idx']).all().reset_index() # find sig chans
+    results['sig'] = np.nan # init
+    for ii in range(len(sig)):
+        results.loc[(results['patient']==sig.loc[ii, 'patient']) & \
+                    (results['chan_idx']==sig.loc[ii, 'chan_idx']), 'sig'] \
+                        = sig.loc[ii, 'sig_tm'] # add results to df
 
     # save results
-    df.to_csv(f"{dir_output}/ieeg_modulated_channels.csv")
+    results.to_csv(f"{dir_output}/ieeg_modulated_channels.csv")
 
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
