@@ -23,10 +23,14 @@ from fooof import FOOOFGroup
 from fooof.utils.data import interpolate_spectrum
 from time import time as timer
 
+# Imports - custom
+from utils import downsample_tfr, hour_min_sec
+
 # Settings
 LINE_NOISE_RANGE = [45,55] # freq range to interpolate
 RUN_TFR = True # run TFR parameterization
 TFR_METHOD = 'multitaper' # method used in ieeg_2_time_frequency_analysis.py
+N_SAMPLES = 2**7 # number of time samples after downsampling
 
 # SpecParam hyperparameters
 N_JOBS = -1 # number of jobs for parallel processing
@@ -45,7 +49,7 @@ def main():
     # parameterize PSDs
     print('\nParameterizing PSDs...')
     # parameterize_psd()
-    param_group_psd_results()
+    # param_group_psd_results()
 
     # parameterize TFRs
     if RUN_TFR:
@@ -229,7 +233,7 @@ def parameterize_tfr():
         tfr_mean = np.squeeze(np.mean(tfr_in, axis=0))
         
         # downsample tfr
-        tfr = downsample_tfr(tfr_mean)
+        tfr, _ = downsample_tfr(tfr_mean, data_in['time'], N_SAMPLES)
         
         # parameterize
         for ap_mode in ['knee']: # ['fixed', 'knee']:
@@ -251,26 +255,6 @@ def parameterize_tfr():
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
     print(f"Total TFR analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
-       
-def downsample_tfr(tfr, n=2**7):
-    # downsample tfr in time dimension
-    # n: number of samples after downsampling
-    
-    if np.ndim(tfr) == 2:
-        step = int(np.floor(tfr.shape[1] / n))
-        tfr_ds = tfr[:, np.arange(1, tfr.shape[1], step)]
-    elif np.ndim(tfr) == 3:
-        step = int(np.floor(tfr.shape[1] / n))
-        tfr_ds = tfr[:, np.arange(1, tfr.shape[1], step), :]
-    
-    return tfr_ds
-
-def hour_min_sec(duration):
-    hours = int(np.floor(duration / 3600))
-    mins = int(np.floor(duration%3600 / 60))
-    secs = duration % 60
-    
-    return hours, mins, secs
      
         
 if __name__ == "__main__":
