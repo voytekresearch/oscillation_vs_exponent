@@ -211,7 +211,7 @@ def parameterize_tfr():
 
     # load alpha/beta bandpower modulation results (resampling ananlysis)
     results = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv")
-    df = results[results['sig']==1]
+    df = results[results['sig']==1].reset_index(drop=True)
     
     # loop through significant channels
     for i_chan in range(len(df)):
