@@ -236,7 +236,7 @@ def parameterize_tfr():
             # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
-            fg.fit(freq, tfr, n_jobs=N_JOBS)
+            fg.fit(freq, tfr.T, n_jobs=N_JOBS)
             
             # save results and report
             fname_out = fname.replace('.npz','_param_%s' %ap_mode)
