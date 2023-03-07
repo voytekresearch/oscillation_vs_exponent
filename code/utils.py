@@ -322,3 +322,48 @@ def params_to_df(params, max_peaks):
     
     return df
 
+def adjust_r_squared(r_squared, n_params, n_samples):
+    """
+    Compute adjusted r-squared.
+    
+    Parameters
+    ----------
+    r_squared : float
+        R-squared value.
+    n_params : int
+        Number of parameters in model.
+    n_data : int
+        Number of data points in model.
+        
+    Returns
+    -------
+    adjusted_r_squared : float
+        Adjusted r-squared value.
+    """
+    
+    adjusted_r_squared = 1 - ((1 - r_squared) * (n_samples - 1)) / (n_samples - n_params - 1)
+
+    return adjusted_r_squared
+
+def compute_adj_r2(params):
+    """Calculate the adjusted r-squared for an existing FOOOF model.
+    
+    Parameters
+    ----------
+    params : FOOOF object
+        FOOOF object that has been fit to data.
+
+    Returns
+    -------
+    adj_r2 : float
+        Adjusted r-squared value.
+    """
+    
+    # compute adjusted r-squared
+    # n_samples = len(params.power_spectrum) # number of data points
+    n_samples = len(params.freqs) # number of data points
+    n_params = len(params.peak_params_) * 3 + 2 # number of parameters
+    r_squared = params.get_params('r_squared')
+    adj_r2 = adjust_r_squared(r_squared, n_params, n_samples)
+
+    return adj_r2
