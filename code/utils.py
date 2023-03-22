@@ -248,7 +248,7 @@ def params_to_spectra(params, component='both'):
             _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
                                                 params[ii].aperiodic_params, params[ii].peak_params, 
                                                 freq_res=params.freq_res, nlv=0)
-    elif component == 'periodic':
+    elif component == 'aperiodic':
         for ii in range(len(params)):
             _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
                                                 params[ii].aperiodic_params, [], 
