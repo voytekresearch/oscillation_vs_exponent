@@ -6,6 +6,7 @@ Utility functions for TFR analysis
 # Imports
 import numpy as np
 
+
 def zscore_tfr(tfr):
     """
     Normalize time-frequency representation (TFR) by z-scoring each frequency.
@@ -119,3 +120,51 @@ def downsample_tfr(tfr, time, n):
     time = time[np.arange(0, n_samples-1, step)] 
     
     return tfr, time
+
+
+def preprocess_tfr(tfr, time, downsample_n=None, edge=None, average_trials=True, z_score=True, t_baseline=None):
+
+    # downsample
+    if not downsample_n is None:
+        tfr, time = downsample_tfr(tfr, time, downsample_n)
+
+    # crop edge effects
+    if not edge is None:
+        tfr, time = crop_tfr(tfr, time, [time[0]+edge/2,time[-1]-edge/2])
+
+    # average spectrogram over trials
+    if average_trials:
+        tfr = np.median(tfr, axis=0)
+
+    # normalize (zscore)
+    if z_score:
+        tfr = zscore_tfr(tfr)
+
+    # subtract basline
+    if not t_baseline is None:
+        tfr = subtract_baseline(tfr, time, t_baseline)
+
+    return tfr, time
+
+
+def load_tfr_results(fname, preprocess=True, downsample_n=None, edge=None, average_trials=True, z_score=True, t_baseline=None):
+    # load data
+    data_in = np.load(fname)
+
+    # unpack
+    tfr = np.squeeze(data_in['tfr']) # remove extra dim (previously channels dim)
+    time = data_in['time']
+    freq = data_in['freq']
+
+    # set default basline time
+    if t_baseline == 'default':
+        t_baseline=[time[0],0]
+
+    # pre-process
+    if preprocess:
+        tfr, time = preprocess_tfr(tfr, time, downsample_n=downsample_n, edge=edge, 
+                                   average_trials=average_trials, z_score=z_score,
+                                   t_baseline=t_baseline)
+        
+    return time, freq, tfr
+
