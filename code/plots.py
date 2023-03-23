@@ -22,7 +22,7 @@ mpl.rcParams['font.size'] = 10
 
 def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
              norm_type='log', vmin=None, vmax=None, fig=None, ax=None,
-             cax=None, cbar_label=None):
+             cax=None, cbar_label=None, annotate_zero=False):
     """
     Plot time-frequency representation (TFR)
 
@@ -114,6 +114,10 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         cbar = fig.colorbar(ScalarMappable(cmap=cmap, norm=norm), cax=cax)
     if not cbar_label is None:
         cbar.set_label(cbar_label)
+
+    # annotate zero
+    if annotate_zero:
+        ax.axvline(0, color='k', linestyle='--', linewidth=3)
 
     # save fig
     if not fname_out is None:
