@@ -103,6 +103,10 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
     if not title is None:
         ax.set_title(title)
 
+    # label axes
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Frequency (Hz)')
+
     # add colorbar
     if cax is None:
         cbar = fig.colorbar(ScalarMappable(cmap=cmap, norm=norm), ax=ax)
