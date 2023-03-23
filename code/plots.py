@@ -398,7 +398,8 @@ def plot_ap_params(params, time):
 
 
 def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
-                             color=['grey','k'], labels=['baseline','encoding']):
+                             color=['grey','k'], labels=['baseline','encoding'],
+                             y_units='\u03BCV\u00b2/Hz'):
     
     """
     Plot mean spectra for two conditions, with optional shading of SEM.
@@ -454,6 +455,12 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
     # set to loglog scale
     ax.set_xscale('log')
     ax.set_yscale('log')
+
+    # set axes ticks and labels
+    ax.set_ylabel(f'power ({y_units})')
+    ax.set_xlabel('frequency (Hz)')
+    ax.set_xticks([10,100])
+    ax.set_xticklabels(["10", "100"])
 
     # add legend
     ax.legend(labels)
