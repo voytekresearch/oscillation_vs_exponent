@@ -387,3 +387,71 @@ def plot_ap_params(params, time):
         
         # plot
         plot_time_series(time, var, title=variable)
+
+
+def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
+                             color=['grey','k'], labels=['baseline','encoding']):
+    
+    """
+    Plot mean spectra for two conditions, with optional shading of SEM.
+
+    Parameters
+    ----------
+    psd_pre : 2d array
+        PSD values for baseline condition.
+    psd_post : 2d array
+        PSD values for encoding condition.
+    freq : 1d array
+        Frequency values corresponding to PSD values.
+    ax : matplotlib axis, optional
+        Axis to plot on. The default is None.
+    shade_sem : bool, optional
+        Whether to shade SEM. The default is True.
+    color : list, optional
+        Colors for each condition. The default is ['grey','k'].
+    labels : list, optional
+        Labels for each condition. The default is ['baseline','encoding'].
+
+    Returns
+    -------
+    fig, ax : matplotlib figure and axis
+        Figure and axis of plot.
+    """
+
+    # imports
+    from fooof.plts import plot_spectrum
+
+    # check axis
+    if ax is None:
+        fig, ax = plt.subplots(1,1, figsize=[6,4])
+        return_fig = True
+
+    # check psds are 2d
+    if not (psd_pre.ndim == 2 and psd_post.ndim == 2):
+        raise ValueError('PSDs must be 2d arrays.')
+
+    # plot mean spectra for each condition
+    plot_spectrum(freq, np.mean(psd_pre, axis=0), ax=ax, color=color[0])
+    plot_spectrum(freq, np.mean(psd_post, axis=0), ax=ax, color=color[1])    
+    
+    # shade between SEM of spectra for each condition
+    if shade_sem:
+        ax.fill_between(freq, np.mean(psd_pre, axis=0) - (np.std(psd_pre, axis=0)/np.sqrt(psd_pre.shape[0])),
+                        np.mean(psd_pre, axis=0) + (np.std(psd_pre, axis=0)/np.sqrt(psd_pre.shape[0])), 
+                        color=color[0], alpha=0.5)
+        ax.fill_between(freq, np.mean(psd_post, axis=0) - (np.std(psd_post, axis=0)/np.sqrt(psd_post.shape[0])),
+                        np.mean(psd_post, axis=0) + (np.std(psd_post, axis=0)/np.sqrt(psd_post.shape[0])),
+                        color=color[1], alpha=0.5)
+    
+    # set to loglog scale
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    # add legend
+    ax.legend(labels)
+    
+    # return
+    if return_fig:
+        return fig, ax
+    else:
+        return ax
