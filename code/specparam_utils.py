@@ -128,6 +128,46 @@ def params_to_spectra(params, component='both'):
     
     return spectra
 
+def params_to_spectrum(params, component='both'):
+    """
+    Simulate aperiodic power spectra from FOOOFGroup object.
+
+    Parameters
+    ----------
+    params : FOOOF object
+        FOOOF object containing aperiodic parameters.
+    component : str
+        Component to simulate ('both', 'aperiodic', or 'peak'). Default is 'both'.
+
+    Returns
+    -------
+    spectra: array
+        Aperiodic power spectra.
+
+    """
+    # imports
+    from fooof.sim import gen_power_spectrum
+
+    # simulate aperiodic spectra for each
+    if component == 'both':
+        _, spectrum = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+                                            params.get_params('aperiodic'),
+                                            params.get_params('peak'),
+                                            freq_res=params.freq_res, nlv=0)
+    elif component == 'aperiodic':
+        _, spectrum = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+                                            params.get_params('aperiodic'), [], 
+                                            freq_res=params.freq_res, nlv=0)
+    # simulate aperiodic spectra for each
+    elif component == 'peak':
+        _, spectrum = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+                                            [], params.get_params('peak'), 
+                                            freq_res=params.freq_res, nlv=0)
+    else:
+        raise ValueError('Invalid component specified. Must be "both", "aperiodic", or "peak".')
+    
+    return spectrum
+
 
 def params_to_df(params, max_peaks):
     """
