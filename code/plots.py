@@ -372,7 +372,7 @@ def plot_ap_params(params, time):
     """
     
     # imports
-    from utils import extract_ap_params
+    from specparam_utils import extract_ap_params
     from neurodsp.plts import plot_time_series
     
     # get ap params

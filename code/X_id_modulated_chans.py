@@ -19,8 +19,6 @@ from time import ctime as time_now
 from fooof.utils import trim_spectrum
 
 # Imports - custom
-import sys
-sys.path.append(f"{PROJECT_PATH}/code")
 from stats import run_resampling_analysis
 from utils import hour_min_sec
 

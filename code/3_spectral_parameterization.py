@@ -24,7 +24,8 @@ from fooof.utils.data import interpolate_spectrum
 from time import time as timer
 
 # Imports - custom
-from utils import downsample_tfr, hour_min_sec
+from utils import hour_min_sec
+from tfr_utils import downsample_tfr
 
 # Settings
 LINE_NOISE_RANGE = [45,55] # freq range to interpolate

@@ -20,7 +20,7 @@ from fooof.analysis import get_band_peak_fg
 from fooof.utils import trim_spectrum
 
 # Imports - custom
-from utils import load_ap_params, params_to_spectra
+from specparam_utils import load_ap_params, params_to_spectra
 
 # Parameters - dataset details
 FS = 512 # sampling frequency
