@@ -50,7 +50,7 @@ def main():
     # parameterize PSDs
     print('\nParameterizing PSDs...')
     # parameterize_psd()
-    # param_group_psd_results()
+    param_group_psd_results()
 
     # parameterize TFRs
     if RUN_TFR:
@@ -101,7 +101,7 @@ def param_group_psd_results():
             # save results 
             fname_out = '%s_params_%s' %(cond, ap_mode)
             fg.save(f"{dir_output}/{fname_out}", save_results=True, 
-                    save_settings=True)
+                    save_settings=True, save_data=True)
             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
 
         # display progress
@@ -150,7 +150,7 @@ def param_group_tfr_results():
             # save results and report
             fname_out = 'tfr_%s_params_%s' %(cond, ap_mode)
             fg.save(f"{dir_output}/{fname_out}", save_results=True, 
-                    save_settings=True)
+                    save_settings=True, save_data=True)
             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
 
         # display progress
