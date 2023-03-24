@@ -399,3 +399,43 @@ def save_report_fm(fm, file_name, file_path=None, plot_peaks=None, plot_aperiodi
         plt.show()
     else:
         plt.close()
+
+def print_report_from_group(params, i_model, fname_out, show_fig=False):
+    """
+    Generate and save out a PDF report for a power spectrum model fit within a
+    FOOOFGroup object.
+
+    Parameters
+    ----------
+    params : FOOOFGroup
+        Object with results from fitting a group of power spectra.
+    i_model : int
+        Index of the model for which to generate a report.
+    fname_out : str
+        Name to give the saved out file.
+    show_fig : bool, optional, default: False
+        Whether to show the plot. If False, the plot is closed after saving.
+    
+    """
+    # imports
+    from fooof import FOOOF
+    from fooof.sim.gen import gen_aperiodic, gen_periodic
+
+    # create fooof object and add settings
+    fm = FOOOF()
+    fm.add_settings(params.get_settings())
+
+    # Copy results for model of interest and additional data needed for plotting
+    fm.add_results(params[i_model])
+    fm.power_spectrum = params.power_spectra[i_model]
+    fm.freq_range = params.freq_range
+    fm.freq_res = params.freq_res
+    fm.freqs = params.freqs
+
+    # generate and perioidc/aperiodic fits from parameters
+    fm._ap_fit = gen_aperiodic(params.freqs, params[i_model].aperiodic_params)
+    fm._peak_fit = gen_periodic(params.freqs, np.ndarray.flatten(params[i_model].gaussian_params))
+    fm.fooofed_spectrum_ = fm._ap_fit + fm._peak_fit
+
+    # save report
+    save_report_fm(fm, fname_out, plt_log=True, show_fig=show_fig)
