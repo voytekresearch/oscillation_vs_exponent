@@ -326,3 +326,76 @@ def comp_intersection(param_pre, param_post):
         
     return psd_pre, psd_post, intersection, intersection_idx
 
+def save_report_fm(fm, file_name, file_path=None, plot_peaks=None, plot_aperiodic=True, plt_log=True, 
+                    add_legend=True, data_kwargs=None, model_kwargs=None, aperiodic_kwargs=None, 
+                    peak_kwargs=None, show_fig=False):
+    """ Modified from FOOOF.core.reports.save_report_fm
+    Generate and save out a PDF report for a power spectrum model fit.
+
+    Parameters
+    ----------
+    fm : FOOOF
+        Object containing a power spectrum and (optionally) results from fitting.    
+    file_name : str
+        Name to give the saved out file.    
+    file_path : str, optional
+        Path to directory to save to. If None, saves to current directory.    
+    plot_peaks : None or {'shade', 'dot', 'outline', 'line'}, optional
+        What kind of approach to take to plot peaks. If None, peaks are not specifically plotted.
+        Can also be a combination of approaches, separated by '-', for example: 'shade-line'.
+    plot_aperiodic : boolean, optional, default: True
+        Whether to plot the aperiodic component of the model fit.
+    plt_log : boolean, optional, default: True
+        Whether to plot the frequency values in log10 spacing.
+    add_legend : boolean, optional, default: False
+        Whether to add a legend describing the plot components.
+    data_kwargs, model_kwargs, aperiodic_kwargs, peak_kwargs : None or dict, optional
+        Keyword arguments to pass into the plot call for each plot element.
+    show_fig : bool, optional, default: False
+        Whether to show the plot. If False, the plot is closed after saving.
+    """
+    # imports 
+    import matplotlib.pyplot as plt
+    from matplotlib import gridspec
+    from fooof.core.strings import gen_settings_str, gen_results_fm_str
+    from fooof.core.io import fname, fpath
+
+    # settings
+    REPORT_FIGSIZE = (16, 20)
+    REPORT_FONT = {'family': 'monospace',
+                'weight': 'normal',
+                'size': 16}
+    SAVE_FORMAT = 'pdf'
+
+    # Set up outline figure, using gridspec
+    _ = plt.figure(figsize=REPORT_FIGSIZE)
+    grid = gridspec.GridSpec(3, 1, height_ratios=[0.45, 1.0, 0.25])
+
+    # First - text results
+    ax0 = plt.subplot(grid[0])
+    results_str = gen_results_fm_str(fm)
+    ax0.text(0.5, 0.7, results_str, REPORT_FONT, ha='center', va='center')
+    ax0.set_frame_on(False)
+    ax0.set_xticks([])
+    ax0.set_yticks([])
+
+    # Second - data plot
+    ax1 = plt.subplot(grid[1])
+    fm.plot(plot_peaks=plot_peaks, plot_aperiodic=plot_aperiodic, plt_log=plt_log, add_legend=add_legend,
+            ax=ax1, data_kwargs=data_kwargs, model_kwargs=model_kwargs, aperiodic_kwargs=aperiodic_kwargs, 
+            peak_kwargs=peak_kwargs)
+
+    # Third - FOOOF settings
+    ax2 = plt.subplot(grid[2])
+    settings_str = gen_settings_str(fm, False)
+    ax2.text(0.5, 0.1, settings_str, REPORT_FONT, ha='center', va='center')
+    ax2.set_frame_on(False)
+    ax2.set_xticks([])
+    ax2.set_yticks([])
+
+    # Save out the report (and optionally show)
+    plt.savefig(fpath(file_path, fname(file_name, SAVE_FORMAT)))
+    if show_fig:
+        plt.show()
+    else:
+        plt.close()
