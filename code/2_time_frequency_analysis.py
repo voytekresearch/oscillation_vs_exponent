@@ -29,8 +29,8 @@ PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
             'pat17','pat19','pat20','pat21','pat22']
 
 # parameters for psd analysis
-BANDWIDTH = 2 # multitaper bandwidth
-FREQ_RANGE = [2, 100] 
+N_JOBS = -1 # number of jobs to run in parallel (-1 = use all available cores)
+BANDWIDTH = 2 # multitaper bandwidth - frequencies at ± half-bandwidth are smoothed together
 TIME_RANGE = np.array([[-1.0, 1.0],    # epoch
                        [-1.0, 0.0],    # pre-stim
                        [0.0, 1.0]])    # post-stim
@@ -41,7 +41,6 @@ TIME_RANGE_LABELS = np.array(['epoch',
 # parameters for tfr analysis
 RUN_TFR = True # set to False to skip tfr analysis
 TFR_METHOD = ['multitaper']
-
 
 def main():
     # identify / create directories
@@ -56,7 +55,7 @@ def main():
     # for each fif file
     for fname in listdir(dir_input):
         # display progress
-        print('\n__________Analyzing: %s ____________________\n' %fname)
+        print(f"\nAnalyzing: {fname}")
         
         # load eeg data
         epochs = read_epochs(join(dir_input, fname), verbose=False)
@@ -86,13 +85,9 @@ def comp_psd(epochs, fname, dir_output):
     for label, time_range in zip(TIME_RANGE_LABELS, TIME_RANGE):
         
         # calculate PSD
-        psd, freq = psd_multitaper(epochs,
-                                        fmin = FREQ_RANGE[0], 
-                                        fmax = FREQ_RANGE[1],
-                                        tmin = time_range[0], 
-                                        tmax = time_range[1],
-                                        bandwidth = BANDWIDTH,
-                                        verbose=False)
+        psd, freq = psd_multitaper(epochs, tmin=time_range[0], tmax=time_range[1],
+                                    bandwidth=BANDWIDTH, n_jobs=N_JOBS, 
+                                    verbose=False)
         
         # save power results
         fname_out = str.replace(fname, '_epo.fif', '_%s_psd' %(label))
@@ -174,7 +169,8 @@ def compute_tfr(epochs, method='multitaper', average_trials=False):
         tfr = tfr_multitaper(epochs, freqs=freq, n_cycles=n_cycles, 
                              time_bandwidth=time_bandwidth,
                              use_fft=True, return_itc=False, 
-                             average=average_trials, verbose=False)
+                             average=average_trials, verbose=False,
+                             n_jobs=N_JOBS)
     
     elif (method=='morlet'):
         # set paramters for TF decomposition
@@ -184,7 +180,8 @@ def compute_tfr(epochs, method='multitaper', average_trials=False):
         # TF decomposition using morlet wavelets
         tfr = tfr_morlet(epochs, freqs=freq, n_cycles=n_cycles, 
                              use_fft=True, return_itc=False, 
-                             average=average_trials, verbose=False)
+                             average=average_trials, verbose=False,
+                             n_jobs=N_JOBS)
 
     elif method=='morlet_adpt':
         # set paramters for TF decomposition
@@ -194,7 +191,8 @@ def compute_tfr(epochs, method='multitaper', average_trials=False):
         # TF decomposition using morlet wavelets
         tfr = tfr_morlet(epochs, freqs=freq, n_cycles=n_cycles, 
                              use_fft=True, return_itc=False, 
-                             average=average_trials, verbose=False)
+                             average=average_trials, verbose=False,
+                             n_jobs=N_JOBS)
     
     # define variables to return
     tfr = tfr.data
