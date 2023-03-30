@@ -12,7 +12,7 @@ This script executes the primary time-frequnecy analyses.
 The power spectral density (PSD) is computed for each epoch, the pre-stimulus 
 time window, and the post-stimulus time window. 
 The time-frequnecy representation of power (TFR) is computed for the epoch 
-using either Morlet wavelet or multitapers. 
+using the multitaper method. 
 
 """
 # Imports
@@ -40,7 +40,6 @@ TIME_RANGE_LABELS = np.array(['epoch',
 
 # parameters for tfr analysis
 RUN_TFR = True # set to False to skip tfr analysis
-TFR_METHOD = ['multitaper']
 
 def main():
     # identify / create directories
@@ -113,14 +112,13 @@ def compute_channel_tfr(epochs, fname, dir_output):
         if epochs_chan == 'no data': continue
         
         # run time-frequency analysis
-        for method in TFR_METHOD:
-            tfr, freq = compute_tfr(epochs_chan, method=method)
-            
-            # save time-frequency results
-            fname_out = str.replace(fname, '_epo.fif', \
-                                    '_chan%s_tfr_%s' %(channel, method))
-            np.savez(join(dir_output, fname_out), 
-                     tfr=tfr, freq=freq, time=epochs_chan.times)
+        tfr, freq = compute_tfr(epochs_chan)
+        
+        # save time-frequency results
+        fname_out = str.replace(fname, '_epo.fif', \
+                                '_chan%s_tfr_%s' %(channel))
+        np.savez(join(dir_output, fname_out), 
+                    tfr=tfr, freq=freq, time=epochs_chan.times)
 
 
 def get_single_channel_epochs(epochs, channel):
@@ -150,49 +148,26 @@ def get_single_channel_epochs(epochs, channel):
     return epochs_chan
 
 
-def compute_tfr(epochs, method='multitaper', average_trials=False):
+def compute_tfr(epochs, average_trials=False):
     '''
     This function takes an MNE epochsArray and computes the time-frequency
-    representatoin of power using either multitapers or wavelets. 
-    Time-frequnecy parameters are set to replicate Fellner et al.
+    representatoin of power using the multitaper method. 
     Due to memory demands, this function should be run on single-channel data, 
     or results can be averaged across trials.
     '''
     
-    if method=='multitaper':
-        # set paramters for TF decomposition
-        freq = np.logspace(*np.log10([2,100]),128)
-        n_cycles = freq / (1/0.3) # 300 ms - as published
-        time_bandwidth = 10 * 0.3 # 10 Hz (when T=0.3 sec) - as published
-        
-        # TF decomposition using multitapers
-        tfr = tfr_multitaper(epochs, freqs=freq, n_cycles=n_cycles, 
-                             time_bandwidth=time_bandwidth,
-                             use_fft=True, return_itc=False, 
-                             average=average_trials, verbose=False,
-                             n_jobs=N_JOBS)
+    # set paramters for TF decomposition
+    freq = np.logspace(*np.log10([2,100]), 256)
+    n_cycles = freq / (1/0.3) # 300 ms - as published
+    time_bandwidth = 10 * 0.3 # 10 Hz (when T=0.3 sec) - as published
     
-    elif (method=='morlet'):
-        # set paramters for TF decomposition
-        freq = np.logspace(*np.log10([2,100]),128)
-        n_cycles = 5 # 5 cyces - as published
-        
-        # TF decomposition using morlet wavelets
-        tfr = tfr_morlet(epochs, freqs=freq, n_cycles=n_cycles, 
-                             use_fft=True, return_itc=False, 
-                             average=average_trials, verbose=False,
-                             n_jobs=N_JOBS)
+    # TF decomposition using multitapers
+    tfr = tfr_multitaper(epochs, freqs=freq, n_cycles=n_cycles, 
+                            time_bandwidth=time_bandwidth,
+                            use_fft=True, return_itc=False, 
+                            average=average_trials, verbose=False,
+                            n_jobs=N_JOBS)
 
-    elif method=='morlet_adpt':
-        # set paramters for TF decomposition
-        freq = np.logspace(*np.log10([2,100]),128)
-        n_cycles = freq / (1/0.3) # 300 ms
-        
-        # TF decomposition using morlet wavelets
-        tfr = tfr_morlet(epochs, freqs=freq, n_cycles=n_cycles, 
-                             use_fft=True, return_itc=False, 
-                             average=average_trials, verbose=False,
-                             n_jobs=N_JOBS)
     
     # define variables to return
     tfr = tfr.data
@@ -244,23 +219,22 @@ def aggregate_tfr(dir_input, dir_output):
     
     # aggregate psd data for each condition
     for condition in ['words_hit', 'faces_hit', 'words_miss', 'faces_miss']:
-        for method in TFR_METHOD:
-            # create array for output data
-            tfr = np.zeros([len(meta), len(time), len(freq)])
-            
-            # loop through rows of metadata
-            for ii in range(len(meta)):
-                fname_in = '%s_%s_chan%d_tfr_%s.npz' %(meta['patient'][ii], condition, meta['chan_idx'][ii], method)
-                # skip missing channels
-                if not fname_in in files: continue
-            
-                # load tfr data               
-                data_in = np.load(join(dir_input, fname_in))
-                tfr[ii] = np.squeeze(np.nanmedian(data_in['tfr'], axis=0).T)
+        # create array for output data
+        tfr = np.zeros([len(meta), len(time), len(freq)])
+        
+        # loop through rows of metadata
+        for ii in range(len(meta)):
+            fname_in = '%s_%s_chan%d_tfr.npz' %(meta['patient'][ii], condition, meta['chan_idx'][ii])
+            # skip missing channels
+            if not fname_in in files: continue
+        
+            # load tfr data               
+            data_in = np.load(join(dir_input, fname_in))
+            tfr[ii] = np.squeeze(np.nanmedian(data_in['tfr'], axis=0).T)
 
-        #  save results
-        fname_out = 'tfr_%s_%s' %(condition, method)
-        np.savez(join(dir_output, fname_out), freq=freq, time=time, tfr=tfr)
+    #  save results
+    fname_out = 'tfr_%s' %(condition)
+    np.savez(join(dir_output, fname_out), freq=freq, time=time, tfr=tfr)
 
 
 if __name__ == "__main__":
