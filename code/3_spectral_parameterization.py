@@ -65,22 +65,14 @@ def param_group_psd_results():
         os.makedirs(f"{dir_output}/fooof_reports")
     
     # loop through conditions
-    files = ['psd_words_hit_prestim.npz', 'psd_words_hit_poststim.npz',
-             'psd_faces_hit_prestim.npz', 'psd_faces_hit_poststim.npz',
-             'psd_words_miss_prestim.npz', 'psd_words_miss_poststim.npz',
-             'psd_faces_miss_prestim.npz', 'psd_faces_miss_poststim.npz']
-    conditions = ['words_hit_prestim', 'words_hit_poststim', 
-                  'faces_hit_prestim', 'faces_hit_poststim',
-                  'words_miss_prestim', 'words_miss_poststim', 
-                  'faces_miss_prestim', 'faces_miss_poststim']
-    
-    for file, cond in zip(files, conditions):
+    files = [f for f in os.listdir(dir_input) if f.startswith('psd_')]
+    for fname in files:
         # display progress
         t_start = timer()
-        print(f"\tAnalyzing condition: \t{cond.replace('_', ', ')}...")
+        print(f"\tAnalyzing: \t{fname}")
 
         # load results for condition
-        data_in =  np.load(f"{dir_input}/{file}")
+        data_in =  np.load(f"{dir_input}/{fname}")
         spectra_raw = data_in['spectra']
         freq = data_in['freq']
         
@@ -98,7 +90,7 @@ def param_group_psd_results():
             fg.fit(freq, spectra, n_jobs=N_JOBS)
             
             # save results 
-            fname_out = '%s_params_%s' %(cond, ap_mode)
+            fname_out = fname.replace('.npz', f'_params_{ap_mode}')
             fg.save(f"{dir_output}/{fname_out}", save_results=True, 
                     save_settings=True, save_data=True)
             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
