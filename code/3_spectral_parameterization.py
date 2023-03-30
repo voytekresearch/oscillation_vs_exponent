@@ -49,14 +49,13 @@ def main():
     
     # parameterize PSDs
     print('\nParameterizing PSDs...')
-    # parameterize_psd()
     param_group_psd_results()
 
     # parameterize TFRs
     if RUN_TFR:
         print('\nParameterizing TFRs...')
         parameterize_tfr()
-        # param_group_tfr_results()
+        # param_group_tfr_results() # computationally intensive
 
 def param_group_psd_results():
     # identify / create directories
@@ -160,45 +159,7 @@ def param_group_tfr_results():
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
     print(f"Total TFR analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
-
-# def parameterize_psd():
-#     # identify / create directories
-#     dir_input = f"{PROJECT_PATH}/data/ieeg_psd"
-#     dir_output = f"{PROJECT_PATH}/data/ieeg_psd_param"
-#     if not os.path.exists(dir_output): 
-#         os.makedirs(f"{dir_output}/fooof_reports")
-    
-#     # load each file
-#     for fname in os.path.listdir(dir_input):
-        
-#         # display progress
-#         print('\n__________Analyzing: %s ____________________\n' %fname)
-        
-#         # load psd
-#         data_in = np.load(join(dir_input, fname))
-#         psd_in = data_in['psd']
-#         freq = data_in['freq']
-        
-#         # average over trials
-#         psd_mean = np.nanmean(psd_in, axis=0)
-            
-#         # interpolate psd for frequency range that includes line noise
-#         spectra = np.zeros_like(psd_mean)
-#         for chan in range(len(spectra)):
-#             _, spectra[chan] = interpolate_spectrum(freq, psd_mean[chan], 
-#                                                     LINE_NOISE_RANGE)
-
-#         # parameterize (fit both with and without knee parametere)
-#         for ap_mode in ['fixed', 'knee']:
-#             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
-#             fg.set_check_data_mode(False)
-#             fg.fit(freq, spectra, n_jobs=N_JOBS)
-            
-#             # save results 
-#             fname_out = fname.replace('.npz','_param_%s' %ap_mode)
-#             fg.save(f"{dir_output}/{fname_out}", save_results=True, 
-#                     save_settings=True)
-#             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")   
+ 
 
 def parameterize_tfr():
     # time it
