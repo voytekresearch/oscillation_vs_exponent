@@ -20,14 +20,12 @@ import os
 import numpy as np
 import pandas as pd
 from fooof import FOOOFGroup
-from fooof.utils.data import interpolate_spectrum
 from time import time as timer
 
 # Imports - custom
 from utils import hour_min_sec
 
 # Settings
-LINE_NOISE_RANGE = [45,55] # freq range to interpolate
 RUN_TFR = True # run TFR parameterization
 N_SAMPLES = 2**7 # number of time samples after downsampling
 
@@ -77,12 +75,6 @@ def param_group_psd_results():
         data_in =  np.load(f"{dir_input}/{fname}")
         spectra = data_in['spectra']
         freq = data_in['freq']
-        
-        # interpolate psd for frequency range that includes line noise
-        spectra = np.zeros_like(spectra_raw)
-        for chan in range(len(spectra)):
-            _, spectra[chan] = interpolate_spectrum(freq, spectra_raw[chan], 
-                                                    LINE_NOISE_RANGE)
         
         # parameterize (fit both with and without knee parametere)
         for ap_mode in AP_MODE:
