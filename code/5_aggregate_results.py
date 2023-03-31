@@ -55,7 +55,8 @@ def main():
                 df['epoch'] = epoch
 
                 # load aperiodic parameters
-                fname_in = f"{material}_{memory}_{epoch}_params_{AP_MODE}"
+                fname_in = f"psd_{material}_{memory}_{epoch}_params_{AP_MODE}"
+                print(f"Loading {fname_in}...")
                 df['offset'], df['knee'], df['exponent'] = load_ap_params(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
 
                 # load intersection frequency results
@@ -65,7 +66,7 @@ def main():
 
                 # load alpha results
                 params = FOOOFGroup()
-                fname_in = f"{material}_{memory}_{epoch}_params_{AP_MODE}.json"
+                fname_in = f"psd_{material}_{memory}_{epoch}_params_{AP_MODE}.json"
                 params.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
                 alpha = get_band_peak_fg(params, bands['alpha'])
                 df["alpha_cf"] = alpha[:,0]
@@ -77,10 +78,14 @@ def main():
                 _, alpha_bp = trim_spectrum(data_in['freq'], data_in['spectra'], f_range=bands['alpha'])
                 df['alpha_bp'] = np.nanmean(alpha_bp, axis=1)
 
+                # drop first index (0 Hz)
+                spectra = data_in['spectra'][:,1:]
+                freq = data_in['freq'][1:]
+
                 # add adjusted alpha bandpower results
                 spectra_ap = params_to_spectra(params, component='aperiodic')
-                spectra_adjusted = data_in['spectra'] - spectra_ap
-                _, alpha_adj = trim_spectrum(data_in['freq'],spectra_adjusted, f_range=bands['alpha'])
+                spectra_adjusted = spectra- spectra_ap 
+                _, alpha_adj = trim_spectrum(freq,spectra_adjusted, f_range=bands['alpha'])
                 df['alpha_adj'] = np.nanmean(alpha_adj, axis=1)                
 
                 # add to list
