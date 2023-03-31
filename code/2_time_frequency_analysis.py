@@ -120,52 +120,18 @@ def compute_channel_tfr(epochs, fname, dir_output):
     '''
     
     # get single channel epochs, and compute TFR for each channel
-    for channel in range(len(epochs.info['ch_names'])):
-        # get single channle epochs
-        epochs_chan = get_single_channel_epochs(epochs, channel)
-        
-        # skip channels with no data or less than 2 trials
-        # note: some channels in dataset contain all NaN; only 1 trial causes error
-        if epochs_chan == 'no data': continue
-        
+    for channel in range(len(epochs.info['ch_names'])):        
         # run time-frequency analysis
-        tfr, freq = compute_tfr(epochs_chan)
+        tfr, freq = compute_tfr(epochs, picks=channel)
         
         # save time-frequency results
         fname_out = fname.replace('_epo.fif', f'_chan{channel}_tfr')
         np.savez(join(dir_output, fname_out), 
-                    tfr=tfr, freq=freq, time=epochs_chan.times)
-
-
-def get_single_channel_epochs(epochs, channel):
-    '''
-    This function takes an MNE epochsArray and creates an new epochsArray 
-    containing the data for single specified channel. 
-    Rejected trials are removed from epochsArray.
-    '''
-    
-    # get data for channel
-    lfp = epochs.get_data(picks=channel)
-
-    # check data contains at least 2 trials
-    # note: some channels in dataset contain all NaN; only 1 trial causes error
-    if np.isnan(lfp).all() or len(lfp) < 2:
-        epochs_chan = 'no data'
-        
-    else:
-        # remove missing/rejected data trials
-        lfp = lfp[~np.isnan(lfp[:, 0, 0])]
-    
-        #create MNE epochs array
-        info = create_info(np.shape(lfp)[1], epochs.info['sfreq'], \
-                               ch_types='eeg')
-        epochs_chan = EpochsArray(lfp, info, tmin=epochs.tmin, verbose=False)
-    
-    return epochs_chan
+                    tfr=tfr, freq=freq, time=epochs.times)
 
 
 def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256, time_window_length=0.5,
-                freq_bandwidth=6, n_jobs=-1, average=False, verbose=False):
+                freq_bandwidth=6, n_jobs=-1, picks=None, average=False, verbose=False):
     '''
     This function takes an MNE epochsArray and computes the time-frequency
     representatoin of power using the multitaper method. 
@@ -185,8 +151,8 @@ def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256, time_window_length=
 
     # TF decomposition using multitapers
     tfr = tfr_multitaper(epochs, freqs=freqs, n_cycles=n_cycles, 
-                            time_bandwidth=time_bandwidth, return_itc=False,
-                            n_jobs=n_jobs, average=average, verbose=verbose)
+                            time_bandwidth=time_bandwidth, return_itc=False, n_jobs=n_jobs,
+                            picks=picks, average=average, verbose=verbose)
     tfr = tfr.data.squeeze() # remove channel dimension
 
     return tfr, freqs
