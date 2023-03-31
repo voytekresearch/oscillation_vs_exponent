@@ -45,7 +45,7 @@ TIME_RANGE_LABELS = np.array(['epoch',
 
 # Settings - tfr analysis
 RUN_TFR = True # set to False to skip tfr analysis
-N_SAMPLES = 2**8 # number of time samples after downsampling
+N_SAMPLES = 2**8 # approx. number of time samples after downsampling
 
 def main():
     # identify / create directories
@@ -127,7 +127,8 @@ def compute_channel_tfr(epochs, fname, dir_output):
     # get single channel epochs, and compute TFR for each channel
     for channel in range(len(epochs.info['ch_names'])):        
         # run time-frequency analysis
-        time, freq, tfr = compute_tfr(epochs, picks=channel, decim=N_SAMPLES)
+        decim = int(np.ceil(len(epochs.times) / N_SAMPLES))
+        time, freq, tfr = compute_tfr(epochs, picks=channel, decim=decim)
         
         # save time-frequency results
         fname_out = fname.replace('_epo.fif', f'_chan{channel}_tfr')
