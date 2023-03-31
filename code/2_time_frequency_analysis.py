@@ -18,12 +18,16 @@ using the multitaper method.
 #  SET PATH
 PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 
-# Imports
+# Imports - general
 from os.path import join, exists
 from os import mkdir, listdir
 import numpy as np
 from mne import read_epochs, create_info, EpochsArray
 from mne.time_frequency import psd_multitaper, tfr_multitaper
+from time import time as timer
+
+# Imports - custom
+from utils import hour_min_sec
 
 # Dataset details
 PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
@@ -52,9 +56,13 @@ def main():
     if not exists(dir_tfr): mkdir(dir_tfr)
     if not exists(dir_results): mkdir(dir_results)
     
+    # display progress
+    t_start = timer()
+
     # for each fif file
     for fname in listdir(dir_input):
         # display progress
+        t_start_f = timer()
         print(f"\nAnalyzing: {fname}")
         
         # load eeg data
@@ -67,13 +75,21 @@ def main():
         # for each trial/channel
         if RUN_TFR:
             compute_channel_tfr(epochs, fname, dir_tfr)
-    
+        
+        # display progress
+        hour, min, sec = hour_min_sec(timer() - t_start_f)
+        print(f"\t\file completed in {hour} hour, {min} min, and {sec :0.1f} s")
+
     # aggregate psd results. average over trials
     aggregate_spectra(dir_psd, dir_results)
     
     # aggregate tfr results. average over trials
     if RUN_TFR:
         aggregate_tfr(dir_tfr, dir_results)
+
+    # display progress
+    hour, min, sec = hour_min_sec(timer() - t_start)
+    print(f"Total analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
     
 def comp_psd(epochs, fname, dir_output):
     '''
