@@ -25,21 +25,20 @@ from time import time as timer
 
 # Imports - custom
 from utils import hour_min_sec
-from tfr_utils import downsample_tfr
 
 # Settings
 LINE_NOISE_RANGE = [45,55] # freq range to interpolate
 RUN_TFR = True # run TFR parameterization
-TFR_METHOD = 'multitaper' # method used in ieeg_2_time_frequency_analysis.py
 N_SAMPLES = 2**7 # number of time samples after downsampling
 
 # SpecParam hyperparameters
 N_JOBS = -1 # number of jobs for parallel processing
 SPEC_PARAM_SETTINGS = {
-    'peak_width_limits' :   [4, 20], # default: (0.5, 12.0)) - recommends at least frequency resolution * 2
-    'min_peak_height'   :   0.1, 
-    'max_n_peaks'       :   4, # (default: inf)
-    'peak_threshold'    :   2.0} # (default: 2.0)
+    'peak_width_limits' :   [2, np.inf], # default : (0.5, 12.0) - recommends at least frequency resolution * 2
+    'min_peak_height'   :   0, # default : 0
+    'max_n_peaks'       :   4, # default : inf
+    'peak_threshold'    :   4} # default : 2.0
+AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
 
 # FOOOF is causing some warnings about ragged arrays
 import warnings
@@ -64,16 +63,19 @@ def param_group_psd_results():
     if not os.path.exists(dir_output): 
         os.makedirs(f"{dir_output}/fooof_reports")
     
+    # display progress
+    t_start = timer()
+    
     # loop through conditions
     files = [f for f in os.listdir(dir_input) if f.startswith('psd_')]
     for fname in files:
         # display progress
-        t_start = timer()
+        t_start_c = timer()
         print(f"\tAnalyzing: \t{fname}")
 
         # load results for condition
         data_in =  np.load(f"{dir_input}/{fname}")
-        spectra_raw = data_in['spectra']
+        spectra = data_in['spectra']
         freq = data_in['freq']
         
         # interpolate psd for frequency range that includes line noise
@@ -83,7 +85,7 @@ def param_group_psd_results():
                                                     LINE_NOISE_RANGE)
         
         # parameterize (fit both with and without knee parametere)
-        for ap_mode in ['fixed', 'knee']:
+        for ap_mode in AP_MODE:
             print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
@@ -96,7 +98,7 @@ def param_group_psd_results():
             fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
 
         # display progress
-        hour, min, sec = hour_min_sec(timer() - t_start)
+        hour, min, sec = hour_min_sec(timer() - t_start_c)
         print(f"\t\tCondition completed in {hour} hour, {min} min, and {sec :0.1f} s")
 
     # display progress
@@ -121,15 +123,12 @@ def param_group_tfr_results():
         t_start_c = timer()
     
         # load group TFR results
-        data_in = np.load(f"{dir_input}/tfr_{cond}_{TFR_METHOD}.npz")
+        data_in = np.load(f"{dir_input}/tfr_{cond}.npz")
         freq = data_in['freq']
         tfr_in = data_in['tfr']
         
-        # downsample tfr
-        tfr_ds = downsample_tfr(tfr_in)
-        
         # reshape TFR for parameterization
-        tfr = tfr_ds.reshape([tfr_ds.shape[0]*tfr_ds.shape[1],tfr_ds.shape[2]])
+        tfr = tfr_in.reshape([tfr_in.shape[0]*tfr_in.shape[1],tfr_in.shape[2]])
         
         # parameterize (fit both with and without knee parametere)
         for ap_mode in ['knee']: # ['fixed', 'knee']:
@@ -171,11 +170,11 @@ def parameterize_tfr():
     for i_chan in range(len(df)):
         # Check for TFR results
         fname = f"{df.loc[i_chan, 'patient']}_{df.loc[i_chan, 'material']}_" + \
-                    f"{df.loc[i_chan, 'memory']}_chan{df.loc[i_chan, 'chan_idx']}_" + \
-                    f"tfr_{TFR_METHOD}.npz"
+                    f"{df.loc[i_chan, 'memory']}_chan{df.loc[i_chan, 'chan_idx']}_tfr.npz"
 
         # display progress
-        print(f"    Analyzing: {fname}")
+        print(f"    Analyzing file {i_chan}/{len(df)}") 
+        print(f"\t{fname}")
         t_start_c = timer()
         
         # load tfr
@@ -184,13 +183,10 @@ def parameterize_tfr():
         freq = data_in['freq']
         
         # average over trials
-        tfr_mean = np.squeeze(np.mean(tfr_in, axis=0))
-        
-        # downsample tfr
-        tfr, _ = downsample_tfr(tfr_mean, data_in['time'], N_SAMPLES)
+        tfr = np.squeeze(np.mean(tfr_in, axis=0))
         
         # parameterize
-        for ap_mode in ['knee']: # ['fixed', 'knee']:
+        for ap_mode in AP_MODE:
             # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
