@@ -17,6 +17,7 @@ import pandas as pd
 from time import time as timer
 from time import ctime as time_now
 from fooof.utils import trim_spectrum
+from fooof.bands import Bands
 
 # Imports - custom
 from stats import run_resampling_analysis
@@ -29,7 +30,7 @@ PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11',
          'pat15','pat16','pat17','pat19','pat20','pat21','pat22']
 
 # anlysis parameters
-ALPHA_BAND = [8, 20] # alpha/beta frequnecy range
+BANDS = Bands({'alpha' : [7, 13]}) # define spectral bands of interest
 N_ITER = 10000 # random permutation iterations/shuffles
 ALPHA = 0.05 # significance level
 
@@ -89,8 +90,8 @@ def main():
                         continue
 
                     # trim in alpha band
-                    _, alpha_band_pre = trim_spectrum(data_pre['freq'], data_pre['psd'][:,i_chan], f_range=ALPHA_BAND)
-                    _, alpha_band_post = trim_spectrum(data_post['freq'], data_post['psd'][:,i_chan], f_range=ALPHA_BAND)
+                    _, alpha_band_pre = trim_spectrum(data_pre['freq'], data_pre['psd'][:,i_chan], f_range=BANDS['alpha'])
+                    _, alpha_band_post = trim_spectrum(data_post['freq'], data_post['psd'][:,i_chan], f_range=BANDS['alpha'])
                     alpha_pre[i_chan] = np.nanmean(alpha_band_pre, axis=1)
                     alpha_post[i_chan] = np.nanmean(alpha_band_post, axis=1)
 
