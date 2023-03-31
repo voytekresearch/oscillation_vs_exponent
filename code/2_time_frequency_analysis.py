@@ -28,7 +28,6 @@ from time import time as timer
 
 # Imports - custom
 from utils import hour_min_sec
-from tfr_utils import downsample_tfr
 
 # Dataset details
 PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
@@ -36,7 +35,7 @@ PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
 
 # Settings - psd analysis
 N_JOBS = -1 # number of jobs to run in parallel (-1 = use all available cores)
-BANDWIDTH = 2 # multitaper bandwidth - frequencies at ± half-bandwidth are smoothed together
+BANDWIDTH = 2 # psd multitaper half-bandwidth - frequencies at ± half-bandwidth are smoothed together
 TIME_RANGE = np.array([[-1.0, 1.0],    # epoch
                        [-1.0, 0.0],    # pre-stim
                        [0.0, 1.0]])    # post-stim
@@ -62,13 +61,17 @@ def main():
     t_start = timer()
 
     # for each fif file
-    for fname in listdir(dir_input):
+    files = listdir(dir_input)
+    for ii, fname in enumerate(files):
+
         # display progress
         t_start_f = timer()
-        print(f"\nAnalyzing: {fname}")
+        print(f"\nAnalyzing file {ii}/{len(files)}")
+        print(f"\tfilename: \t{fname}")
         
         # load eeg data
         epochs = read_epochs(join(dir_input, fname), verbose=False)
+        print(f"\tchannels: \t{len(epochs.info['ch_names'])}")
         
         # compute power spectral density
         comp_psd(epochs, fname, dir_psd)
@@ -80,7 +83,7 @@ def main():
         
         # display progress
         hour, min, sec = hour_min_sec(timer() - t_start_f)
-        print(f"\t\file completed in {hour} hour, {min} min, and {sec :0.1f} s")
+        print(f"\tanalysis time: \t{hour} hour, {min} min, and {sec :0.1f} s")
 
     # aggregate psd results. average over trials
     aggregate_spectra(dir_psd, dir_results)
@@ -91,7 +94,7 @@ def main():
 
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
-    print(f"Total analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
+    print(f"\n\nTotal analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
     
 def comp_psd(epochs, fname, dir_output):
     '''
@@ -118,25 +121,22 @@ def compute_channel_tfr(epochs, fname, dir_output):
     '''
     This function takes an MNE epochsArray and computes the time-frequency
     representatoin of power for each channel sequentially, saving the results
-    for each channel seperately. 
+    for each channel seperately. Data is downsampled to N_SAMPLES time points.
     '''
     
     # get single channel epochs, and compute TFR for each channel
     for channel in range(len(epochs.info['ch_names'])):        
         # run time-frequency analysis
-        tfr, freq = compute_tfr(epochs, picks=channel)
-
-        # downsample tfr
-        tfr, time = downsample_tfr(tfr, epochs.times, N_SAMPLES)
+        time, freq, tfr = compute_tfr(epochs, picks=channel, decim=N_SAMPLES)
         
         # save time-frequency results
         fname_out = fname.replace('_epo.fif', f'_chan{channel}_tfr')
         np.savez(join(dir_output, fname_out), 
                     tfr=tfr, freq=freq, time=time)
 
-
-def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256, time_window_length=0.5,
-                freq_bandwidth=6, n_jobs=-1, picks=None, average=False, verbose=False):
+def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256, 
+                time_window_length=0.5, freq_bandwidth=4, n_jobs=-1, picks=None, 
+                average=False, decim=1, verbose=False):
     '''
     This function takes an MNE epochsArray and computes the time-frequency
     representatoin of power using the multitaper method. 
@@ -150,17 +150,21 @@ def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256, time_window_length=
     if f_max is None:
         f_max = epochs.info['sfreq'] / 2 # Nyquist
 
-    freqs = np.logspace(*np.log10([f_min, f_max]), n_freqs) # log-spaced freq vector
-    n_cycles = freqs * time_window_length # set n_cycles based on fixed time window length
+    freq = np.logspace(*np.log10([f_min, f_max]), n_freqs) # log-spaced freq vector
+    n_cycles = freq * time_window_length # set n_cycles based on fixed time window length
     time_bandwidth =  time_window_length * freq_bandwidth # must be >= 2
 
     # TF decomposition using multitapers
-    tfr = tfr_multitaper(epochs, freqs=freqs, n_cycles=n_cycles, 
+    tfr = tfr_multitaper(epochs, freqs=freq, n_cycles=n_cycles, 
                             time_bandwidth=time_bandwidth, return_itc=False, n_jobs=n_jobs,
-                            picks=picks, average=average, verbose=verbose)
-    tfr = tfr.data.squeeze() # remove channel dimension
+                            picks=picks, average=average, decim=decim, verbose=verbose)
+    
+    # extract data
+    time = tfr.times
+    tfr = tfr.data.squeeze()
 
-    return tfr, freqs
+    return time, freq, tfr
+
 
 def aggregate_spectra(dir_input, dir_output):
     '''
