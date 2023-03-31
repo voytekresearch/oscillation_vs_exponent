@@ -275,6 +275,8 @@ def comp_intersection(param_pre, param_post):
         index of intersection frequency
 
     """
+    # imports
+    from fooof.sim import gen_power_spectrum
     
     # count channels
     n_chans = len(param_pre.get_params('r_squared'))
