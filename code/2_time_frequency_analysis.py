@@ -22,12 +22,13 @@ PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 from os.path import join, exists
 from os import mkdir, listdir
 import numpy as np
-from mne import read_epochs, create_info, EpochsArray
+from mne import read_epochs
 from mne.time_frequency import psd_multitaper, tfr_multitaper
 from time import time as timer
 
 # Imports - custom
 from utils import hour_min_sec
+from tfr_utils import downsample_tfr
 
 # Dataset details
 PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
@@ -45,6 +46,7 @@ TIME_RANGE_LABELS = np.array(['epoch',
 
 # Settings - tfr analysis
 RUN_TFR = True # set to False to skip tfr analysis
+N_SAMPLES = 2**8 # number of time samples after downsampling
 
 def main():
     # identify / create directories
@@ -123,11 +125,14 @@ def compute_channel_tfr(epochs, fname, dir_output):
     for channel in range(len(epochs.info['ch_names'])):        
         # run time-frequency analysis
         tfr, freq = compute_tfr(epochs, picks=channel)
+
+        # downsample tfr
+        tfr, time = downsample_tfr(tfr, epochs.times, N_SAMPLES)
         
         # save time-frequency results
         fname_out = fname.replace('_epo.fif', f'_chan{channel}_tfr')
         np.savez(join(dir_output, fname_out), 
-                    tfr=tfr, freq=freq, time=epochs.times)
+                    tfr=tfr, freq=freq, time=time)
 
 
 def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256, time_window_length=0.5,
