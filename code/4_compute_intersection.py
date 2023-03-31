@@ -17,17 +17,12 @@ from os import mkdir
 import numpy as np
 
 from fooof import FOOOFGroup
-from fooof.sim import gen_power_spectrum
 
 # import - custom
 from specparam_utils import comp_intersection
 
 # Parameters
 PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-
-# optimization settings
-N_ITER = 10
-AVERAGE_METHOD = 'mode'
 
 def main():
     # identify / create directories
@@ -40,12 +35,12 @@ def main():
     # loop through conditions
     for material in ['words', 'faces']:
         for memory in ['hit', 'miss']:
-            for ap_mode in ['fixed', 'knee']:
+            for ap_mode in ['knee']: # ['fixed', 'knee']:
                 # load parameterization results
                 param_pre = FOOOFGroup()
-                param_pre.load(join(dir_input, '%s_%s_prestim_params_%s.json' %(material, memory, ap_mode)))
+                param_pre.load(join(dir_input, 'psd_%s_%s_prestim_params_%s.json' %(material, memory, ap_mode)))
                 param_post = FOOOFGroup()
-                param_post.load(join(dir_input, '%s_%s_poststim_params_%s.json' %(material, memory, ap_mode)))
+                param_post.load(join(dir_input, 'psd_%s_%s_poststim_params_%s.json' %(material, memory, ap_mode)))
         
         
                 # calc intersection 
@@ -55,7 +50,7 @@ def main():
                 # save results
                 fname_out = 'intersection_results_%s_%s_%s' %(material, memory, ap_mode)
                 np.savez(join(dir_output, fname_out), psd_pre=psd_pre, psd_post=psd_post, 
-                        intersection=intersection)
+                        intersection=intersection, intersection_idx=intersection_idx)
 
     
 if __name__ == "__main__":
