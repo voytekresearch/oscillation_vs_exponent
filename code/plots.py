@@ -474,3 +474,82 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
     # return
     if fname is not None:
         fig.savefig(fname, dpi=300, bbox_inches='tight')
+
+
+def plot_psd_diff(freq, psd_diff, title=None, fname_out=None,
+                  plot_each=False, plot_mean=True, shade_sem=True,
+                  ax=None):
+    """ 
+    Plot spectra (or change in spectral power) in semi-log space.
+    The mean spectrum is plotted in black, and the individual spectra are plotted in grey.
+    A horizontal line at power=0 is also plotted.
+
+    Parameters
+    ----------
+    freq : array
+        Frequency values.
+    psd_diff : array
+        Spectral power values.
+    title : str, optional
+        Title of plot. The default is None.
+    fname_out : str, optional
+        Path to save figure to. If None, figure is not saved.
+        The default is None.
+    plot_each : bool, optional
+        Whether to plot each individual spectrum. The default is False.
+    plot_mean : bool, optional
+        Whether to plot the mean spectrum. The default is True.
+    shade_sem : bool, optional
+        Whether to shade the standard error of the mean. The default is True.
+    ax : matplotlib axis, optional
+        Axis to plot on. If None, a new figure is created.
+
+    Returns
+    -------
+    None.
+    
+    """
+    # create figure
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+
+    # plot psd
+    if plot_each:
+        ax.plot(freq, psd_diff.T, color='grey')
+
+    # plot mean
+    if plot_mean:
+        ax.plot(freq, np.nanmean(psd_diff, axis=0), color='k', linewidth=3,
+                label="mean")
+
+    # shade sem
+    if shade_sem:
+        mean = np.nanmean(psd_diff, axis=0)
+        sem = np.nanstd(psd_diff, axis=0) / np.sqrt(psd_diff.shape[0])
+        ax.fill_between(freq, mean - sem, mean + sem,
+                        color='k', alpha=0.2, label="SEM")
+
+    # legend
+    try:
+        ax.legend()
+    except:
+        pass
+
+    # label
+    ax.set_xlabel('Frequency (Hz)')
+    ax.set_ylabel('Power (uV^2/Hz)')
+    if title is None:
+        ax.set_title(f"Power spectrum difference")
+    else:
+        ax.set_title(title)
+
+    # annotate power=0
+    ax.axhline(0, color='r', linestyle='--', linewidth=3)
+
+    # scale x-axis logarithmically
+    ax.set(xscale="log")
+
+    # save
+    if not fname_out is None:
+        plt.savefig(fname_out, transparent=False)
+
