@@ -399,7 +399,7 @@ def plot_ap_params(params, time):
 
 def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
                              color=['grey','k'], labels=['baseline','encoding'],
-                             y_units='\u03BCV\u00b2/Hz'):
+                             y_units='\u03BCV\u00b2/Hz', fname=None):
     
     """
     Plot mean spectra for two conditions, with optional shading of SEM.
@@ -420,11 +420,14 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
         Colors for each condition. The default is ['grey','k'].
     labels : list, optional
         Labels for each condition. The default is ['baseline','encoding'].
+    y_units : str, optional
+        Units for y-axis. The default is '\u03BCV\u00b2/Hz' (microvolts).
+    fname : str, optional
+        File name to save figure. The default is None.
 
     Returns
     -------
-    fig, ax : matplotlib figure and axis
-        Figure and axis of plot.
+    None.
     """
 
     # imports
@@ -433,11 +436,14 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
     # check axis
     if ax is None:
         fig, ax = plt.subplots(1,1, figsize=[6,4])
-        return_fig = True
 
     # check psds are 2d
     if not (psd_pre.ndim == 2 and psd_post.ndim == 2):
         raise ValueError('PSDs must be 2d arrays.')
+    
+    # remove rows containing all nans
+    psd_pre = psd_pre[~np.isnan(psd_pre).all(axis=1)]
+    psd_post = psd_post[~np.isnan(psd_post).all(axis=1)]
 
     # plot mean spectra for each condition
     plot_spectrum(freq, np.mean(psd_pre, axis=0), ax=ax, color=color[0])
@@ -466,7 +472,5 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
     ax.legend(labels)
     
     # return
-    if return_fig:
-        return fig, ax
-    else:
-        return ax
+    if fname is not None:
+        fig.savefig(fname, dpi=300, bbox_inches='tight')
