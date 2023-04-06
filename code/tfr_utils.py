@@ -134,7 +134,7 @@ def preprocess_tfr(tfr, time, downsample_n=None, edge=None, average_trials=True,
 
     # average spectrogram over trials
     if average_trials:
-        tfr = np.median(tfr, axis=0)
+        tfr = np.nanmedian(tfr, axis=0)
 
     # normalize (zscore)
     if z_score:
