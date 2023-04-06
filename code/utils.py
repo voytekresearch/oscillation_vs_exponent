@@ -52,3 +52,27 @@ def adjust_r_squared(r_squared, n_params, n_samples):
 
     return adjusted_r_squared
 
+
+def diff_spectra(spectra_a, spectra_b):
+    """
+    Compute the difference between two arrays of power spectra.
+    Spectra are log transformed before computing the difference.
+    
+    Parameters
+    ----------
+    spectra_a : array
+        Array of power spectra.
+    spectra_b : array
+        Array of power spectra.
+
+    Returns
+    -------
+    spectra : array
+        Difference between spectra_a and spectra_b.
+    
+    """
+    
+    # log transform and compute difference
+    spectra = np.log(spectra_b) - np.log(spectra_a)
+
+    return spectra
