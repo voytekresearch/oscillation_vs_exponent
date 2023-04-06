@@ -55,10 +55,7 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
 
     Returns
     -------
-    fig : matplotlib figure
-        Figure with plot.
-    ax : matplotlib axis
-        Axis with plot.
+    fNone.
     """
 
     # imports
@@ -88,16 +85,14 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
     # create figure
     if ax is None:
         fig, ax = plt.subplots(constrained_layout=True)
-        return_fig = True
-    else:
-        return_fig = False
 
     # plot tfr
     ax.pcolor(time, freqs, tfr, cmap=cmap, norm=norm)
 
     # set labels and scale
     ax.set(yscale='log')
-    plt.yticks([10, 30, 50, 70, 90], labels=['10','30','50','70','90'])
+    ax.set_yticks([10, 100])
+    ax.set_yticklabels(['10','100'])
 
     # set title
     if not title is None:
@@ -117,16 +112,15 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
 
     # annotate zero
     if annotate_zero:
-        ax.axvline(0, color='k', linestyle='--', linewidth=3)
+        ax.axvline(0, color='k', linestyle='--', linewidth=2)
+
+    # add grid
+    ax.grid(True, which='major', axis='both', linestyle='--', linewidth=0.8)
 
     # save fig
     if not fname_out is None:
         plt.savefig(fname_out)
 
-    if return_fig:
-        return fig, ax
-    else:
-        return ax
 
 def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
                        x_offset=None, y_offset=None, z_offset=None,
