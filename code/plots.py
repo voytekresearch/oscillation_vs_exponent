@@ -399,7 +399,7 @@ def plot_ap_params(params, time):
 
 def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
                              color=['grey','k'], labels=['baseline','encoding'],
-                             y_units='\u03BCV\u00b2/Hz', fname=None):
+                             y_units='\u03BCV\u00b2/Hz', title=None, fname=None):
     
     """
     Plot mean spectra for two conditions, with optional shading of SEM.
@@ -422,6 +422,8 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
         Labels for each condition. The default is ['baseline','encoding'].
     y_units : str, optional
         Units for y-axis. The default is '\u03BCV\u00b2/Hz' (microvolts).
+    title : str, optional
+        Title for plot. The default is None.
     fname : str, optional
         File name to save figure. The default is None.
 
@@ -429,9 +431,6 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
     -------
     None.
     """
-
-    # imports
-    from fooof.plts import plot_spectrum
 
     # check axis
     if ax is None:
@@ -446,8 +445,8 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
     psd_post = psd_post[~np.isnan(psd_post).all(axis=1)]
 
     # plot mean spectra for each condition
-    plot_spectrum(freq, np.mean(psd_pre, axis=0), ax=ax, color=color[0])
-    plot_spectrum(freq, np.mean(psd_post, axis=0), ax=ax, color=color[1])    
+    ax.loglog(freq, np.mean(psd_pre, axis=0), color=color[0], label=labels[0])
+    ax.loglog(freq, np.mean(psd_post, axis=0), color=color[1], label=labels[1])
     
     # shade between SEM of spectra for each condition
     if shade_sem:
@@ -457,10 +456,6 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
         ax.fill_between(freq, np.mean(psd_post, axis=0) - (np.std(psd_post, axis=0)/np.sqrt(psd_post.shape[0])),
                         np.mean(psd_post, axis=0) + (np.std(psd_post, axis=0)/np.sqrt(psd_post.shape[0])),
                         color=color[1], alpha=0.5)
-    
-    # set to loglog scale
-    ax.set_xscale('log')
-    ax.set_yscale('log')
 
     # set axes ticks and labels
     ax.set_ylabel(f'power ({y_units})')
@@ -470,15 +465,24 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
 
     # add legend
     ax.legend(labels)
+
+    # add title
+    if title is None:
+        ax.set_title('Power spectra')
+    else:
+        ax.set_title(title)
+
+    # add grid
+    ax.grid(True, which='major', axis='both', linestyle='--', linewidth=0.5)
     
     # return
     if fname is not None:
-        fig.savefig(fname, dpi=300, bbox_inches='tight')
+        fig.savefig(fname)
 
 
 def plot_psd_diff(freq, psd_diff, title=None, fname_out=None,
                   plot_each=False, plot_mean=True, shade_sem=True,
-                  ax=None):
+                  y_units='\u03BCV\u00b2/Hz', ax=None):
     """ 
     Plot spectra (or change in spectral power) in semi-log space.
     The mean spectrum is plotted in black, and the individual spectra are plotted in grey.
@@ -489,7 +493,7 @@ def plot_psd_diff(freq, psd_diff, title=None, fname_out=None,
     freq : array
         Frequency values.
     psd_diff : array
-        Spectral power values.
+        Spectral power values (difference in log power between 2 spectra).
     title : str, optional
         Title of plot. The default is None.
     fname_out : str, optional
@@ -501,6 +505,8 @@ def plot_psd_diff(freq, psd_diff, title=None, fname_out=None,
         Whether to plot the mean spectrum. The default is True.
     shade_sem : bool, optional
         Whether to shade the standard error of the mean. The default is True.
+    y_units : str, optional
+        Units for y-axis. The default is '\u03BCV\u00b2/Hz' (microvolts).
     ax : matplotlib axis, optional
         Axis to plot on. If None, a new figure is created.
 
@@ -511,7 +517,7 @@ def plot_psd_diff(freq, psd_diff, title=None, fname_out=None,
     """
     # create figure
     if ax is None:
-        fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+        fig, ax = plt.subplots(1, 1, figsize=(6,4))
 
     # plot psd
     if plot_each:
@@ -535,21 +541,28 @@ def plot_psd_diff(freq, psd_diff, title=None, fname_out=None,
     except:
         pass
 
-    # label
-    ax.set_xlabel('Frequency (Hz)')
-    ax.set_ylabel('Power (uV^2/Hz)')
+    # scale x-axis logarithmically
+    ax.set(xscale="log")
+
+    # set axes ticks and labels
+    ax.set_ylabel(f'log power ({y_units})')
+    ax.set_xlabel('frequency (Hz)')
+    ax.set_xticks([10,100])
+    ax.set_xticklabels(["10", "100"])
+
+    # title
     if title is None:
-        ax.set_title(f"Power spectrum difference")
+        ax.set_title(f"Difference in power")
     else:
         ax.set_title(title)
 
     # annotate power=0
     ax.axhline(0, color='r', linestyle='--', linewidth=3)
 
-    # scale x-axis logarithmically
-    ax.set(xscale="log")
+    # add grid
+    ax.grid(True, which='major', axis='both', linestyle='--', linewidth=0.5)
 
     # save
     if not fname_out is None:
-        plt.savefig(fname_out, transparent=False)
+        plt.savefig(fname_out)
 
