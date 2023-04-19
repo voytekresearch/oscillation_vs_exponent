@@ -31,6 +31,7 @@ PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
 # Parameters - spectral analysis hyperparameters
 bands = Bands({'alpha' : [7, 13]}) # define spectral bands of interest
 AP_MODE = 'knee' # aperiodic mode
+DECOMP_METHOD = 'tfr' # 'psd'
 
 def main():
     # id directories
@@ -55,7 +56,7 @@ def main():
                 df['epoch'] = epoch
 
                 # load aperiodic parameters
-                fname_in = f"psd_{material}_{memory}_{epoch}_params_{AP_MODE}"
+                fname_in = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}"
                 print(f"Loading {fname_in}...")
                 df['offset'], df['knee'], df['exponent'] = load_ap_params(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
 
@@ -66,7 +67,7 @@ def main():
 
                 # load alpha results
                 params = FOOOFGroup()
-                fname_in = f"psd_{material}_{memory}_{epoch}_params_{AP_MODE}.json"
+                fname_in = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}.json"
                 params.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
                 alpha = get_band_peak_fg(params, bands['alpha'])
                 df["alpha_cf"] = alpha[:,0]
@@ -74,7 +75,7 @@ def main():
                 df["alpha_bw"] = alpha[:,2]
 
                 # add alpha bandpower results
-                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_{material}_{memory}_{epoch}.npz")
+                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/{DECOMP_METHOD}_{material}_{memory}_{epoch}.npz")
                 _, alpha_bp = trim_spectrum(data_in['freq'], data_in['spectra'], f_range=bands['alpha'])
                 df['alpha_bp'] = np.nanmean(alpha_bp, axis=1)
 
@@ -83,6 +84,7 @@ def main():
                 freq = data_in['freq'][1:]
 
                 # add adjusted alpha bandpower results
+                params.freqs = freq
                 spectra_ap = params_to_spectra(params, component='aperiodic')
                 spectra_adjusted = spectra- spectra_ap 
                 _, alpha_adj = trim_spectrum(freq,spectra_adjusted, f_range=bands['alpha'])

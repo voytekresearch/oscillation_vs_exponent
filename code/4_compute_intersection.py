@@ -23,6 +23,7 @@ from specparam_utils import comp_intersection
 
 # Parameters
 PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
+DECOMP_METHOD = 'tfr' # 'psd'
 
 def main():
     # identify / create directories
@@ -31,16 +32,15 @@ def main():
     if not exists(dir_output): 
         mkdir(dir_output)
         
-        
     # loop through conditions
     for material in ['words', 'faces']:
         for memory in ['hit', 'miss']:
             for ap_mode in ['knee']: # ['fixed', 'knee']:
                 # load parameterization results
                 param_pre = FOOOFGroup()
-                param_pre.load(join(dir_input, 'psd_%s_%s_prestim_params_%s.json' %(material, memory, ap_mode)))
+                param_pre.load(join(dir_input, '%s_%s_%s_prestim_params_%s.json' %(DECOMP_METHOD, material, memory, ap_mode)))
                 param_post = FOOOFGroup()
-                param_post.load(join(dir_input, 'psd_%s_%s_poststim_params_%s.json' %(material, memory, ap_mode)))
+                param_post.load(join(dir_input, '%s_%s_%s_poststim_params_%s.json' %(DECOMP_METHOD, material, memory, ap_mode)))
         
         
                 # calc intersection 
