@@ -28,6 +28,7 @@ from time import time as timer
 
 # Imports - custom
 from utils import hour_min_sec
+from tfr_utils import crop_tfr
 
 # Dataset details
 PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
@@ -204,7 +205,6 @@ def aggregate_tfr(dir_input, dir_output):
     files = listdir(dir_input)
     data_in = np.load(join(dir_input, files[0]))
     freq = data_in['freq']
-    time = data_in['time']
     
     # load channel meta data
     meta = np.load(join(PROJECT_PATH, 'data/ieeg_metadata', 'ieeg_channel_info.pkl'),
@@ -212,23 +212,51 @@ def aggregate_tfr(dir_input, dir_output):
     
     # aggregate psd data for each condition
     for condition in ['words_hit', 'faces_hit', 'words_miss', 'faces_miss']:
-        # create array for output data
-        tfr = np.zeros([len(meta), len(time), len(freq)])
+        # display progress
+        print(f'Aggregating condition: {condition}')
+
+        # initialize dictionary for time-averaged tfr
+        tfr_mean_pre = np.zeros([len(meta), len(freq)])
+        tfr_mean_post = np.zeros([len(meta), len(freq)])
+        tfr_mean_epoch = np.zeros([len(meta), len(freq)])
         
         # loop through rows of metadata
         for ii in range(len(meta)):
+            # display progress 
+            if ii % 100 == 0: 
+                print(f"     files loaded: \t{ii} / {len(meta)}")
+
             fname_in = '%s_%s_chan%d_tfr.npz' %(meta['patient'][ii], condition, meta['chan_idx'][ii])
             # skip missing channels
             if not fname_in in files: continue
         
             # load tfr data               
             data_in = np.load(join(dir_input, fname_in))
-            tfr[ii] = np.squeeze(np.nanmedian(data_in['tfr'], axis=0).T)
 
-    #  save results
-    fname_out = 'tfr_%s' %(condition)
-    np.savez(join(dir_output, fname_out), freq=freq, time=time, tfr=tfr)
+            # if all values are NaN, set means to Nan and continue
+            if np.all(np.isnan(data_in['tfr'])):
+                tfr_mean_pre[ii] = np.nan
+                tfr_mean_post[ii] = np.nan
+                tfr_mean_epoch[ii] = np.nan
+                continue
 
+            # average across trials
+            tfr = np.nanmedian(data_in['tfr'], axis=0)
+
+            # crop time windows of interest
+            tfr_eopch, _ = crop_tfr(tfr, data_in['time'], TIME_RANGE[0])
+            tfr_pre, _ = crop_tfr(tfr, data_in['time'], TIME_RANGE[1])
+            tfr_post, _ = crop_tfr(tfr, data_in['time'], TIME_RANGE[2])
+
+            # average across time for each time window of interest
+            tfr_mean_epoch[ii] = np.nanmean(tfr_eopch, axis=1)
+            tfr_mean_pre[ii] = np.nanmean(tfr_pre, axis=1)
+            tfr_mean_post[ii] = np.nanmean(tfr_post, axis=1)
+
+        #  save results
+        np.savez(join(dir_output, f"tfr_{condition}_epoch"), freq=freq, tfr=tfr_mean_epoch)
+        np.savez(join(dir_output, f"tfr_{condition}_pre"), freq=freq, tfr=tfr_mean_pre)
+        np.savez(join(dir_output, f"tfr_{condition}_post"), freq=freq, tfr=tfr_mean_post)
 
 if __name__ == "__main__":
     main()
