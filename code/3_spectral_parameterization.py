@@ -37,6 +37,7 @@ SPEC_PARAM_SETTINGS = {
     'max_n_peaks'       :   4, # default : inf
     'peak_threshold'    :   4} # default : 2.0
 AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
+FREQ_RANGE = [4, 100] # frequency range to fit
 
 # FOOOF is causing some warnings about ragged arrays
 import warnings
@@ -81,7 +82,7 @@ def param_group_psd_results():
             print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
-            fg.fit(freq, spectra, n_jobs=N_JOBS)
+            fg.fit(freq, spectra, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             
             # save results 
             fname_out = fname.replace('.npz', f'_params_{ap_mode}')
@@ -127,7 +128,7 @@ def param_group_tfr_results():
             # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
-            fg.fit(freq, tfr, n_jobs=N_JOBS)
+            fg.fit(freq, tfr, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             
             # save results and report
             fname_out = 'tfr_%s_params_%s' %(cond, ap_mode)
@@ -182,7 +183,7 @@ def parameterize_tfr():
             # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
-            fg.fit(freq, tfr.T, n_jobs=N_JOBS)
+            fg.fit(freq, tfr.T, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             
             # save results and report
             fname_out = fname.replace('.npz','_param_%s' %ap_mode)
