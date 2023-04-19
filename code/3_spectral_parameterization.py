@@ -35,7 +35,7 @@ SPEC_PARAM_SETTINGS = {
     'peak_width_limits' :   [2, np.inf], # default : (0.5, 12.0) - recommends at least frequency resolution * 2
     'min_peak_height'   :   0, # default : 0
     'max_n_peaks'       :   4, # default : inf
-    'peak_threshold'    :   4} # default : 2.0
+    'peak_threshold'    :   3} # default : 2.0
 AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
 FREQ_RANGE = [4, 100] # frequency range to fit
 DECOMP_METHOD = 'tfr' # 'psd'
@@ -70,7 +70,7 @@ def param_group_psd_results():
     for fname in files:
         # display progress
         t_start_c = timer()
-        print(f"\tAnalyzing: \t{fname}")
+        print(f"\tAnalyzing: {fname}")
 
         # load results for condition
         data_in =  np.load(f"{dir_input}/{fname}")
@@ -79,7 +79,6 @@ def param_group_psd_results():
         
         # parameterize (fit both with and without knee parametere)
         for ap_mode in AP_MODE:
-            print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_data_mode(False)
             fg.fit(freq, spectra, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
