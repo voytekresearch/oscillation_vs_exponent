@@ -254,9 +254,9 @@ def aggregate_tfr(dir_input, dir_output):
             tfr_mean_post[ii] = np.nanmean(tfr_post, axis=1)
 
         #  save results
-        np.savez(join(dir_output, f"tfr_{condition}_epoch"), freq=freq, tfr=tfr_mean_epoch)
-        np.savez(join(dir_output, f"tfr_{condition}_pre"), freq=freq, tfr=tfr_mean_pre)
-        np.savez(join(dir_output, f"tfr_{condition}_post"), freq=freq, tfr=tfr_mean_post)
+        np.savez(join(dir_output, f"tfr_{condition}_epoch"), freq=freq, spectra=tfr_mean_epoch)
+        np.savez(join(dir_output, f"tfr_{condition}_pre"), freq=freq, spectra=tfr_mean_pre)
+        np.savez(join(dir_output, f"tfr_{condition}_post"), freq=freq, spectra=tfr_mean_post)
 
 if __name__ == "__main__":
     main()
