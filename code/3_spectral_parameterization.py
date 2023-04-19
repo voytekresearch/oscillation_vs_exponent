@@ -26,7 +26,7 @@ from time import time as timer
 from utils import hour_min_sec
 
 # Settings
-RUN_TFR = True # run TFR parameterization
+RUN_TFR = False # run TFR parameterization
 N_SAMPLES = 2**7 # number of time samples after downsampling
 
 # SpecParam hyperparameters
@@ -38,6 +38,7 @@ SPEC_PARAM_SETTINGS = {
     'peak_threshold'    :   4} # default : 2.0
 AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
 FREQ_RANGE = [4, 100] # frequency range to fit
+DECOMP_METHOD = 'tfr' # 'psd'
 
 # FOOOF is causing some warnings about ragged arrays
 import warnings
@@ -65,7 +66,7 @@ def param_group_psd_results():
     t_start = timer()
     
     # loop through conditions
-    files = [f for f in os.listdir(dir_input) if f.startswith('psd_')]
+    files = [f for f in os.listdir(dir_input) if f.startswith(DECOMP_METHOD)]
     for fname in files:
         # display progress
         t_start_c = timer()
