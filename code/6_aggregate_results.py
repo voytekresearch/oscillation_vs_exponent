@@ -20,7 +20,7 @@ from fooof.analysis import get_band_peak_fg
 from fooof.utils import trim_spectrum
 
 # Imports - custom
-from specparam_utils import load_ap_params, params_to_spectra
+from specparam_utils import load_ap_params, params_to_spectra, compute_adj_r2
 
 # Parameters - dataset details
 FS = 512 # sampling frequency
@@ -48,7 +48,7 @@ def main():
     df_list = []
     for material in ['words', 'faces']:
         for memory in ['hit', 'miss']:
-            for epoch in ['prestim', 'poststim']:
+            for epoch in ['pre', 'post']:
                 # add condition info (material, memory, epoch)
                 df = chan_info.copy()
                 df['material'] = material
@@ -65,30 +65,36 @@ def main():
                 data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname_in}", allow_pickle=True)
                 df['f_rotation'] = data_in['intersection']
 
-                # load alpha results
+                # load specparam results
                 params = FOOOFGroup()
                 fname_in = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}.json"
                 params.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
+
+                # add alpha results
                 alpha = get_band_peak_fg(params, bands['alpha'])
                 df["alpha_cf"] = alpha[:,0]
                 df["alpha_pw"] = alpha[:,1]
                 df["alpha_bw"] = alpha[:,2]
 
-                # add alpha bandpower results
-                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/{DECOMP_METHOD}_{material}_{memory}_{epoch}.npz")
-                _, alpha_bp = trim_spectrum(data_in['freq'], data_in['spectra'], f_range=bands['alpha'])
-                df['alpha_bp'] = np.nanmean(alpha_bp, axis=1)
+                # add alpha power results
+                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/{DECOMP_METHOD}_{material}_{memory}_{epoch}stim.npz")
+                _, alpha = trim_spectrum(data_in['freq'], data_in['spectra'], f_range=bands['alpha'])
+                df['alpha'] = np.nanmean(alpha, axis=1)
 
                 # drop first index (0 Hz)
                 spectra = data_in['spectra'][:,1:]
                 freq = data_in['freq'][1:]
 
-                # add adjusted alpha bandpower results
+                # add adjusted alpha power results
                 params.freqs = freq
                 spectra_ap = params_to_spectra(params, component='aperiodic')
-                spectra_adjusted = spectra- spectra_ap 
+                spectra_adjusted = spectra - spectra_ap
                 _, alpha_adj = trim_spectrum(freq,spectra_adjusted, f_range=bands['alpha'])
-                df['alpha_adj'] = np.nanmean(alpha_adj, axis=1)                
+                df['alpha_adj'] = np.nanmean(alpha_adj, axis=1)
+
+                # add r-squared and adjusted r-squared
+                df['r2'] = params.get_params('r_squared')
+                df['r2_adj'] = compute_adj_r2(params)
 
                 # add to list
                 df_list.append(df)
