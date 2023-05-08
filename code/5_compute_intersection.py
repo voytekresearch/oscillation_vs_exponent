@@ -6,7 +6,7 @@ Data Repo: https://osf.io/3csku/
 Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
 
 This script analyzes the spectral results from 
-ieeg_3_spectral_parameterization.py
+ieeg_4_spectral_parameterization.py
 
 """
 
