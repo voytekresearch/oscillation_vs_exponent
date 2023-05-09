@@ -111,18 +111,18 @@ def params_to_spectra(params, component='both'):
         for ii in range(len(params)):
             _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
                                                 params[ii].aperiodic_params, params[ii].peak_params, 
-                                                freq_res=params.freq_res, nlv=0)
+                                                freq_res=params.freq_res, nlv=0, freqs=params.freqs)
     elif component == 'aperiodic':
         for ii in range(len(params)):
             _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
                                                 params[ii].aperiodic_params, [], 
-                                                freq_res=params.freq_res, nlv=0)
+                                                freq_res=params.freq_res, nlv=0, freqs=params.freqs)
     # simulate aperiodic spectra for each
     elif component == 'peak':
         for ii in range(len(params)):
             _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
                                                 [], params[ii].peak_params, 
-                                                freq_res=params.freq_res, nlv=0)
+                                                freq_res=params.freq_res, nlv=0, freqs=params.freqs)
     else:
         raise ValueError('Invalid component specified. Must be "both", "aperiodic", or "peak".')
     
@@ -275,6 +275,8 @@ def comp_intersection(param_pre, param_post):
         index of intersection frequency
 
     """
+    # imports
+    from fooof.sim import gen_power_spectrum
     
     # count channels
     n_chans = len(param_pre.get_params('r_squared'))
