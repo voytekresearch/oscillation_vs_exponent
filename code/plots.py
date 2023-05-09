@@ -357,7 +357,7 @@ def find_cpos_interactive():
     return cpos
 
 
-def plot_ap_params(params, time):
+def plot_ap_params(params, time, single_plot=True):
     """
     Plot time-series of aperiodic parameters.
     
@@ -367,6 +367,9 @@ def plot_ap_params(params, time):
         FOOOFGroup object containing aperiodic parameters.
     time : numpy array
         Time points corresponding to each aperiodic parameter.
+    single_plot : bool, optional
+        Whether to plot all aperiodic parameters on a single plot.
+        The default is True.
 
     Returns
     -------
@@ -379,16 +382,41 @@ def plot_ap_params(params, time):
     
     # get ap params
     offset, knee, exponent = extract_ap_params(params)
-    
-    # plot each ap param
-    for var, variable in zip([offset, knee, exponent], 
-                             ['offset', 'knee', 'exponent']):
-        
-        # skip knee if not fit
-        if np.isnan(var).all(): continue
-        
+
+    # plot each ap param separately
+    if not single_plot:
+        # create figure
+        fig, axes = plt.subplots(3, 1, figsize=(10, 7.5))
+
+        # plot each ap param
+        for var, variable, ax in zip([offset, knee, exponent], 
+                                    ['offset', 'knee', 'exponent'],
+                                    axes):
+            
+            # skip knee if not fit
+            if np.isnan(var).all(): continue
+            
+            # plot
+            plot_time_series(time, var, title=variable, ax=ax)
+            ax.set_ylabel(variable)
+
+    # plot all ap params on a single plot
+    else:
+        # zscore params
+        offset = (offset - np.mean(offset)) / np.std(offset)
+        knee = (knee - np.mean(knee)) / np.std(knee)
+        exponent = (exponent - np.mean(exponent)) / np.std(exponent)    
+
+        # join signals as 2D array
+        signals = np.vstack((offset, knee, exponent))
+
         # plot
-        plot_time_series(time, var, title=variable)
+        plot_time_series(time, signals, labels=['offset', 'knee', 'exponent'],
+                         title='Aperiodic parameters')
+
+        # label
+        plt.ylabel('z-score')
+
 
 
 def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
