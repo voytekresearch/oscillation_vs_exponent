@@ -175,3 +175,33 @@ def run_resampling_analysis(data_a, data_b , n_iter):
 
     return p_val, sign
 
+
+# reample means between two groups of data
+def resample_means(data1, data2, surrogate_runs):
+    # data sizes
+    data1_size = np.size(data1)
+    data2_size = np.size(data2)
+
+    # real differnce in means between datasets
+    real_difference = np.mean(data1) - np.mean(data2)
+
+    # pooled data for resampling analyses
+    pooled_data = np.append(data1, data2)
+
+    surr_difference = np.zeros(surrogate_runs)
+    for i in range(surrogate_runs):
+        # randomly permute the pooled data
+        permutation_array = np.random.permutation(data1_size + data2_size)
+        permuted_data = pooled_data[permutation_array]
+
+        # sample from the pooled data
+        surr_data1 = permuted_data[:data1_size]
+        surr_data2 = permuted_data[data1_size:]
+
+        # build distrubution of differenes of permuted data means
+        surr_difference[i] = np.mean(surr_data1) - np.mean(surr_data2)
+    
+    # where, along the distribution of the surrogate data, does the real data lie?
+    exact_p_value = np.count_nonzero(np.abs(real_difference) < np.abs(surr_difference)) / surrogate_runs
+
+    return real_difference, surr_difference, exact_p_value
