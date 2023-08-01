@@ -19,7 +19,7 @@ PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 import os
 import numpy as np
 import pandas as pd
-from fooof import FOOOFGroup
+from specparam import SpectralGroupModel, SpectralTimeModel
 from time import time as timer
 
 # Imports - custom
@@ -38,7 +38,7 @@ SPEC_PARAM_SETTINGS = {
     'peak_threshold'    :   3} # default : 2.0
 AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
 FREQ_RANGE = [4, 100] # frequency range to fit
-DECOMP_METHOD = 'tfr' # 'psd'
+DECOMP_METHOD = 'psd' # 'psd' or 'tfr'
 
 # FOOOF is causing some warnings about ragged arrays
 import warnings
@@ -58,7 +58,7 @@ def main():
 def param_group_psd_results():
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_spectral_results"
-    dir_output = f"{PROJECT_PATH}/data/ieeg_psd_param"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_psd_specparam"
     if not os.path.exists(dir_output): 
         os.makedirs(f"{dir_output}/fooof_reports")
     
@@ -79,8 +79,8 @@ def param_group_psd_results():
         
         # parameterize (fit both with and without knee parametere)
         for ap_mode in AP_MODE:
-            fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
-            fg.set_check_data_mode(False)
+            fg = SpectralGroupModel(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+            fg.set_check_modes(check_freqs=False, check_data=False)
             fg.fit(freq, spectra, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             
             # save results 
@@ -104,7 +104,7 @@ def parameterize_tfr():
 
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_tfr"
-    dir_output = f"{PROJECT_PATH}/data/ieeg_tfr_param"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_tfr_specparam"
     if not os.path.exists(f"{dir_output}/fooof_reports"): 
         os.makedirs(f"{dir_output}/fooof_reports")
 
@@ -134,9 +134,9 @@ def parameterize_tfr():
         # parameterize
         for ap_mode in AP_MODE:
             # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
-            fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
-            fg.set_check_data_mode(False)
-            fg.fit(freq, tfr.T, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
+            fg = SpectralTimeModel(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+            fg.set_check_modes(check_freqs=False, check_data=False)
+            fg.fit(freq, tfr, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             
             # save results and report
             fname_out = fname.replace('.npz','_param_%s' %ap_mode)
