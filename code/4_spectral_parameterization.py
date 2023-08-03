@@ -26,7 +26,7 @@ from time import time as timer
 from utils import hour_min_sec
 
 # Settings
-RUN_TFR = False # run TFR parameterization
+RUN_TFR = True # run TFR parameterization
 N_SAMPLES = 2**7 # number of time samples after downsampling
 
 # SpecParam hyperparameters
@@ -48,7 +48,7 @@ def main():
     
     # parameterize PSDs
     print('\nParameterizing PSDs...')
-    param_group_psd_results()
+    # param_group_psd_results()
 
     # parameterize TFRs
     if RUN_TFR:
@@ -129,7 +129,7 @@ def parameterize_tfr():
         freq = data_in['freq']
         
         # average over trials
-        tfr = np.squeeze(np.mean(tfr_in, axis=0))
+        tfr = np.squeeze(np.nanmean(tfr_in, axis=0))
         
         # parameterize
         for ap_mode in AP_MODE:
