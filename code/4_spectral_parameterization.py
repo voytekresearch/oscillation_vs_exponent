@@ -40,9 +40,9 @@ AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
 FREQ_RANGE = [4, 100] # frequency range to fit
 DECOMP_METHOD = 'psd' # 'psd' or 'tfr'
 
-# FOOOF is causing some warnings about ragged arrays
-import warnings
-warnings.filterwarnings("ignore")
+# This fixed the error: "Tcl_AsyncDelete: async handler deleted by the wrong thread"
+import matplotlib
+matplotlib.use('TkAgg')
 
 def main():
     
@@ -67,10 +67,10 @@ def param_group_psd_results():
     
     # loop through conditions
     files = [f for f in os.listdir(dir_input) if f.startswith(DECOMP_METHOD)]
-    for fname in files:
+    for i_file, fname in enumerate(files):
         # display progress
         t_start_c = timer()
-        print(f"\tAnalyzing: {fname}")
+        print(f"\tAnalyzing: {fname} ({i_file+1}/{len(files)})")
 
         # load results for condition
         data_in =  np.load(f"{dir_input}/{fname}")
