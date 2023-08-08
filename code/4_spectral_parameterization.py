@@ -39,6 +39,7 @@ SPEC_PARAM_SETTINGS = {
 AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
 FREQ_RANGE = [4, 100] # frequency range to fit
 DECOMP_METHOD = 'psd' # 'psd' or 'tfr'
+OVERWRITE = False # overwrite existing results
 
 # This fixed the error: "Tcl_AsyncDelete: async handler deleted by the wrong thread"
 import matplotlib
@@ -123,6 +124,13 @@ def parameterize_tfr():
         print(f"\t{fname}")
         t_start_c = timer()
         
+        # skip file is output already exists
+        if not OVERWRITE:
+            fname_out = fname.replace('.npz','_param_%s.json' %AP_MODE[0])
+            if os.path.exists(f"{dir_output}/{fname_out}"):
+                print("\t\tOutput already exists. Skipping...")
+                continue
+
         # load tfr
         data_in = np.load(f"{dir_input}/{fname}")
         tfr_in = data_in['tfr']
