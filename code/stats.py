@@ -125,7 +125,7 @@ def comp_resampling_pval(distribution, value):
     n_more = np.sum(distribution > value)
     
     # calc 2-sided p value
-    p_value = np.min([n_less, n_more]) / n_iterations * 2
+    p_value = np.min([n_less, n_more]) / n_iterations
     
     # determine direction of effect
     if n_less < n_more: 
