@@ -182,17 +182,18 @@ def plot_data_spatial(brain_mesh, elec_pos, value=None,
     plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
     
     # plot electrodes
+    print('plotting electrodes')
     if value is None:
         plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, color=elec_color, \
                         render_points_as_spheres=True)
     else:
         # set colormap
         if cmap is None:
-            cmap = pv.themes.DefaultTheme().cmap
-        # plot electrodes
-        print('plotting electrodes')
-        plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, scalars=value, \
-                        cmap=cmap, render_points_as_spheres=True)  
+            plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, scalars=value, \
+                            render_points_as_spheres=True)  
+        else:
+            plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, scalars=value, \
+                            cmap=cmap, render_points_as_spheres=True)  
         
     # add plane to divide hemisphers
     if divide_hemispheres:
