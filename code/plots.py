@@ -182,7 +182,6 @@ def plot_data_spatial(brain_mesh, elec_pos, value=None,
     plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
     
     # plot electrodes
-    print('plotting electrodes')
     if value is None:
         plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, color=elec_color, \
                         render_points_as_spheres=True)
@@ -201,7 +200,7 @@ def plot_data_spatial(brain_mesh, elec_pos, value=None,
         verts = np.array([[0,l,l], [0,l,-l], [0,-l,-l], [0,-l,l]])
         faces = np.array([4,0,1,2,3])
         divider = pv.PolyData(verts, faces)
-        plotter.add_mesh(divider, color='k')
+        plotter.add_mesh(divider, color=backgrouond_color)
 
     # set camera position
     if cpos is not None:
@@ -292,7 +291,7 @@ def plot_binary_spatial(brain_mesh, elec_pos, binary,
         verts = np.array([[0,l,l], [0,l,-l], [0,-l,-l], [0,-l,l]])
         faces = np.array([4,0,1,2,3])
         divider = pv.PolyData(verts, faces)
-        plotter.add_mesh(divider, color='k')
+        plotter.add_mesh(divider, color=backgrouond_color)
 
     # set camera position
     if cpos is not None:
