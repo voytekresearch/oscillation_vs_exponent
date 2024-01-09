@@ -122,7 +122,7 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         plt.savefig(fname_out)
 
 
-def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
+def plot_data_spatial(brain_mesh, elec_pos, value=None,
                        x_offset=None, y_offset=None, z_offset=None,
                        cpos=None, fname_out=None, off_screen=False,
                        elec_size=8, elec_color='r', cmap=None,
@@ -135,10 +135,8 @@ def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
 
     Parameters
     ----------
-    brain_pos : numpy array
-        Brain surface vertices.
-    brain_tri : numpy array
-        Brain surface triangles.
+    brain_mesh : pyvista object
+        Brain mesh.
     elec_pos : numpy array
         Electrode positions.
     value : numpy array, optional
@@ -177,10 +175,6 @@ def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
         elec_pos[:, 1] = elec_pos[:, 1] + y_offset
     if not z_offset is None:
         elec_pos[:, 2] = elec_pos[:, 2] + z_offset
-
-    # create pyvista object for brain
-    faces = np.hstack((3*np.ones((brain_tri.shape[0],1)), brain_tri))
-    brain_mesh = pv.PolyData(brain_pos, faces.astype(int))
     
     # create figure and add brain mesh
     plotter = pv.Plotter(off_screen=off_screen)
@@ -227,7 +221,7 @@ def plot_data_spatial(brain_pos, brain_tri, elec_pos, value=None,
         plotter.close()
 
         
-def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary, 
+def plot_binary_spatial(brain_mesh, elec_pos, binary, 
                         x_offset=None, y_offset=None, z_offset=None,
                         cpos=None, fname_out=None, off_screen=False,
                         elec_size=8, elec_colors=['r','grey'], 
@@ -239,10 +233,8 @@ def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary,
 
     Parameters
     ----------
-    brain_pos : numpy array
-        Brain surface vertices.
-    brain_tri : numpy array
-        Brain surface triangles.
+    brain_mesh : pyvista object
+        Brain mesh.
     elec_pos : numpy array
         Electrode positions.
     binary : numpy array of bool
@@ -279,10 +271,6 @@ def plot_binary_spatial(brain_pos, brain_tri, elec_pos, binary,
         elec_pos[:, 1] = elec_pos[:, 1] + y_offset
     if not z_offset is None:
         elec_pos[:, 2] = elec_pos[:, 2] + z_offset
-
-    # create pyvista object for brain
-    faces = np.hstack((3*np.ones((brain_tri.shape[0],1)), brain_tri))
-    brain_mesh = pv.PolyData(brain_pos, faces.astype(int))
     
     # create figure and add brain mesh
     plotter = pv.Plotter(off_screen=off_screen)
