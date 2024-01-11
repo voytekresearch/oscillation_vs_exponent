@@ -122,7 +122,8 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         plt.savefig(fname_out)
 
 
-def plot_data_spatial(brain_mesh, elec_pos, value=None,
+def plot_data_spatial(brain_mesh, elec_pos, value=None, 
+                       value_label='', title=None,
                        x_offset=None, y_offset=None, z_offset=None,
                        cpos=None, fname_out=None, off_screen=False,
                        elec_size=8, elec_color='r', cmap=None,
@@ -141,6 +142,10 @@ def plot_data_spatial(brain_mesh, elec_pos, value=None,
         Electrode positions.
     value : numpy array, optional
         Values to plot at electrodes. The default is None.
+    value_label : str, optional
+        Label for colorbar. The default is ''.
+    title : str, optional
+        Title for plot. The default is None.
     x_offset, y_offset, z_offset : float, optional
         Offset for electrode positions to avoid overlap with brain surface. 
         The default is None.
@@ -186,13 +191,13 @@ def plot_data_spatial(brain_mesh, elec_pos, value=None,
         plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, color=elec_color, \
                         render_points_as_spheres=True)
     else:
-        # set colormap
+        scalar_bar_args = {'title' : value_label, 'title_font_size' : 26}
         if cmap is None:
             plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, scalars=value, \
-                            render_points_as_spheres=True)  
+                            render_points_as_spheres=True, scalar_bar_args=scalar_bar_args)
         else:
             plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, scalars=value, \
-                            cmap=cmap, render_points_as_spheres=True)  
+                            cmap=cmap, render_points_as_spheres=True, scalar_bar_args=scalar_bar_args)  
         
     # add plane to divide hemisphers
     if divide_hemispheres:
@@ -205,6 +210,10 @@ def plot_data_spatial(brain_mesh, elec_pos, value=None,
     # set camera position
     if cpos is not None:
         plotter.camera_position = cpos
+
+    # add title
+    if title is not None:
+        plotter.add_text(title, position='upper_left', font_size=20)
 
     # save figure
     if fname_out is not None:
@@ -221,7 +230,7 @@ def plot_data_spatial(brain_mesh, elec_pos, value=None,
         plotter.close()
 
         
-def plot_binary_spatial(brain_mesh, elec_pos, binary, 
+def plot_binary_spatial(brain_mesh, elec_pos, binary, title=None,
                         x_offset=None, y_offset=None, z_offset=None,
                         cpos=None, fname_out=None, off_screen=False,
                         elec_size=8, elec_colors=['r','grey'], 
@@ -239,6 +248,8 @@ def plot_binary_spatial(brain_mesh, elec_pos, binary,
         Electrode positions.
     binary : numpy array of bool
         Binary values to plot at electrodes. (True = elec_color[0], False = elec_color[1])
+    title : str, optional
+        Title for plot. The default is None.
     x_offset, y_offset, z_offset : float, optional
         Offset for electrode positions to avoid overlap with brain surface. 
         The default is None.
@@ -296,6 +307,10 @@ def plot_binary_spatial(brain_mesh, elec_pos, binary,
     # set camera position
     if cpos is not None:
         plotter.camera_position = cpos
+
+    # add title
+    if title is not None:
+        plotter.add_text(title, position='upper_left', font_size=20)
 
     # save figure
     if fname_out is not None:
