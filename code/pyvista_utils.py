@@ -14,6 +14,32 @@ from pymatreader import read_mat
 PROJECT_PATH = 'C:/Users/prestonmw/tilt_vs_fingerprint/'
 DATASET_PATH = 'C:/Users/micha/datasets/SpectraltiltvsOscillations'
 
+def load_brain_meshes():
+    '''
+    Import brain mesh data from Fellner 2019 dataset, and return a dictionary
+    containing PyVista mesh object for each hemisphere and the whole brain.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    brain_mesh : dictionary
+        dictionary containing PyVista mesh object for each hemisphere and the
+        whole brain.
+
+    '''
+
+    # Load brain mesh data
+    brain_mesh = dict()
+    brain_mesh['right'] = load_brain_mesh('right')
+    brain_mesh['left'] = load_brain_mesh('left')
+    brain_mesh['both'] = load_brain_mesh('both')
+    
+    return brain_mesh
+
+
 def load_brain_mesh(hemisphere='both'):
     '''
     Import brain mesh data from Fellner 2019 dataset, and return a PyVista
