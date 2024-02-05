@@ -245,7 +245,7 @@ def compute_adj_r2(params):
     
     # compute adjusted r-squared
     n_samples = len(params.freqs) # number of data points
-    n_params = len(params.peak_params_) * 3 + 2 # number of parameters
+    n_params = len(params.peak_params_) * 3 + len(params.aperiodic_params_) # number of parameters
     r_squared = params.get_params('r_squared')
     adj_r2 = adjust_r_squared(r_squared, n_params, n_samples)
 
