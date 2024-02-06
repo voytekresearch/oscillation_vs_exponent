@@ -11,7 +11,7 @@ from os.path import join, exists
 from os import mkdir, listdir
 import numpy as np
 from mne import read_epochs
-from mne.time_frequency import psd_multitaper, tfr_multitaper
+from mne.time_frequency import tfr_multitaper
 from time import time as timer
 
 # Imports - custom
@@ -94,15 +94,15 @@ def comp_psd(epochs, fname, dir_output):
     for label, time_range in zip(TIME_RANGE_LABELS, TIME_RANGE):
         
         # calculate PSD
-        psd, freq = psd_multitaper(epochs, tmin=time_range[0], 
-                                   tmax=time_range[1], bandwidth=BANDWIDTH, 
-                                   n_jobs=N_JOBS, verbose=False)
+        results = epochs.compute_psd(tmin=time_range[0], tmax=time_range[1], 
+                                       bandwidth=BANDWIDTH, n_jobs=N_JOBS, 
+                                       verbose=False)
+        psd = results.get_data()
+        freq = results.freqs
         
         # save power results
         fname_out = str.replace(fname, '_epo.fif', '_%s_psd' %(label))
-        np.savez(join(dir_output, fname_out), 
-                 psd = psd, 
-                 freq = freq)
+        np.savez(join(dir_output, fname_out), psd=psd, freq=freq)
 
 
 def compute_channel_tfr(epochs, fname, dir_output):
