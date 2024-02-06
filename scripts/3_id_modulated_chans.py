@@ -70,13 +70,13 @@ def main():
         df.loc[0, 'material'] = f_parts[1]
         df.loc[0, 'memory'] = f_parts[2]
 
-        # trim tfr in time windows of interest AND AVERAGE ACROSS TIME
+        # trim tfr in time windows of interest and average across time
         tfr_pre = np.mean(crop_tfr(tfr, time, TIME_PRE)[0], axis=2)
         tfr_post = np.mean(crop_tfr(tfr, time, TIME_POST)[0], axis=2)
 
         # trim tf in frequency bands of interest
-        alpha_pre = np.mean(trim_spectrum(freq, tfr_pre, ALPHA_RANGE)[1], axis=1)
-        alpha_post = np.mean(trim_spectrum(freq, tfr_post, ALPHA_RANGE)[1], axis=1)
+        alpha_pre = np.mean(trim_spectrum(freq, tfr_pre, ALPHA_RANGE)[1], 1)
+        alpha_post = np.mean(trim_spectrum(freq, tfr_post, ALPHA_RANGE)[1], 1)
 
         # determine whether alpha/beta bandpower was task modulation
         p_val, sign = run_resampling_analysis(alpha_pre, alpha_post, N_ITER)
@@ -91,10 +91,12 @@ def main():
     # concatenate results
     results = pd.concat(dfs, ignore_index=True)
 
-    # find channels that are task modulated in both material conditions (successful trials)
-    results['sig_tm'] = results['p_val'] < ALPHA # determine significance within condition
-    sig = results[results['memory']=='hit'].groupby(['patient','chan_idx']).all().reset_index() # find sig chans
+    # find task modulated channels 
+    # p-value must be less than alpha for both material conditions)
     results['sig'] = np.nan # init
+    results['sig_tm'] = results['p_val'] < ALPHA # sig within material condition
+    results_s = results[results['memory']=='hit'] # take successful trials only
+    sig = results_s.groupby(['patient','chan_idx']).all().reset_index() 
     for ii in range(len(sig)):
         results.loc[(results['patient']==sig.loc[ii, 'patient']) & \
                     (results['chan_idx']==sig.loc[ii, 'chan_idx']), 'sig'] \
@@ -105,7 +107,7 @@ def main():
 
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
-    print(f"\n\n Total Time: \t {hour} hours, {min} minutes, {sec :0.1f} seconds")
+    print(f"\n\nTotal Time: \t {hour} hours, {min} minutes, {sec:0.1f} seconds")
 
 
 if __name__ == "__main__":

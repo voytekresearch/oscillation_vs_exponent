@@ -33,19 +33,23 @@ def main():
             for ap_mode in ['knee']: # ['fixed', 'knee']:
                 # load parameterization results
                 param_pre = FOOOFGroup()
-                param_pre.load(join(dir_input, '%s_%s_%s_prestim_params_%s.json' %(DECOMP_METHOD, material, memory, ap_mode)))
+                fname = f"{dir_input}/{DECOMP_METHOD}_{material}_{memory}_prestim_params_{ap_mode}.json"
+                param_pre.load(fname)
+
                 param_post = FOOOFGroup()
-                param_post.load(join(dir_input, '%s_%s_%s_poststim_params_%s.json' %(DECOMP_METHOD, material, memory, ap_mode)))
+                fname = f"{dir_input}/{DECOMP_METHOD}_{material}_{memory}_poststim_params_{ap_mode}.json"
+                param_post.load(fname)
         
         
                 # calc intersection 
-                psd_pre, psd_post, intersection, intersection_idx = \
-                    comp_intersection(param_pre, param_post)
+                temp = comp_intersection(param_pre, param_post)
+                psd_pre, psd_post, intersection, intersection_idx = temp
                 
                 # save results
-                fname_out = 'intersection_results_%s_%s_%s' %(material, memory, ap_mode)
-                np.savez(join(dir_output, fname_out), psd_pre=psd_pre, psd_post=psd_post, 
-                        intersection=intersection, intersection_idx=intersection_idx)
+                fname_out = f'{dir_output}/intersection_results_{material}_{memory}_{ap_mode}.npz'
+                np.savez(fname_out, psd_pre=psd_pre, psd_post=psd_post, 
+                        intersection=intersection, 
+                        intersection_idx=intersection_idx)
 
     
 if __name__ == "__main__":

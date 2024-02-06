@@ -35,9 +35,9 @@ def main():
         os.makedirs(dir_output)
 
     # load channel info
-    chan_info = pd.read_pickle(F"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.pkl")
+    fname_in = F"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.pkl"
+    chan_info = pd.read_pickle(fname_in)
     chan_info.drop(columns=['index'], inplace=True)
-    chan_info['unique_id'] = chan_info['patient'] + '_' + chan_info['chan_idx'].astype(str)
 
     # get data for each parameter and condition
     df_list = []
@@ -51,19 +51,21 @@ def main():
                 df['epoch'] = epoch
 
                 # load aperiodic parameters
-                fname_in = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}"
-                print(f"Loading {fname_in}...")
-                df['offset'], df['knee'], df['exponent'] = load_ap_params(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
+                fname = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}"
+                print(f"Loading {fname}...")
+                data_in = load_ap_params(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname}")
+                df['offset'], df['knee'], df['exponent'] = data_in
 
                 # load intersection frequency results
-                fname_in = f"intersection_results_{material}_{memory}_{AP_MODE}.npz"
-                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname_in}", allow_pickle=True)
+                fname = f"intersection_results_{material}_{memory}_{AP_MODE}.npz"
+                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}", 
+                                  allow_pickle=True)
                 df['f_rotation'] = data_in['intersection']
 
                 # load specparam results
                 params = FOOOFGroup()
-                fname_in = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}.json"
-                params.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
+                fname = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}.json"
+                params.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname}")
 
                 # add alpha results
                 alpha = get_band_peak_fg(params, ALPHA_RANGE)
@@ -72,8 +74,10 @@ def main():
                 df["alpha_bw"] = alpha[:,2]
 
                 # add alpha power results
-                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/{DECOMP_METHOD}_{material}_{memory}_{epoch}stim.npz")
-                _, alpha = trim_spectrum(data_in['freq'], data_in['spectra'], f_range=ALPHA_RANGE)
+                fname = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}stim.npz"
+                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/{fname}")
+                _, alpha = trim_spectrum(data_in['freq'], data_in['spectra'],
+                                          f_range=ALPHA_RANGE)
                 df['alpha'] = np.nanmean(alpha, axis=1)
 
                 # drop first index (0 Hz)
@@ -84,7 +88,8 @@ def main():
                 params.freqs = freq
                 spectra_ap = params_to_spectra(params, component='aperiodic')
                 spectra_adjusted = spectra - spectra_ap
-                _, alpha_adj = trim_spectrum(freq,spectra_adjusted, f_range=ALPHA_RANGE)
+                _, alpha_adj = trim_spectrum(freq, spectra_adjusted, 
+                                             f_range=ALPHA_RANGE)
                 df['alpha_adj'] = np.nanmean(alpha_adj, axis=1)
 
                 # add r-squared and adjusted r-squared

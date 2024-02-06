@@ -131,8 +131,10 @@ def save_epochs(epochs, fname):
     epochs_miss = epochs[~epochs.metadata['recalled'].values.astype('bool')]
 
     # save data as .fif - after dropping unsuccessful trials 
-    epochs_hit.save(join(dir_output, fname.replace('.mat', '_hit_epo.fif')), overwrite=True)
-    epochs_miss.save(join(dir_output, fname.replace('.mat', '_miss_epo.fif')), overwrite=True)
+    epochs_hit.save(join(dir_output, fname.replace('.mat', '_hit_epo.fif')), 
+                    overwrite=True)
+    epochs_miss.save(join(dir_output, fname.replace('.mat', '_miss_epo.fif')), 
+                     overwrite=True)
     
 def collect_channel_info(dir_input, fname):
     """

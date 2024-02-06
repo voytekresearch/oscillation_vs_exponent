@@ -63,7 +63,8 @@ def param_group_psd_results():
         
         # parameterize (fit both with and without knee parametere)
         for ap_mode in AP_MODE:
-            fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+            fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, 
+                            verbose=False)
             fg.set_check_data_mode(False)
             fg.fit(freq, spectra, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             
@@ -75,11 +76,11 @@ def param_group_psd_results():
 
         # display progress
         hour, min, sec = hour_min_sec(timer() - t_start_c)
-        print(f"\t\tCondition completed in {hour} hour, {min} min, and {sec :0.1f} s")
+        print(f"\t\tCondition completed in {hour} hour, {min} min, and {sec:0.1f} s")
 
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
-    print(f"Total PSD analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
+    print(f"Total PSD analysis time: {hour} hour, {min} min, and {sec:0.1f} s")
  
 
 def parameterize_tfr():
@@ -97,10 +98,10 @@ def parameterize_tfr():
     df = results[results['sig']==1].reset_index(drop=True)
     
     # loop through significant channels
-    for i_chan in range(len(df)):
-        # Check for TFR results
-        fname = f"{df.loc[i_chan, 'patient']}_{df.loc[i_chan, 'material']}_" + \
-                    f"{df.loc[i_chan, 'memory']}_chan{df.loc[i_chan, 'chan_idx']}_tfr.npz"
+    for i_chan, row in df.iterrows():
+        # get file name
+        fname = f"{row['patient']}_{row['material']}_{row['memory']}" + \
+            f"_chan{row['chan_idx']}_tfr.npz"
 
         # display progress
         print(f"    Analyzing file {i_chan}/{len(df)}") 
@@ -118,7 +119,8 @@ def parameterize_tfr():
         # parameterize
         for ap_mode in AP_MODE:
             # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
-            fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+            fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, 
+                            verbose=False)
             fg.set_check_data_mode(False)
             fg.fit(freq, tfr.T, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             

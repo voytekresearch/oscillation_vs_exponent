@@ -24,7 +24,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # analysis/statistical settings
-AP_MODE = 'knee' # Specparam setting, 'fixed' or 'knee' - knee is recommended for this dataset
+AP_MODE = 'knee' # Specparam aperiodic mode ('fixed' or 'knee')
 N_ITER = 100 # number of iterations for permutation test
 
 def main():
@@ -40,8 +40,8 @@ def main():
     dfs = []
 
     # load channel info
-    chan_info = np.load(f'{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.pkl',
-        allow_pickle=True)
+    fname_in = f'{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.pkl'
+    chan_info = np.load(fname_in, allow_pickle=True)
     
     # loop through materials
     for material in ['face','word']:
@@ -54,9 +54,12 @@ def main():
             
             # load spectral parameterization results
             param_pre = FOOOFGroup()
-            param_pre.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{material}s_{memory}_prestim_params_{AP_MODE}.json")
+            fname = f"{material}s_{memory}_prestim_params_{AP_MODE}.json"
+            param_pre.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname}")
+
             param_post = FOOOFGroup()
-            param_post.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{material}s_{memory}_poststim_params_{AP_MODE}.json")
+            fname = f"{material}s_{memory}_poststim_params_{AP_MODE}.json"
+            param_post.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname}")
             
             # change NaN to 0 (no detectable alpha peak)
             alpha_pre = get_band_peak_fg(param_pre, ALPHA_RANGE)
@@ -81,9 +84,9 @@ def main():
                 print(f'\nAnalyzing patient: {patient}' )
 
                 # load subject data (pre/post-stim PSDs)
-                fname = f'{patient}_{material}s_{memory}_xxx_psd.npz'
-                data_pre = np.load(f"{dir_input}/{fname.replace('xxx','prestim')}")
-                data_post = np.load(f"{dir_input}/{fname.replace('xxx','poststim')}")
+                fname = f'{patient}_{material}s_{memory}_xxxstim_psd.npz'
+                data_pre = np.load(f"{dir_input}/{fname.replace('xxx','pre')}")
+                data_post = np.load(f"{dir_input}/{fname.replace('xxx','post')}")
         
                 # get parameters for this patient
                 exp_diff_pat = exp_diff[chan_info['patient']==patient]
@@ -92,8 +95,9 @@ def main():
                 # run permutation stats
                 df_i = resampling_analysis(data_pre['freq'], data_pre['psd'], 
                                             data_post['psd'], exp_diff_pat,
-                                            alpha_diff_pat, AP_MODE, ALPHA_RANGE,
-                                            n_iterations=N_ITER, n_jobs=N_JOBS)
+                                            alpha_diff_pat, AP_MODE, 
+                                            ALPHA_RANGE, n_iterations=N_ITER, 
+                                            n_jobs=N_JOBS)
 
                 # aggregate
                 df_i['patient'] = patient
@@ -145,14 +149,16 @@ def resampling_analysis(freq, spectra_pre, spectra_post, exp_diff, alpha_diff,
                                                  spectra_post[:, i_chan], order)
 
         # parameterize shuffled spectra and compute the difference in exponent
-        results = calc_param_change(freq, spectra_0s, spectra_1s, ap_mode, f_range, n_jobs=n_jobs)
+        results = calc_param_change(freq, spectra_0s, spectra_1s, ap_mode, 
+                                    f_range, n_jobs=n_jobs)
         distr_exp[i_chan], distr_alpha[i_chan] = results
 
-        # comp p-value
-        pval_exp[i_chan], sign_exp[i_chan] = comp_resampling_pval(distr_exp[i_chan], 
-                                                           exp_diff[i_chan])
-        pval_alpha[i_chan], sign_alpha[i_chan] = comp_resampling_pval(distr_alpha[i_chan], 
-                                                           alpha_diff[i_chan])
+        # compute p-value
+        temp = comp_resampling_pval(distr_exp[i_chan], exp_diff[i_chan])
+        pval_exp[i_chan], sign_exp[i_chan] = temp
+
+        temp = comp_resampling_pval(distr_alpha[i_chan], alpha_diff[i_chan])
+        pval_alpha[i_chan], sign_alpha[i_chan] = temp
         
         # check if all distr_alpha values are NaN
         if np.isnan(distr_alpha[i_chan]).all():
@@ -189,7 +195,8 @@ def shuffle_spectra(spectra_0, spectra_1, order):
 
 def calc_param_change(freq, spectra_0, spectra_1, ap_mode, f_range, n_jobs=-1):
     # initialize model
-    sp_0 = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+    sp_0 = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, 
+                      verbose=False)
     sp_0.set_check_data_mode(False)
     sp_1 = sp_0.copy()
 
