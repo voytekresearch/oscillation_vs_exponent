@@ -1,19 +1,7 @@
-# -*- coding: utf-8 -*-
 """
-Created on Thu Apr  8 17:35:02 2021
-
-@author: micha
-
-Data Repo: https://osf.io/3csku/
-Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
-
-This script parameterizes the spectral results from 
-ieeg_2_time_frequency_analysis.py
+This script parameterizes the spectral results from 2_time_frequency_analysis.py
 
 """
-
-# Set path
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 
 # Imports
 import os

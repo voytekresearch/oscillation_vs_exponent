@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Sep 22 11:46:53 2021
+This script aggregates the results from the spectral parameterization and 
+intersection analyses (scripts 4 and 5) and saves them to a single dataframe.
 
-@author: micha
 """
 
 # SET PATH

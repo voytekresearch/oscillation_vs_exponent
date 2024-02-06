@@ -1,18 +1,8 @@
-# -*- coding: utf-8 -*-
 """
-Created on Thu Apr  8 17:35:00 2021
-
-@author: micha
-
-Data Repo: https://osf.io/3csku/
-Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
-
- 
-This script executes the primary time-frequnecy analyses. 
-The power spectral density (PSD) is computed for each epoch, the pre-stimulus 
-time window, and the post-stimulus time window. 
-The time-frequnecy representation of power (TFR) is computed for the epoch 
-using the multitaper method. 
+This script executes the primary time-frequnecy analyses. The power spectral 
+density (PSD) is computed for each epoch, the pre-stimulus time window, and the 
+post-stimulus time window. The time-frequnecy representation of power (TFR) is 
+also computed for each epoch using the multitaper method. 
 
 """
 

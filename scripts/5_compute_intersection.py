@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
 """
-Created on Mon Sep 20 09:27:01 2021
-
-Data Repo: https://osf.io/3csku/
-Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
-
-This script analyzes the spectral results from 
-ieeg_4_spectral_parameterization.py
+This script computes the intersaection frequency between the pre- and 
+post-stimulus power spectra.
 
 """
 

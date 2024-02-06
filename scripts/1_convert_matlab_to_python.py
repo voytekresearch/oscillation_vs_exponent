@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
 """
-Created on Thu Apr  8 17:29:53 2021
+This script reformats the iEEG dataset from Fieldtrip data structures (.mat) 
+into MNE epochsArrays (.fif). The time-series are also saved as numpy arrays 
+(.npy).
 
-@author: micha
-
-Data Repo: https://osf.io/3csku/
-Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
-
-The provided dataset is formatted as Fieldtrip data structures (.mat);  
-this script reformats the iEEG dataset into MNE epochsArrays (.fif). The 
-time-series are also saved as numpy arrays (.npy).
+Data Repository: 
+  https://osf.io/3csku/
+  
+Associated Paper: 
+  https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
 
 """
 

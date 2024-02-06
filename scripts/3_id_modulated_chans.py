@@ -1,5 +1,6 @@
 """
-Identify channels with significant modulation of alpha/beta bandpower
+This script identifies channels with significant task-related modulation of 
+total alpha/beta bandpower using permutation testing.
 
 """
 

@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Sep 22 11:46:53 2021
+The script applies permutation testing to evaluate the significance of the 
+spectral parameterization results from 4_spectral_parameterization.py.
 
-@author: micha
 """
 
 # Imports - standard
