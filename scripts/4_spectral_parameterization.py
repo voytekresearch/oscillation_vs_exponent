@@ -23,22 +23,18 @@ from fooof import FOOOFGroup
 from time import time as timer
 
 # Imports - custom
+import sys
+sys.path.append("code")
+from paths import PROJECT_PATH
+from info import N_JOBS, FREQ_RANGE, SPEC_PARAM_SETTINGS
 from utils import hour_min_sec
 
 # Settings
-RUN_TFR = False # run TFR parameterization
-N_SAMPLES = 2**7 # number of time samples after downsampling
+RUN_TFR = False # run TFR parameterization (takes a long time)
 
 # SpecParam hyperparameters
-N_JOBS = -1 # number of jobs for parallel processing
-SPEC_PARAM_SETTINGS = {
-    'peak_width_limits' :   [2, np.inf], # default : (0.5, 12.0) - recommends at least frequency resolution * 2
-    'min_peak_height'   :   0, # default : 0
-    'max_n_peaks'       :   4, # default : inf
-    'peak_threshold'    :   3} # default : 2.0
 AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
-FREQ_RANGE = [4, 100] # frequency range to fit
-DECOMP_METHOD = 'tfr' # 'psd'
+DECOMP_METHOD = 'tfr' # paraneterize PSDs or average TFRs
 
 # FOOOF is causing some warnings about ragged arrays
 import warnings

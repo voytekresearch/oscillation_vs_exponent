@@ -13,22 +13,20 @@ time-series are also saved as numpy arrays (.npy).
 
 """
 
-# Imports
+# Imports - standard
 from os.path import join, exists
-from os import  makedirs
+from os import makedirs
 import mne
 from pymatreader import read_mat
 import numpy as np
 import pandas as pd
 
-# Set directories
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-DATASET_PATH = 'C:/Users/micha/datasets/SpectraltiltvsOscillations/'
+# Imports - custom
+import sys
+sys.path.append("code")
+from info import PATIENTS, FS
+from paths import PROJECT_PATH, DATASET_PATH
 
-# Dataset info
-PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
-            'pat17','pat19','pat20','pat21','pat22']
-FS = 512
 
 def main():
     """

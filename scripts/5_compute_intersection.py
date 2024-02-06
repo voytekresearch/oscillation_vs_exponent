@@ -15,15 +15,16 @@ ieeg_4_spectral_parameterization.py
 from os.path import join, exists
 from os import mkdir
 import numpy as np
-
 from fooof import FOOOFGroup
 
-# import - custom
+# Imports - custom
+import sys
+sys.path.append("code")
+from paths import PROJECT_PATH
 from specparam_utils import comp_intersection
 
-# Parameters
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-DECOMP_METHOD = 'tfr' # 'psd'
+# Settings
+DECOMP_METHOD = 'tfr' # analyze PSDs or average TFRs
 
 def main():
     # identify / create directories

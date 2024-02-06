@@ -8,30 +8,26 @@ Created on Wed Sep 22 11:46:53 2021
 # SET PATH
 PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 
-# Imports - general
+# Imports - standard
 import os
 import numpy as np
 import pandas as pd
 
 # Imports - specparam
 from fooof import FOOOFGroup
-from fooof.bands import Bands
 from fooof.analysis import get_band_peak_fg
 from fooof.utils import trim_spectrum
 
 # Imports - custom
+import sys
+sys.path.append("code")
+from paths import PROJECT_PATH
+from info import ALPHA_RANGE
 from specparam_utils import load_ap_params, params_to_spectra, compute_adj_r2
 
-# Parameters - dataset details
-FS = 512 # sampling frequency
-TMIN = -1.5 # epoch start time
-PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
-            'pat17','pat19','pat20','pat21','pat22'] # subject IDs
-
-# Parameters - spectral analysis hyperparameters
-bands = Bands({'alpha' : [7, 13]}) # define spectral bands of interest
+# Settings - spectral analysis hyperparameters
 AP_MODE = 'knee' # aperiodic mode
-DECOMP_METHOD = 'tfr' # 'psd'
+DECOMP_METHOD = 'tfr' # analyze PSDs or average TFRs
 
 def main():
     # id directories
@@ -71,14 +67,14 @@ def main():
                 params.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
 
                 # add alpha results
-                alpha = get_band_peak_fg(params, bands['alpha'])
+                alpha = get_band_peak_fg(params, ALPHA_RANGE)
                 df["alpha_cf"] = alpha[:,0]
                 df["alpha_pw"] = alpha[:,1]
                 df["alpha_bw"] = alpha[:,2]
 
                 # add alpha power results
                 data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/{DECOMP_METHOD}_{material}_{memory}_{epoch}stim.npz")
-                _, alpha = trim_spectrum(data_in['freq'], data_in['spectra'], f_range=bands['alpha'])
+                _, alpha = trim_spectrum(data_in['freq'], data_in['spectra'], f_range=ALPHA_RANGE)
                 df['alpha'] = np.nanmean(alpha, axis=1)
 
                 # drop first index (0 Hz)
@@ -89,7 +85,7 @@ def main():
                 params.freqs = freq
                 spectra_ap = params_to_spectra(params, component='aperiodic')
                 spectra_adjusted = spectra - spectra_ap
-                _, alpha_adj = trim_spectrum(freq,spectra_adjusted, f_range=bands['alpha'])
+                _, alpha_adj = trim_spectrum(freq,spectra_adjusted, f_range=ALPHA_RANGE)
                 df['alpha_adj'] = np.nanmean(alpha_adj, axis=1)
 
                 # add r-squared and adjusted r-squared

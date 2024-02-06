@@ -5,45 +5,28 @@ Created on Wed Sep 22 11:46:53 2021
 @author: micha
 """
 
-# Set paths
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-
-# Imports - general
+# Imports - standard
 import os
 import numpy as np
 import pandas as pd
 from timeit import default_timer as timer
-
 from fooof import FOOOFGroup
-from fooof.bands import Bands
 from fooof.analysis import get_band_peak_fg
+
+# Imports - custom
+import sys
+sys.path.append("code")
+from paths import PROJECT_PATH
+from info import PATIENTS, N_JOBS, SPEC_PARAM_SETTINGS, ALPHA_RANGE
+from stats import gen_random_order, comp_resampling_pval
 
 # FOOOF is causing some warnings about ragged arrays
 import warnings
 warnings.filterwarnings("ignore")
 
-# Imports - custom
-from stats import gen_random_order, comp_resampling_pval
-
 # analysis/statistical settings
 AP_MODE = 'knee' # Specparam setting, 'fixed' or 'knee' - knee is recommended for this dataset
 N_ITER = 100 # number of iterations for permutation test
-N_JOBS = -1 # run in parrallel
-
-# dataset details
-FS = 512 # meg sampling frequency
-TMIN = -1.5 # epoch start time
-PATS = ['pat02','pat04','pat05','pat08','pat10','pat11',
-         'pat15','pat16','pat17','pat19','pat20','pat21','pat22']
-
-# analysis parameters used to generate results
-BANDS = Bands({'alpha' : [8, 20]})
-SPEC_PARAM_SETTINGS = {
-    'peak_width_limits' :   [4, 20], # default: (0.5, 12.0)) - recommends at least frequency resolution * 2
-    'min_peak_height'   :   0.1, 
-    'max_n_peaks'       :   4, # (default: inf)
-    'peak_threshold'    :   2.0} # (default: 2.0)
-
 
 def main():
     # display progress
@@ -77,8 +60,8 @@ def main():
             param_post.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{material}s_{memory}_poststim_params_{AP_MODE}.json")
             
             # change NaN to 0 (no detectable alpha peak)
-            alpha_pre = get_band_peak_fg(param_pre, BANDS.alpha)
-            alpha_post = get_band_peak_fg(param_post, BANDS.alpha)
+            alpha_pre = get_band_peak_fg(param_pre, ALPHA_RANGE)
+            alpha_post = get_band_peak_fg(param_post, ALPHA_RANGE)
             
             # calc change in parameters (exponent and adjusted alpha power)
             exp_diff = param_post.get_params('aperiodic','exponent') - \
@@ -86,7 +69,7 @@ def main():
             alpha_diff = alpha_post[:,1] - alpha_pre[:,1] 
 
             # loop through patients
-            for patient in PATS:
+            for patient in PATIENTS:
                 # TEMP - skip files that have already been processed
                 files_completed = os.listdir(dir_output)
                 fname_out = f'stats_{patient}_{material}_{memory}_{AP_MODE}.csv'
@@ -110,7 +93,7 @@ def main():
                 # run permutation stats
                 df_i = resampling_analysis(data_pre['freq'], data_pre['psd'], 
                                             data_post['psd'], exp_diff_pat,
-                                            alpha_diff_pat, AP_MODE, BANDS,
+                                            alpha_diff_pat, AP_MODE, ALPHA_RANGE,
                                             n_iterations=N_ITER, n_jobs=N_JOBS)
 
                 # aggregate
@@ -136,7 +119,7 @@ def main():
     print(f'Total time: {timer() - start_time}')
         
 def resampling_analysis(freq, spectra_pre, spectra_post, exp_diff, alpha_diff, 
-                        ap_mode, bands, n_iterations=1000, n_jobs=-1):
+                        ap_mode, f_range, n_iterations=1000, n_jobs=-1):
     
     # size up data
     n_trials = spectra_pre.shape[0]
@@ -163,7 +146,7 @@ def resampling_analysis(freq, spectra_pre, spectra_post, exp_diff, alpha_diff,
                                                  spectra_post[:, i_chan], order)
 
         # parameterize shuffled spectra and compute the difference in exponent
-        results = calc_param_change(freq, spectra_0s, spectra_1s, ap_mode, bands, n_jobs=n_jobs)
+        results = calc_param_change(freq, spectra_0s, spectra_1s, ap_mode, f_range, n_jobs=n_jobs)
         distr_exp[i_chan], distr_alpha[i_chan] = results
 
         # comp p-value
@@ -205,7 +188,7 @@ def shuffle_spectra(spectra_0, spectra_1, order):
 
     return spectra_0s, spectra_1s
 
-def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=-1):
+def calc_param_change(freq, spectra_0, spectra_1, ap_mode, f_range, n_jobs=-1):
     # initialize model
     sp_0 = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
     sp_0.set_check_data_mode(False)
@@ -220,8 +203,8 @@ def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=-1):
                sp_0.get_params('aperiodic', 'exponent')
     
     # calculate change in alpha amplitude
-    alpha_0 = get_band_peak_fg(sp_0, bands.alpha)
-    alpha_1 = get_band_peak_fg(sp_1, bands.alpha)
+    alpha_0 = get_band_peak_fg(sp_0, f_range)
+    alpha_1 = get_band_peak_fg(sp_1, f_range)
     alpha_diff = alpha_1[:,1] - alpha_0[:,1] 
     
     return exp_diff, alpha_diff

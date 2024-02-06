@@ -15,10 +15,8 @@ The time-frequnecy representation of power (TFR) is computed for the epoch
 using the multitaper method. 
 
 """
-#  SET PATH
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 
-# Imports - general
+# Imports - standard
 from os.path import join, exists
 from os import mkdir, listdir
 import numpy as np
@@ -27,15 +25,14 @@ from mne.time_frequency import psd_multitaper, tfr_multitaper
 from time import time as timer
 
 # Imports - custom
+import sys
+sys.path.append("code")
+from info import PATIENTS, N_JOBS
+from paths import PROJECT_PATH
 from utils import hour_min_sec
 from tfr_utils import crop_tfr
 
-# Dataset details
-PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
-            'pat17','pat19','pat20','pat21','pat22']
-
 # Settings - psd analysis
-N_JOBS = -1 # number of jobs to run in parallel (-1 = use all available cores)
 BANDWIDTH = 2 # psd multitaper half-bandwidth - frequencies at ± half-bandwidth are smoothed together
 TIME_RANGE = np.array([[-1.0, 1.0],    # epoch
                        [-1.0, 0.0],    # pre-stim

@@ -3,37 +3,30 @@ Identify channels with significant modulation of alpha/beta bandpower
 
 """
 
-# Set path
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-
-# ignore mean of empty slice warnings
-import warnings
-warnings.filterwarnings("ignore")
-
-# Imports - general
+# Imports - standard
 import os
 import numpy as np
 import pandas as pd
 from time import time as timer
 from time import ctime as time_now
 from fooof.utils import trim_spectrum
-from fooof.bands import Bands
 
 # Imports - custom
+import sys
+sys.path.append("code")
+from paths import PROJECT_PATH
+from info import ALPHA_RANGE
 from stats import run_resampling_analysis
 from utils import hour_min_sec
 from tfr_utils import crop_tfr
 
-# dataset details
-FS = 512 # meg sampling frequency
-TMIN = -1.5 # epoch start time
-PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11',
-         'pat15','pat16','pat17','pat19','pat20','pat21','pat22']
+# ignore mean of empty slice warnings
+import warnings
+warnings.filterwarnings("ignore")
 
 # anlysis parameters
 TIME_PRE = [-1.0, 0.0]    # pre-stim
 TIME_POST = [0.0, 1.0]    # post-stim
-BANDS = Bands({'alpha' : [7, 13]}) # define spectral bands of interest
 N_ITER = 10000 # random permutation iterations/shuffles
 ALPHA = 0.05 # significance level
 
@@ -81,8 +74,8 @@ def main():
         tfr_post = np.mean(crop_tfr(tfr, time, TIME_POST)[0], axis=2)
 
         # trim tf in frequency bands of interest
-        alpha_pre = np.mean(trim_spectrum(freq, tfr_pre, BANDS.alpha)[1], axis=1)
-        alpha_post = np.mean(trim_spectrum(freq, tfr_post, BANDS.alpha)[1], axis=1)
+        alpha_pre = np.mean(trim_spectrum(freq, tfr_pre, ALPHA_RANGE)[1], axis=1)
+        alpha_post = np.mean(trim_spectrum(freq, tfr_post, ALPHA_RANGE)[1], axis=1)
 
         # determine whether alpha/beta bandpower was task modulation
         p_val, sign = run_resampling_analysis(alpha_pre, alpha_post, N_ITER)
