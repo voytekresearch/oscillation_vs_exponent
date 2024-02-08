@@ -13,9 +13,10 @@ import numpy as np
 import pandas as pd
 
 # Imports - specparam
-from fooof import FOOOFGroup
-from fooof.analysis import get_band_peak_fg
-from fooof.utils import trim_spectrum
+from specparam import SpectralGroupModel
+from specparam.bands import Bands
+from specparam.analysis import get_band_peak
+from specparam.utils import trim_spectrum
 
 # Imports - custom
 import sys
@@ -63,12 +64,12 @@ def main():
                 df['f_rotation'] = data_in['intersection']
 
                 # load specparam results
-                params = FOOOFGroup()
-                fname = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}.json"
-                params.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname}")
+                params = SpectralGroupModel()
+                fname_in = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}.json"
+                params.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
 
                 # add alpha results
-                alpha = get_band_peak_fg(params, ALPHA_RANGE)
+                alpha = get_band_peak(params, bands['alpha'])
                 df["alpha_cf"] = alpha[:,0]
                 df["alpha_pw"] = alpha[:,1]
                 df["alpha_bw"] = alpha[:,2]

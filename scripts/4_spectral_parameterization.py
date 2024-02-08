@@ -7,7 +7,7 @@ This script parameterizes the spectral results from 2_time_frequency_analysis.py
 import os
 import numpy as np
 import pandas as pd
-from fooof import FOOOFGroup
+from specparam import SpectralGroupModel, SpectralTimeModel
 from time import time as timer
 
 # Imports - custom
@@ -18,21 +18,24 @@ from info import N_JOBS, FREQ_RANGE, SPEC_PARAM_SETTINGS
 from utils import hour_min_sec
 
 # Settings
-RUN_TFR = False # run TFR parameterization (takes a long time)
+RUN_TFR = False # run TFR parameterization
+N_SAMPLES = 2**7 # number of time samples after downsampling
 
 # SpecParam hyperparameters
 AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
+FREQ_RANGE = [4, 100] # frequency range to fit
 DECOMP_METHOD = 'tfr' # paraneterize PSDs or average TFRs
+OVERWRITE = False # overwrite existing results
 
-# FOOOF is causing some warnings about ragged arrays
-import warnings
-warnings.filterwarnings("ignore")
+# This fixed the error: "Tcl_AsyncDelete: async handler deleted by the wrong thread"
+import matplotlib
+matplotlib.use('TkAgg')
 
 def main():
     
     # parameterize PSDs
     print('\nParameterizing PSDs...')
-    param_group_psd_results()
+    # param_group_psd_results()
 
     # parameterize TFRs
     if RUN_TFR:
@@ -42,7 +45,7 @@ def main():
 def param_group_psd_results():
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_spectral_results"
-    dir_output = f"{PROJECT_PATH}/data/ieeg_psd_param"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_psd_specparam"
     if not os.path.exists(dir_output): 
         os.makedirs(f"{dir_output}/fooof_reports")
     
@@ -51,10 +54,10 @@ def param_group_psd_results():
     
     # loop through conditions
     files = [f for f in os.listdir(dir_input) if f.startswith(DECOMP_METHOD)]
-    for fname in files:
+    for i_file, fname in enumerate(files):
         # display progress
         t_start_c = timer()
-        print(f"\tAnalyzing: {fname}")
+        print(f"\tAnalyzing: {fname} ({i_file+1}/{len(files)})")
 
         # load results for condition
         data_in =  np.load(f"{dir_input}/{fname}")
@@ -63,9 +66,8 @@ def param_group_psd_results():
         
         # parameterize (fit both with and without knee parametere)
         for ap_mode in AP_MODE:
-            fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, 
-                            verbose=False)
-            fg.set_check_data_mode(False)
+            fg = SpectralGroupModel(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+            fg.set_check_modes(check_freqs=False, check_data=False)
             fg.fit(freq, spectra, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             
             # save results 
@@ -89,7 +91,7 @@ def parameterize_tfr():
 
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_tfr"
-    dir_output = f"{PROJECT_PATH}/data/ieeg_tfr_param"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_tfr_specparam"
     if not os.path.exists(f"{dir_output}/fooof_reports"): 
         os.makedirs(f"{dir_output}/fooof_reports")
 
@@ -108,21 +110,27 @@ def parameterize_tfr():
         print(f"\t{fname}")
         t_start_c = timer()
         
+        # skip file is output already exists
+        if not OVERWRITE:
+            fname_out = fname.replace('.npz','_param_%s.json' %AP_MODE[0])
+            if os.path.exists(f"{dir_output}/{fname_out}"):
+                print("\t\tOutput already exists. Skipping...")
+                continue
+
         # load tfr
         data_in = np.load(f"{dir_input}/{fname}")
         tfr_in = data_in['tfr']
         freq = data_in['freq']
         
         # average over trials
-        tfr = np.squeeze(np.mean(tfr_in, axis=0))
+        tfr = np.squeeze(np.nanmean(tfr_in, axis=0))
         
         # parameterize
         for ap_mode in AP_MODE:
             # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
-            fg = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, 
-                            verbose=False)
-            fg.set_check_data_mode(False)
-            fg.fit(freq, tfr.T, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
+            fg = SpectralTimeModel(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+            fg.set_check_modes(check_freqs=False, check_data=False)
+            fg.fit(freq, tfr, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             
             # save results and report
             fname_out = fname.replace('.npz','_param_%s' %ap_mode)
