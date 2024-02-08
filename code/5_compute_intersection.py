@@ -16,7 +16,7 @@ from os.path import join, exists
 from os import mkdir
 import numpy as np
 
-from fooof import FOOOFGroup
+from specparam import SpectralGroupModel
 
 # import - custom
 from specparam_utils import comp_intersection
@@ -37,9 +37,9 @@ def main():
         for memory in ['hit', 'miss']:
             for ap_mode in ['knee']: # ['fixed', 'knee']:
                 # load parameterization results
-                param_pre = FOOOFGroup()
+                param_pre = SpectralGroupModel()
                 param_pre.load(join(dir_input, '%s_%s_%s_prestim_params_%s.json' %(DECOMP_METHOD, material, memory, ap_mode)))
-                param_post = FOOOFGroup()
+                param_post = SpectralGroupModel()
                 param_post.load(join(dir_input, '%s_%s_%s_poststim_params_%s.json' %(DECOMP_METHOD, material, memory, ap_mode)))
         
         

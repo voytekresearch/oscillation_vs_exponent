@@ -14,9 +14,9 @@ import numpy as np
 import pandas as pd
 from timeit import default_timer as timer
 
-from fooof import FOOOFGroup
-from fooof.bands import Bands
-from fooof.analysis import get_band_peak_fg
+from specparam import SpectralGroupModel
+from specparam.bands import Bands
+from specparam.analysis import get_band_peak
 
 # FOOOF is causing some warnings about ragged arrays
 import warnings
@@ -71,14 +71,14 @@ def main():
             print('---------------------------------------')
             
             # load spectral parameterization results
-            param_pre = FOOOFGroup()
+            param_pre = SpectralGroupModel()
             param_pre.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{material}s_{memory}_prestim_params_{AP_MODE}.json")
-            param_post = FOOOFGroup()
+            param_post = SpectralGroupModel()
             param_post.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{material}s_{memory}_poststim_params_{AP_MODE}.json")
             
             # change NaN to 0 (no detectable alpha peak)
-            alpha_pre = get_band_peak_fg(param_pre, BANDS.alpha)
-            alpha_post = get_band_peak_fg(param_post, BANDS.alpha)
+            alpha_pre = get_band_peak(param_pre, BANDS.alpha)
+            alpha_post = get_band_peak(param_post, BANDS.alpha)
             
             # calc change in parameters (exponent and adjusted alpha power)
             exp_diff = param_post.get_params('aperiodic','exponent') - \
@@ -207,7 +207,7 @@ def shuffle_spectra(spectra_0, spectra_1, order):
 
 def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=-1):
     # initialize model
-    sp_0 = FOOOFGroup(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+    sp_0 = SpectralGroupModel(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
     sp_0.set_check_data_mode(False)
     sp_1 = sp_0.copy()
 
@@ -220,8 +220,8 @@ def calc_param_change(freq, spectra_0, spectra_1, ap_mode, bands, n_jobs=-1):
                sp_0.get_params('aperiodic', 'exponent')
     
     # calculate change in alpha amplitude
-    alpha_0 = get_band_peak_fg(sp_0, bands.alpha)
-    alpha_1 = get_band_peak_fg(sp_1, bands.alpha)
+    alpha_0 = get_band_peak(sp_0, bands.alpha)
+    alpha_1 = get_band_peak(sp_1, bands.alpha)
     alpha_diff = alpha_1[:,1] - alpha_0[:,1] 
     
     return exp_diff, alpha_diff

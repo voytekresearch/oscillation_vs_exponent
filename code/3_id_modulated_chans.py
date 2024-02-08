@@ -16,8 +16,8 @@ import numpy as np
 import pandas as pd
 from time import time as timer
 from time import ctime as time_now
-from fooof.utils import trim_spectrum
-from fooof.bands import Bands
+from specparam.utils import trim_spectrum
+from specparam.bands import Bands
 
 # Imports - custom
 from stats import run_resampling_analysis
