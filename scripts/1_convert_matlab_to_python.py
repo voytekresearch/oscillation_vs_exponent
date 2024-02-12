@@ -1,34 +1,30 @@
-# -*- coding: utf-8 -*-
 """
-Created on Thu Apr  8 17:29:53 2021
+This script reformats the iEEG dataset from Fieldtrip data structures (.mat) 
+into MNE epochsArrays (.fif). The time-series are also saved as numpy arrays 
+(.npy).
 
-@author: micha
-
-Data Repo: https://osf.io/3csku/
-Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
-
-The provided dataset is formatted as Fieldtrip data structures (.mat);  
-this script reformats the iEEG dataset into MNE epochsArrays (.fif). The 
-time-series are also saved as numpy arrays (.npy).
+Data Repository: 
+  https://osf.io/3csku/
+  
+Associated Paper: 
+  https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
 
 """
 
-# Imports
+# Imports - standard
 from os.path import join, exists
-from os import  makedirs
+from os import makedirs
 import mne
 from pymatreader import read_mat
 import numpy as np
 import pandas as pd
 
-# Set directories
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-DATASET_PATH = 'C:/Users/micha/datasets/SpectraltiltvsOscillations/'
+# Imports - custom
+import sys
+sys.path.append("code")
+from info import PATIENTS, FS
+from paths import PROJECT_PATH, DATASET_PATH
 
-# Dataset info
-PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
-            'pat17','pat19','pat20','pat21','pat22']
-FS = 512
 
 def main():
     """
@@ -135,8 +131,10 @@ def save_epochs(epochs, fname):
     epochs_miss = epochs[~epochs.metadata['recalled'].values.astype('bool')]
 
     # save data as .fif - after dropping unsuccessful trials 
-    epochs_hit.save(join(dir_output, fname.replace('.mat', '_hit_epo.fif')), overwrite=True)
-    epochs_miss.save(join(dir_output, fname.replace('.mat', '_miss_epo.fif')), overwrite=True)
+    epochs_hit.save(join(dir_output, fname.replace('.mat', '_hit_epo.fif')), 
+                    overwrite=True)
+    epochs_miss.save(join(dir_output, fname.replace('.mat', '_miss_epo.fif')), 
+                     overwrite=True)
     
 def collect_channel_info(dir_input, fname):
     """

@@ -363,8 +363,8 @@ def plot_ap_params(params, time, single_plot=True):
     
     Parameters
     ----------
-    params : FOOOFGroup object
-        FOOOFGroup object containing aperiodic parameters.
+    params : SpectralGroupGroup object
+        SpectralGroupGroup object containing aperiodic parameters.
     time : numpy array
         Time points corresponding to each aperiodic parameter.
     single_plot : bool, optional
