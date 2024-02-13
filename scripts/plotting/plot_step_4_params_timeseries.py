@@ -30,15 +30,7 @@ T_ENCODING = [0, 1] # in seconds. These time bins will be averaged for PSD plot
 # T_SPECTROGRAM = [-1, 2] # in seconds. Spectrogram will be cropped in this range for plotting
 
 # set plotting parameers
-mpl.rcParams['figure.facecolor'] = 'w'
-mpl.rcParams['axes.facecolor'] = 'w'
-mpl.rcParams['figure.titlesize'] = 18
-mpl.rcParams['axes.titlesize'] = 16
-mpl.rcParams['axes.labelsize'] = 14
-mpl.rcParams['xtick.labelsize'] = 12
-mpl.rcParams['ytick.labelsize'] = 12
-mpl.rcParams['legend.fontsize'] = 10
-mpl.rcParams['font.size'] = 10
+plt.style.use('mpl_styles/default.mplstyle')
 
 def main():
     # time it

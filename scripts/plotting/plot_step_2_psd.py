@@ -9,7 +9,6 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from time import time as timer
 
 # Imports - custom
@@ -20,15 +19,7 @@ from utils import hour_min_sec, diff_spectra
 from plots import plot_spectra_2conditions, plot_psd_diff
 
 # set plotting parameers
-mpl.rcParams['figure.facecolor'] = 'w'
-mpl.rcParams['axes.facecolor'] = 'w'
-mpl.rcParams['figure.titlesize'] = 18
-mpl.rcParams['axes.titlesize'] = 16
-mpl.rcParams['axes.labelsize'] = 14
-mpl.rcParams['xtick.labelsize'] = 12
-mpl.rcParams['ytick.labelsize'] = 12
-mpl.rcParams['legend.fontsize'] = 10
-mpl.rcParams['font.size'] = 10
+plt.style.use('mpl_styles/default.mplstyle')
 
 def main():
     # time it
