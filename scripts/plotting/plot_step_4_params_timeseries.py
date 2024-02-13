@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
 """
-This script plots the TFR results of code/2_time_frequency_analysis.py
+This script plots the spectral parameterization results of 
+code/4_spectral_parameterization.py. The time-series of each aperiodic
+parameter (offset, slope, knee) is plotted for each significant channel.
 
 """
 
@@ -12,7 +13,6 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from time import time as timer
 from fooof import FOOOFGroup
 
@@ -27,10 +27,10 @@ from plots import plot_ap_params
 WINDOW = 0.5 # in seconds. Edge effects are removed by cropping the TFR results
 T_BASELINE = [-1, 0] # in seconds. These time bins will be averaged for PSD plot
 T_ENCODING = [0, 1] # in seconds. These time bins will be averaged for PSD plot
-# T_SPECTROGRAM = [-1, 2] # in seconds. Spectrogram will be cropped in this range for plotting
 
 # set plotting parameers
 plt.style.use('mpl_styles/default.mplstyle')
+
 
 def main():
     # time it

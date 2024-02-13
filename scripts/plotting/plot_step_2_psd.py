@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This script plots the PSD results of code/2_time_frequency_analysis.py
 
@@ -20,6 +19,7 @@ from plots import plot_spectra_2conditions, plot_psd_diff
 
 # set plotting parameers
 plt.style.use('mpl_styles/default.mplstyle')
+
 
 def main():
     # time it
@@ -80,7 +80,7 @@ def main():
                         continue
 
                     # create figure
-                    fig, (ax1, ax2) = plt.subplots(1,2, figsize=(10,4), constrained_layout=True)
+                    fig, (ax1, ax2) = plt.subplots(1,2, figsize=(10,4))
                     fig.suptitle(f"{patient}, chan{chan_idx}: {material}-{memory}")
 
                     # plot pre v post spectra

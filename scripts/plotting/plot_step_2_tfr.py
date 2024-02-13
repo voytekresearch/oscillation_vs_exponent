@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This script plots the TFR results of code/2_time_frequency_analysis.py
 
@@ -23,10 +22,11 @@ from tfr_utils import load_tfr_results, crop_tfr
 WINDOW = 0.3 # in seconds. Edge effects are removed by cropping the TFR results
 T_BASELINE = [-1, 0] # in seconds. These time bins will be averaged for PSD plot
 T_ENCODING = [0, 1] # in seconds. These time bins will be averaged for PSD plot
-T_SPECTROGRAM = [-1, 2] # in seconds. Spectrogram will be cropped in this range for plotting
+T_SPECTROGRAM = [-1, 2] # in seconds. Spectrogram will be cropped in this range 
 
 # set plotting parameers
 plt.style.use('mpl_styles/default.mplstyle')
+
 
 def main():
     # time it
@@ -64,8 +64,12 @@ def main():
                 
                 # load spectral results
                 fname_in = f"{dir_input}/{fname}_tfr.npz"
-                time, freq, tfr = load_tfr_results(fname_in, preprocess=True, edge=WINDOW, t_baseline=None, z_score=False)
-                _, _, tfr_norm = load_tfr_results(fname_in, preprocess=True, edge=WINDOW, t_baseline='default')
+                time, freq, tfr = load_tfr_results(fname_in, preprocess=True, 
+                                                   edge=WINDOW, t_baseline=None, 
+                                                   z_score=False)
+                _, _, tfr_norm = load_tfr_results(fname_in, preprocess=True, 
+                                                  edge=WINDOW, 
+                                                  t_baseline='default')
 
                 # check data exists
                 if tfr is None or np.isnan(tfr).all():
@@ -73,17 +77,22 @@ def main():
                     continue
 
                 # create figure
-                fig, (ax_1, ax_2) = plt.subplots(1,2, figsize=[10,4], constrained_layout=True)
+                fig, (ax_1, ax_2) = plt.subplots(1,2, figsize=[10,4])
 
                 # plot spectrogram
                 tfr_plot, time_plot = crop_tfr(tfr_norm, time, T_SPECTROGRAM)
-                plot_tfr(time_plot, freq, tfr_plot, norm_type='centered', cbar_label='normalizaed power', 
-                         title='Normalized spectrogram', annotate_zero=True, fig=fig, ax=ax_1)
+                plot_tfr(time_plot, freq, tfr_plot, norm_type='centered', 
+                         cbar_label='normalizaed power', 
+                         title='Normalized spectrogram', 
+                         annotate_zero=True, fig=fig, ax=ax_1)
 
                 # Plot average spectra for pre- and post-stimulus periods
-                spectra_pre = tfr[:, ((time>T_BASELINE[0]) & (time<T_BASELINE[1]))].T
-                spectra_post = tfr[:, ((time>T_ENCODING[0]) & (time<T_ENCODING[1]))].T
-                plot_spectra_2conditions(spectra_pre, spectra_post, freq, shade_sem=True, ax=ax_2,
+                spectra_pre = tfr[:, ((time>T_BASELINE[0]) & \
+                                      (time<T_BASELINE[1]))].T
+                spectra_post = tfr[:, ((time>T_ENCODING[0]) & \
+                                       (time<T_ENCODING[1]))].T
+                plot_spectra_2conditions(spectra_pre, spectra_post, freq, 
+                                         shade_sem=True, ax=ax_2,
                                          title='Average spectral power')
 
                 # save figure
