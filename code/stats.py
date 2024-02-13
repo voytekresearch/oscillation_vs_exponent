@@ -116,26 +116,14 @@ def comp_resampling_pval(distribution, value):
     -------
     p_value : float
         P-value for resampling analysis.
-    sign : int
-        Sign of effect (1 = positive, -1 = negative, 0 = no effect).
     """
 
-    n_iterations = np.size(distribution)
-    n_less = np.sum(distribution < value)
-    n_more = np.sum(distribution > value)
-    
     # calc 2-sided p value
-    p_value = np.min([n_less, n_more]) / n_iterations * 2
-    
-    # determine direction of effect
-    if n_less < n_more: 
-        sign = -1
-    elif n_less > n_more: 
-        sign = 1
-    elif n_less == n_more: 
-        sign = 0
+    n_iterations = np.size(distribution)
+    n_more = np.sum(np.abs(distribution) > np.abs(value))
+    p_value = n_more / n_iterations
         
-    return p_value, sign
+    return p_value
 
 def run_resampling_analysis(data_a, data_b , n_iter):
     """
@@ -158,22 +146,20 @@ def run_resampling_analysis(data_a, data_b , n_iter):
                         0   :   no difference (a=b)).
     """
 
-    # get random order for trials
-    order = gen_random_order(n_iter, len(data_a)*2)
-
     # shuffle conditions
-    shuffled_a, shuffled_b = shuffle_arrays(data_a, data_b, order)
+    order = gen_random_order(n_iter, len(data_a)*2)
+    surrogate_0, surrogate_1 = shuffle_arrays(data_a, data_b, order)
 
-    # average shuffled power values over time windows and trials, then compute difference
-    mean_a = np.nanmean(shuffled_a, axis=1)
-    mean_b = np.nanmean(shuffled_b, axis=1)
-    distr = mean_a - mean_b
+    # average values for each surrogate condition and compute difference
+    means_0 = np.nanmean(surrogate_0, axis=1)
+    means_1 = np.nanmean(surrogate_1, axis=1)
+    distr = means_1 - means_0 # surrogate distribution
 
-    # compute p value
-    diff = np.nanmean(data_a) - np.nanmean(data_b)
-    p_val, sign = comp_resampling_pval(distr, diff)
+    # compute p-value
+    diff = np.nanmean(data_b) - np.nanmean(data_a) # true difference
+    p_val = comp_resampling_pval(distr, diff)
 
-    return p_val, sign
+    return p_val
 
 
 # reample means between two groups of data

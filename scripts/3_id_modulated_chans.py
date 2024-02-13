@@ -29,6 +29,7 @@ warnings.filterwarnings("ignore")
 # anlysis parameters
 TIME_PRE = [-1.0, 0.0]    # pre-stim
 TIME_POST = [0.0, 1.0]    # post-stim
+BANDS = Bands({'alpha' : [7, 13], 'gamma' : [50, 90]}) # define spectral bands of interest
 N_ITER = 10000 # random permutation iterations/shuffles
 ALPHA = 0.05 # significance level
 
@@ -75,33 +76,40 @@ def main():
         tfr_pre = np.mean(crop_tfr(tfr, time, TIME_PRE)[0], axis=2)
         tfr_post = np.mean(crop_tfr(tfr, time, TIME_POST)[0], axis=2)
 
-        # trim tf in frequency bands of interest
-        alpha_pre = np.mean(trim_spectrum(freq, tfr_pre, ALPHA_RANGE)[1], 1)
-        alpha_post = np.mean(trim_spectrum(freq, tfr_post, ALPHA_RANGE)[1], 1)
+        # loop through bands of interst
+        for band in enumerate(BANDS):
+            # trim tf in frequency bands of interest
+            pre = np.mean(trim_spectrum(freq, tfr_pre, band[1])[1], axis=1)
+            post = np.mean(trim_spectrum(freq, tfr_post, band[1])[1], axis=1)
 
-        # determine whether alpha/beta bandpower was task modulation
-        p_val, sign = run_resampling_analysis(alpha_pre, alpha_post, N_ITER)
-        
-        # save results
-        df.loc[0, 'p_val'] = p_val
-        df.loc[0, 'sign'] = sign
+            # determine whether alpha/beta bandpower was task modulation
+            p_val = run_resampling_analysis(pre, post, N_ITER)
 
-        # aggreate results
-        dfs.append(df)
+            # determine sign of effect
+            sign = np.sign(np.mean(post) - np.mean(pre))
+            
+            # save results
+            df.loc[0, f'pval_{band[0]}'] = p_val
+            df.loc[0, f'sign_{band[0]}'] = sign
+
+            # aggreate results
+            dfs.append(df)
 
     # concatenate results
     results = pd.concat(dfs, ignore_index=True)
 
-    # find task modulated channels 
-    # p-value must be less than alpha for both material conditions)
-    results['sig'] = np.nan # init
-    results['sig_tm'] = results['p_val'] < ALPHA # sig within material condition
-    results_s = results[results['memory']=='hit'] # take successful trials only
-    sig = results_s.groupby(['patient','chan_idx']).all().reset_index() 
-    for ii in range(len(sig)):
-        results.loc[(results['patient']==sig.loc[ii, 'patient']) & \
-                    (results['chan_idx']==sig.loc[ii, 'chan_idx']), 'sig'] \
-                        = sig.loc[ii, 'sig_tm'] # add results to df
+    # find channels that are task modulated in both material conditions (successful trials)
+    for band in enumerate(BANDS.labels):
+        results[f'sig_tm_{band[0]}'] = results[f'pval_{band}'] < ALPHA # determine significance within condition
+        sig = results[results['memory']=='hit'].groupby(['patient','chan_idx']).all().reset_index() # find sig chans
+        results[f'sig_{band}'] = np.nan # init
+        for ii in range(len(sig)):
+            results.loc[(results['patient']==sig.loc[ii, 'patient']) & \
+                        (results['chan_idx']==sig.loc[ii, 'chan_idx']), f'sig_{band}'] \
+                            = sig.loc[ii, f'sig_tm_{band}'] # add results to df
+            
+    # find channels that are task modulated in both frequency bands
+    results['sig'] = results[[f'sig_{band}' for band in BANDS.labels ]].all(axis=1) # find sig chans
 
     # save results
     results.to_csv(f"{dir_output}/ieeg_modulated_channels.csv")
