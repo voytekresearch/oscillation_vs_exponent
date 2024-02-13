@@ -11,7 +11,6 @@ results are saved in a dataframe and the ERP plots are saved as PNG files.
 import os
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mne import read_epochs
 from time import time as timer
@@ -26,19 +25,10 @@ from erp_utils import compute_erp, plot_erp
 
 # settings 
 T_BASELINE = [-0.5, 0.] # baseline time window for ERP computation
-T_TRIM = [-0.5, 2.] # time window to trim signal
+T_TRIM = [-0.5, 2.] # time window to trim signal    
 
-# set plotting parameers
-mpl.rcParams['figure.facecolor'] = 'w'
-mpl.rcParams['axes.facecolor'] = 'w'
-mpl.rcParams['figure.titlesize'] = 18
-mpl.rcParams['axes.titlesize'] = 16
-mpl.rcParams['axes.labelsize'] = 14
-mpl.rcParams['xtick.labelsize'] = 12
-mpl.rcParams['ytick.labelsize'] = 12
-mpl.rcParams['legend.fontsize'] = 10
-mpl.rcParams['font.size'] = 10
-mpl.rcParams['figure.constrained_layout.use'] = True
+# set plotting style
+plt.style.use('mpl_styles/default.mplstyle')
 
 def main():
     # display progress
@@ -98,14 +88,13 @@ def main():
 
             # set title
             ax = plt.gca()
-            title = f"{fname.replace('_epo.fif', '')} - Channel {channel}"
-            ax.set_title(title)
+            fname_fig = fname.replace('_epo.fif', f'_chan{channel}')
+            ax.set_title(fname_fig)
 
             # save figure
             fig = plt.gcf()
             fig.set_size_inches(6,4)
-            fname_fig = fname.replace('_epo.fif', f'_chan{channel}.png')
-            fig.savefig(f"{dir_fig}/{fname_fig}")
+            fig.savefig(f"{dir_fig}/{fname_fig}.png")
             plt.close('all')
 
         # display progress
