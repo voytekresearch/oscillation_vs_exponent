@@ -87,7 +87,10 @@ def main():
             post = np.mean(trim_spectrum(freq, tfr_post, band[1])[1], axis=1)
 
             # determine whether alpha/beta bandpower was task modulation
-            p_val, sign = run_resampling_analysis(pre, post, N_ITER)
+            p_val = run_resampling_analysis(pre, post, N_ITER)
+
+            # determine sign of effect
+            sign = np.sign(np.mean(post) - np.mean(pre))
             
             # save results
             df.loc[0, f'pval_{band[0]}'] = p_val
