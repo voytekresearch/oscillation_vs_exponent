@@ -7,16 +7,9 @@ Data Repo: https://osf.io/3csku/
 Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
 
 """
-#  SET PATH
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-
-# settings 
-T_BASELINE = [-0.5, 0.] # baseline time window for ERP computation
-T_TRIM = [-0.5, 2.] # time window to trim signal
 
 # Imports - general
-from os.path import join, exists
-from os import mkdir, listdir
+import os
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
@@ -26,14 +19,15 @@ from time import time as timer
 
 # Imports - custom
 import sys
-sys.path.append(f"{PROJECT_PATH}/code")
+sys.path.append("code")
+from paths import PROJECT_PATH
 from utils import hour_min_sec
 from tfr_utils import crop_tfr
 from erp_utils import compute_erp, plot_erp
 
-# Dataset details
-PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
-            'pat17','pat19','pat20','pat21','pat22']
+# settings 
+T_BASELINE = [-0.5, 0.] # baseline time window for ERP computation
+T_TRIM = [-0.5, 2.] # time window to trim signal
 
 # set plotting parameers
 mpl.rcParams['figure.facecolor'] = 'w'
@@ -52,17 +46,17 @@ def main():
     t_start = timer()
 
     # identify / create directories
-    dir_input = join(PROJECT_PATH, 'data/ieeg_epochs')
-    dir_output = join(PROJECT_PATH, 'data/results')
-    dir_fig = join(PROJECT_PATH, 'figures/erp')
-    if not exists(dir_output): mkdir(dir_output)
-    if not exists(dir_fig): mkdir(dir_fig)
+    dir_input = f"{PROJECT_PATH}/data/ieeg_epochs"
+    dir_output = f"{PROJECT_PATH}/data/results"
+    dir_fig = f"{PROJECT_PATH}/figures/erp"
+    if not os.path.exists(dir_output): os.makedirs(dir_output)
+    if not os.path.exists(dir_fig): os.makedirs(dir_fig)
     
     # init
     df_erp = pd.DataFrame(columns=['patient', 'chan_idx', 'material', 'memory', 'erp_amp'])
 
     # for each fif file
-    files = listdir(dir_input)
+    files = os.listdir(dir_input)
     for ii, fname in enumerate(files):
 
         # display progress
@@ -71,7 +65,7 @@ def main():
         print(f"\tfilename: \t{fname}")
 
         # load eeg data
-        epochs = read_epochs(join(dir_input, fname), verbose=False)
+        epochs = read_epochs(f"{dir_input}/{fname}", verbose=False)
         signals = epochs.get_data()
         time = epochs.times
         print(f"\tchannels: \t{len(epochs.info['ch_names'])}")
@@ -110,7 +104,7 @@ def main():
             fig = plt.gcf()
             fig.set_size_inches(5,4)
             fname_fig = fname.replace('.fif', f'_chan{channel}.png')
-            fig.savefig(join(dir_fig, fname_fig))
+            fig.savefig(f"{dir_fig}/{fname_fig}")
             plt.close('all')
 
         # display progress
@@ -118,7 +112,7 @@ def main():
         print(f"\tanalysis time: \t{hour} hour, {min} min, and {sec :0.1f} s")
 
     # save df
-    df_erp.to_csv(join(dir_output, 'df_erp.csv'), index=False)
+    df_erp.to_csv(f"{dir_output}/df_erp.csv", index=False)
 
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)

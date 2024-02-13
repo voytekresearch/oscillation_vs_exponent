@@ -4,9 +4,6 @@ This script plots the PSD results of code/2_time_frequency_analysis.py
 
 """
 
-# Set path
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-
 # Imports
 import os
 import numpy as np
@@ -17,7 +14,8 @@ from time import time as timer
 
 # Imports - custom
 import sys
-sys.path.append(f"{PROJECT_PATH}/code")
+sys.path.append("code")
+from paths import PROJECT_PATH
 from utils import hour_min_sec, diff_spectra
 from plots import plot_spectra_2conditions, plot_psd_diff
 

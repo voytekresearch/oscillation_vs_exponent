@@ -5,19 +5,15 @@ Created on Mon Feb 10 11:40:22 2020
 @author: prestonmw
 """
 
-# SET PATHS
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent'
-DATASET_PATH = 'C:/Users/micha/datasets/SpectraltiltvsOscillations'
-
 # Imports - general
 import numpy as np
 import os
-import pyvista as pv
 from pymatreader import read_mat
 
 # Imports - custom
 import sys
-sys.path.append(f"{PROJECT_PATH}/code")
+sys.path.append("code")
+from paths import PROJECT_PATH, DATASET_PATH
 from pyvista_utils import default_camera_pos, plot_electrodes
 
 # make directory for output figures

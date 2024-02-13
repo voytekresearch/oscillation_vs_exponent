@@ -18,9 +18,9 @@ from fooof import FOOOFGroup
 
 # Imports - custom
 import sys
-sys.path.append(f"{PROJECT_PATH}/code")
+sys.path.append("code")
+from paths import PROJECT_PATH
 from utils import hour_min_sec
-from specparam_utils import load_ap_params
 from plots import plot_ap_params
 
 # Settings
