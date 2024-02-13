@@ -1,42 +1,29 @@
-# -*- coding: utf-8 -*-
 """
-Created on Thu Apr  8 17:35:00 2021
-
-@author: micha
-
-Data Repo: https://osf.io/3csku/
-Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
-
- 
-This script executes the primary time-frequnecy analyses. 
-The power spectral density (PSD) is computed for each epoch, the pre-stimulus 
-time window, and the post-stimulus time window. 
-The time-frequnecy representation of power (TFR) is computed for the epoch 
-using the multitaper method. 
+This script executes the primary time-frequnecy analyses. The power spectral 
+density (PSD) is computed for each epoch, the pre-stimulus time window, and the 
+post-stimulus time window. The time-frequnecy representation of power (TFR) is 
+also computed for each epoch using the multitaper method. 
 
 """
-#  SET PATH
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 
-# Imports - general
+# Imports - standard
 from os.path import join, exists
 from os import mkdir, listdir
 import numpy as np
 from mne import read_epochs
-from mne.time_frequency import psd_multitaper, tfr_multitaper
+from mne.time_frequency import tfr_multitaper
 from time import time as timer
 
 # Imports - custom
+import sys
+sys.path.append("code")
+from info import PATIENTS, N_JOBS
+from paths import PROJECT_PATH
 from utils import hour_min_sec
 from tfr_utils import crop_tfr
 
-# Dataset details
-PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11','pat15','pat16',
-            'pat17','pat19','pat20','pat21','pat22']
-
-# Settings - psd analysis
-N_JOBS = -1 # number of jobs to run in parallel (-1 = use all available cores)
-BANDWIDTH = 2 # psd multitaper half-bandwidth - frequencies at ± half-bandwidth are smoothed together
+# Settings - multitaper analysis
+BANDWIDTH = 2 # frequencies at ± bandwidth are smoothed 
 TIME_RANGE = np.array([[-1.0, 1.0],    # epoch
                        [-1.0, 0.0],    # pre-stim
                        [0.0, 1.0]])    # post-stim
@@ -107,15 +94,15 @@ def comp_psd(epochs, fname, dir_output):
     for label, time_range in zip(TIME_RANGE_LABELS, TIME_RANGE):
         
         # calculate PSD
-        psd, freq = psd_multitaper(epochs, tmin=time_range[0], tmax=time_range[1],
-                                    bandwidth=BANDWIDTH, n_jobs=N_JOBS, 
-                                    verbose=False)
+        results = epochs.compute_psd(tmin=time_range[0], tmax=time_range[1], 
+                                       bandwidth=BANDWIDTH, n_jobs=N_JOBS, 
+                                       verbose=False)
+        psd = results.get_data()
+        freq = results.freqs
         
         # save power results
         fname_out = str.replace(fname, '_epo.fif', '_%s_psd' %(label))
-        np.savez(join(dir_output, fname_out), 
-                 psd = psd, 
-                 freq = freq)
+        np.savez(join(dir_output, fname_out), psd=psd, freq=freq)
 
 
 def compute_channel_tfr(epochs, fname, dir_output):
@@ -152,14 +139,15 @@ def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256,
     if f_max is None:
         f_max = epochs.info['sfreq'] / 2 # Nyquist
 
-    freq = np.logspace(*np.log10([f_min, f_max]), n_freqs) # log-spaced freq vector
-    n_cycles = freq * time_window_length # set n_cycles based on fixed time window length
+    freq = np.logspace(*np.log10([f_min, f_max]), n_freqs) # log-spaced 
+    n_cycles = freq * time_window_length # set based on fixed window length
     time_bandwidth =  time_window_length * freq_bandwidth # must be >= 2
 
     # TF decomposition using multitapers
     tfr = tfr_multitaper(epochs, freqs=freq, n_cycles=n_cycles, 
-                            time_bandwidth=time_bandwidth, return_itc=False, n_jobs=n_jobs,
-                            picks=picks, average=average, decim=decim, verbose=verbose)
+                            time_bandwidth=time_bandwidth, return_itc=False, 
+                            n_jobs=n_jobs, picks=picks, average=average, 
+                            decim=decim, verbose=verbose)
     
     # extract data
     time = tfr.times
@@ -180,8 +168,10 @@ def aggregate_spectra(dir_input, dir_output):
     freq = data_in['freq']
     
     # aggregate psd data for each condition
-    conditions = ['words_hit_prestim', 'words_hit_poststim', 'faces_hit_prestim', 'faces_hit_poststim',
-                  'words_miss_prestim', 'words_miss_poststim', 'faces_miss_prestim', 'faces_miss_poststim']
+    conditions = ['words_hit_prestim', 'words_hit_poststim', 
+                  'faces_hit_prestim', 'faces_hit_poststim',
+                  'words_miss_prestim', 'words_miss_poststim', 
+                  'faces_miss_prestim', 'faces_miss_poststim']
     for cond in conditions:    
         # create placeholder for output data
         spectra = np.zeros(len(freq))
@@ -207,8 +197,8 @@ def aggregate_tfr(dir_input, dir_output):
     freq = data_in['freq']
     
     # load channel meta data
-    meta = np.load(join(PROJECT_PATH, 'data/ieeg_metadata', 'ieeg_channel_info.pkl'),
-                   allow_pickle=True)
+    meta = np.load(join(PROJECT_PATH, 'data/ieeg_metadata', 
+                        'ieeg_channel_info.pkl'), allow_pickle=True)
     
     # aggregate psd data for each condition
     for condition in ['words_hit', 'faces_hit', 'words_miss', 'faces_miss']:
@@ -226,11 +216,14 @@ def aggregate_tfr(dir_input, dir_output):
             if ii % 100 == 0: 
                 print(f"     files loaded: \t{ii} / {len(meta)}")
 
-            fname_in = '%s_%s_chan%d_tfr.npz' %(meta['patient'][ii], condition, meta['chan_idx'][ii])
+            # set file name
+            fname_in = f"{meta['patient'][ii]}_{condition}_\
+                chan{meta['chan_idx'][ii]}_tfr.npz"
+            
             # skip missing channels
             if not fname_in in files: continue
         
-            # load tfr data               
+            # load tfr data
             data_in = np.load(join(dir_input, fname_in))
 
             # if all values are NaN, set means to Nan and continue
@@ -254,9 +247,12 @@ def aggregate_tfr(dir_input, dir_output):
             tfr_mean_post[ii] = np.nanmean(tfr_post, axis=1)
 
         #  save results
-        np.savez(join(dir_output, f"tfr_{condition}_epoch"), freq=freq, spectra=tfr_mean_epoch)
-        np.savez(join(dir_output, f"tfr_{condition}_prestim"), freq=freq, spectra=tfr_mean_pre)
-        np.savez(join(dir_output, f"tfr_{condition}_poststim"), freq=freq, spectra=tfr_mean_post)
+        np.savez(join(dir_output, f"tfr_{condition}_epoch"), freq=freq, 
+                 spectra=tfr_mean_epoch)
+        np.savez(join(dir_output, f"tfr_{condition}_prestim"), freq=freq, 
+                 spectra=tfr_mean_pre)
+        np.savez(join(dir_output, f"tfr_{condition}_poststim"), freq=freq, 
+                 spectra=tfr_mean_post)
 
 if __name__ == "__main__":
     main()

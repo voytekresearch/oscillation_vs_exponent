@@ -1,34 +1,30 @@
 """
-Identify channels with significant modulation of alpha/beta bandpower
+This script identifies channels with significant task-related modulation of 
+total alpha/beta bandpower using permutation testing.
 
 """
 
-# Set path
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-
-# ignore mean of empty slice warnings
-import warnings
-warnings.filterwarnings("ignore")
-
-# Imports - general
+# Imports - standard
 import os
 import numpy as np
 import pandas as pd
 from time import time as timer
 from time import ctime as time_now
-from fooof.utils import trim_spectrum
-from fooof.bands import Bands
+from specparam.utils import trim_spectrum
+from specparam.bands import Bands
 
 # Imports - custom
+import sys
+sys.path.append("code")
+from paths import PROJECT_PATH
+from info import ALPHA_RANGE
 from stats import run_resampling_analysis
 from utils import hour_min_sec
 from tfr_utils import crop_tfr
 
-# dataset details
-FS = 512 # meg sampling frequency
-TMIN = -1.5 # epoch start time
-PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11',
-         'pat15','pat16','pat17','pat19','pat20','pat21','pat22']
+# ignore mean of empty slice warnings
+import warnings
+warnings.filterwarnings("ignore")
 
 # anlysis parameters
 TIME_PRE = [-1.0, 0.0]    # pre-stim
@@ -76,7 +72,7 @@ def main():
         df.loc[0, 'material'] = f_parts[1]
         df.loc[0, 'memory'] = f_parts[2]
 
-        # trim tfr in time windows of interest AND AVERAGE ACROSS TIME
+        # trim tfr in time windows of interest and average across time
         tfr_pre = np.mean(crop_tfr(tfr, time, TIME_PRE)[0], axis=2)
         tfr_post = np.mean(crop_tfr(tfr, time, TIME_POST)[0], axis=2)
 
@@ -120,7 +116,7 @@ def main():
 
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
-    print(f"\n\n Total Time: \t {hour} hours, {min} minutes, {sec :0.1f} seconds")
+    print(f"\n\nTotal Time: \t {hour} hours, {min} minutes, {sec:0.1f} seconds")
 
 
 if __name__ == "__main__":
