@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """
+This script plots the ERP for each channel in the dataset. Additionally, the
+ERP amplitude is computed as the ratio of the maximum ERP amplitude after the
+stimulus onset to the maximum ERP amplitude before the stimulus onset. The
+results are saved in a dataframe and the ERP plots are saved as PNG files.
 
-This script plots the ERP for each channel and computes the amplitude.
-
-Data Repo: https://osf.io/3csku/
-Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
 
 """
 
@@ -53,7 +52,8 @@ def main():
     if not os.path.exists(dir_fig): os.makedirs(dir_fig)
     
     # init
-    df_erp = pd.DataFrame(columns=['patient', 'chan_idx', 'material', 'memory', 'erp_amp'])
+    df_erp = pd.DataFrame(columns=['patient', 'chan_idx', 'material', 'memory', 
+                                   'erp_max_pre', 'erp_max_post', 'erp_amp'])
 
     # for each fif file
     files = os.listdir(dir_input)
@@ -82,13 +82,13 @@ def main():
         erp_max_post = np.nanmax(erps_abs[:, time>0], axis=1)
         erp_amp = erp_max_post / erp_max_pre
         fparts = fname.split('_')
-        df_i = pd.DataFrame({'patient': fparts[0],
-                            'chan_idx': np.arange(erps.shape[0]),
-                            'material': fparts[1],
-                            'memory': fparts[2],
-                            'erp_max_pre': erp_max_pre,
-                            'erp_max_post': erp_max_post,
-                            'erp_amp': erp_amp})
+        df_i = pd.DataFrame({'patient' : fparts[0],
+                            'chan_idx' : np.arange(erps.shape[0]),
+                            'material' : fparts[1],
+                            'memory' : fparts[2],
+                            'erp_max_pre' : erp_max_pre,
+                            'erp_max_post' : erp_max_post,
+                            'erp_amp' : erp_amp})
         df_erp = pd.concat([df_erp, df_i], axis=0)  
 
         # plot erp for each channel
@@ -98,12 +98,13 @@ def main():
 
             # set title
             ax = plt.gca()
-            ax.set_title(fname)
+            title = f"{fname.replace('_epo.fif', '')} - Channel {channel}"
+            ax.set_title(title)
 
             # save figure
             fig = plt.gcf()
-            fig.set_size_inches(5,4)
-            fname_fig = fname.replace('.fif', f'_chan{channel}.png')
+            fig.set_size_inches(6,4)
+            fname_fig = fname.replace('_epo.fif', f'_chan{channel}.png')
             fig.savefig(f"{dir_fig}/{fname_fig}")
             plt.close('all')
 
