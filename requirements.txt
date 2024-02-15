@@ -4,8 +4,9 @@ pandas
 matplotlib
 seaborn
 statsmodels
+scikit-learn
 mne
 pymatreader
 pyvista
 neurodsp
-fooof #specparam
+specparam
