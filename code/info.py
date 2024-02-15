@@ -14,6 +14,8 @@ TMIN = -1.5 # epoch start time
 # Analysis settings
 N_JOBS = -1 # number of jobs for parallel processing
 ALPHA_RANGE = [7, 13] # alpha frequency range
+GAMMA_BANGE = [50, 90] # gamma frequency range
+BANDS = {'alpha' : ALPHA_RANGE, 'gamma' : GAMMA_BANGE} # oscillation bands
 
 # SpecParam hyperparameters
 FREQ_RANGE = [4, 100] # frequency range to fit
