@@ -116,26 +116,14 @@ def comp_resampling_pval(distribution, value):
     -------
     p_value : float
         P-value for resampling analysis.
-    sign : int
-        Sign of effect (1 = positive, -1 = negative, 0 = no effect).
     """
 
-    n_iterations = np.size(distribution)
-    n_less = np.sum(distribution < value)
-    n_more = np.sum(distribution > value)
-    
     # calc 2-sided p value
-    p_value = np.min([n_less, n_more]) / n_iterations * 2
-    
-    # determine direction of effect
-    if n_less < n_more: 
-        sign = -1
-    elif n_less > n_more: 
-        sign = 1
-    elif n_less == n_more: 
-        sign = 0
+    n_iterations = np.size(distribution)
+    n_more = np.sum(np.abs(distribution) > np.abs(value))
+    p_value = n_more / n_iterations
         
-    return p_value, sign
+    return p_value
 
 def run_resampling_analysis(data_a, data_b , n_iter):
     """
@@ -158,20 +146,48 @@ def run_resampling_analysis(data_a, data_b , n_iter):
                         0   :   no difference (a=b)).
     """
 
-    # get random order for trials
-    order = gen_random_order(n_iter, len(data_a)*2)
-
     # shuffle conditions
-    shuffled_a, shuffled_b = shuffle_arrays(data_a, data_b, order)
+    order = gen_random_order(n_iter, len(data_a)*2)
+    surrogate_0, surrogate_1 = shuffle_arrays(data_a, data_b, order)
 
-    # average shuffled power values over time windows and trials, then compute difference
-    mean_a = np.nanmean(shuffled_a, axis=1)
-    mean_b = np.nanmean(shuffled_b, axis=1)
-    distr = mean_a - mean_b
+    # average values for each surrogate condition and compute difference
+    means_0 = np.nanmean(surrogate_0, axis=1)
+    means_1 = np.nanmean(surrogate_1, axis=1)
+    distr = means_1 - means_0 # surrogate distribution
 
-    # compute p value
-    diff = np.nanmean(data_a) - np.nanmean(data_b)
-    p_val, sign = comp_resampling_pval(distr, diff)
+    # compute p-value
+    diff = np.nanmean(data_b) - np.nanmean(data_a) # true difference
+    p_val = comp_resampling_pval(distr, diff)
 
-    return p_val, sign
+    return p_val
 
+
+# reample means between two groups of data
+def resample_means(data1, data2, surrogate_runs):
+    # data sizes
+    data1_size = np.size(data1)
+    data2_size = np.size(data2)
+
+    # real differnce in means between datasets
+    real_difference = np.mean(data1) - np.mean(data2)
+
+    # pooled data for resampling analyses
+    pooled_data = np.append(data1, data2)
+
+    surr_difference = np.zeros(surrogate_runs)
+    for i in range(surrogate_runs):
+        # randomly permute the pooled data
+        permutation_array = np.random.permutation(data1_size + data2_size)
+        permuted_data = pooled_data[permutation_array]
+
+        # sample from the pooled data
+        surr_data1 = permuted_data[:data1_size]
+        surr_data2 = permuted_data[data1_size:]
+
+        # build distrubution of differenes of permuted data means
+        surr_difference[i] = np.mean(surr_data1) - np.mean(surr_data2)
+    
+    # where, along the distribution of the surrogate data, does the real data lie?
+    exact_p_value = np.count_nonzero(np.abs(real_difference) < np.abs(surr_difference)) / surrogate_runs
+
+    return real_difference, surr_difference, exact_p_value

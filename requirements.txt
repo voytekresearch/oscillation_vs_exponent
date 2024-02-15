@@ -1,0 +1,11 @@
+numpy
+scipy
+pandas
+matplotlib
+seaborn
+statsmodels
+mne
+pymatreader
+pyvista
+neurodsp
+fooof #specparam

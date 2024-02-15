@@ -1,39 +1,35 @@
 """
-Identify channels with significant modulation of alpha/beta bandpower
+This script identifies channels with significant task-related modulation of 
+total alpha/beta bandpower using permutation testing.
 
 """
 
-# Set path
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
-
-# ignore mean of empty slice warnings
-import warnings
-warnings.filterwarnings("ignore")
-
-# Imports - general
+# Imports - standard
 import os
 import numpy as np
 import pandas as pd
 from time import time as timer
 from time import ctime as time_now
-from fooof.utils import trim_spectrum
-from fooof.bands import Bands
+from specparam.utils import trim_spectrum
+from specparam.bands import Bands
 
 # Imports - custom
+import sys
+sys.path.append("code")
+from paths import PROJECT_PATH
+from info import ALPHA_RANGE
 from stats import run_resampling_analysis
 from utils import hour_min_sec
 from tfr_utils import crop_tfr
 
-# dataset details
-FS = 512 # meg sampling frequency
-TMIN = -1.5 # epoch start time
-PATIENTS = ['pat02','pat04','pat05','pat08','pat10','pat11',
-         'pat15','pat16','pat17','pat19','pat20','pat21','pat22']
+# ignore mean of empty slice warnings
+import warnings
+warnings.filterwarnings("ignore")
 
 # anlysis parameters
 TIME_PRE = [-1.0, 0.0]    # pre-stim
 TIME_POST = [0.0, 1.0]    # post-stim
-BANDS = Bands({'alpha' : [7, 13]}) # define spectral bands of interest
+BANDS = Bands({'alpha' : [7, 13], 'gamma' : [50, 90]}) # define spectral bands of interest
 N_ITER = 10000 # random permutation iterations/shuffles
 ALPHA = 0.05 # significance level
 
@@ -76,42 +72,51 @@ def main():
         df.loc[0, 'material'] = f_parts[1]
         df.loc[0, 'memory'] = f_parts[2]
 
-        # trim tfr in time windows of interest AND AVERAGE ACROSS TIME
+        # trim tfr in time windows of interest and average across time
         tfr_pre = np.mean(crop_tfr(tfr, time, TIME_PRE)[0], axis=2)
         tfr_post = np.mean(crop_tfr(tfr, time, TIME_POST)[0], axis=2)
 
-        # trim tf in frequency bands of interest
-        alpha_pre = np.mean(trim_spectrum(freq, tfr_pre, BANDS.alpha)[1], axis=1)
-        alpha_post = np.mean(trim_spectrum(freq, tfr_post, BANDS.alpha)[1], axis=1)
+        # loop through bands of interst
+        for band in enumerate(BANDS):
+            # trim tf in frequency bands of interest
+            pre = np.mean(trim_spectrum(freq, tfr_pre, band[1])[1], axis=1)
+            post = np.mean(trim_spectrum(freq, tfr_post, band[1])[1], axis=1)
 
-        # determine whether alpha/beta bandpower was task modulation
-        p_val, sign = run_resampling_analysis(alpha_pre, alpha_post, N_ITER)
-        
-        # save results
-        df.loc[0, 'p_val'] = p_val
-        df.loc[0, 'sign'] = sign
+            # determine whether alpha/beta bandpower was task modulation
+            p_val = run_resampling_analysis(pre, post, N_ITER)
 
-        # aggreate results
-        dfs.append(df)
+            # determine sign of effect
+            sign = np.sign(np.mean(post) - np.mean(pre))
+            
+            # save results
+            df.loc[0, f'pval_{band[0]}'] = p_val
+            df.loc[0, f'sign_{band[0]}'] = sign
+
+            # aggreate results
+            dfs.append(df)
 
     # concatenate results
     results = pd.concat(dfs, ignore_index=True)
 
     # find channels that are task modulated in both material conditions (successful trials)
-    results['sig_tm'] = results['p_val'] < ALPHA # determine significance within condition
-    sig = results[results['memory']=='hit'].groupby(['patient','chan_idx']).all().reset_index() # find sig chans
-    results['sig'] = np.nan # init
-    for ii in range(len(sig)):
-        results.loc[(results['patient']==sig.loc[ii, 'patient']) & \
-                    (results['chan_idx']==sig.loc[ii, 'chan_idx']), 'sig'] \
-                        = sig.loc[ii, 'sig_tm'] # add results to df
+    for band in enumerate(BANDS.labels):
+        results[f'sig_tm_{band[0]}'] = results[f'pval_{band}'] < ALPHA # determine significance within condition
+        sig = results[results['memory']=='hit'].groupby(['patient','chan_idx']).all().reset_index() # find sig chans
+        results[f'sig_{band}'] = np.nan # init
+        for ii in range(len(sig)):
+            results.loc[(results['patient']==sig.loc[ii, 'patient']) & \
+                        (results['chan_idx']==sig.loc[ii, 'chan_idx']), f'sig_{band}'] \
+                            = sig.loc[ii, f'sig_tm_{band}'] # add results to df
+            
+    # find channels that are task modulated in both frequency bands
+    results['sig'] = results[[f'sig_{band}' for band in BANDS.labels ]].all(axis=1) # find sig chans
 
     # save results
     results.to_csv(f"{dir_output}/ieeg_modulated_channels.csv")
 
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
-    print(f"\n\n Total Time: \t {hour} hours, {min} minutes, {sec :0.1f} seconds")
+    print(f"\n\nTotal Time: \t {hour} hours, {min} minutes, {sec:0.1f} seconds")
 
 
 if __name__ == "__main__":

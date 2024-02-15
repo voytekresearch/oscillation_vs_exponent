@@ -30,12 +30,12 @@ def knee_freq(knee, exponent):
 
 def extract_ap_params(params):
     """
-    Extract aperiodic parameters from FOOOFGroup object.
+    Extract aperiodic parameters from SpectralGroupModel object.
 
     Parameters
     ----------
-    params : FOOOFGroup object
-        FOOOFGroup object containing aperiodic parameters.
+    params : SpectralGroupModel object
+        SpectralGroupModel object containing aperiodic parameters.
 
     Returns
     -------
@@ -74,10 +74,10 @@ def load_ap_params(fname):
     """
 
     # imports
-    from fooof import FOOOFGroup
+    from specparam import SpectralGroupModel
 
     # import specparam results
-    params = FOOOFGroup()
+    params = SpectralGroupModel()
     params.load(fname)
     
     return extract_ap_params(params)
@@ -85,14 +85,14 @@ def load_ap_params(fname):
 
 def params_to_spectra(params, component='both'):
     """
-    Simulate aperiodic power spectra from FOOOFGroup object.
+    Simulate aperiodic power spectra from SpectralGroupModel object.
 
     Parameters
     ----------
-    params : FOOOFGroup object
-        FOOOFGroup object containing aperiodic parameters.
+    params : SpectralGroupModel object
+        SpectralGroupModel object containing aperiodic parameters.
     component : str
-        Component to simulate ('both', 'aperiodic', or 'peak'). Default is 'both'.
+        Component to simulate ('both', 'aperiodic', or 'peak'). Default: 'both'.
 
     Returns
     -------
@@ -101,7 +101,7 @@ def params_to_spectra(params, component='both'):
 
     """
     # imports
-    from fooof.sim import gen_power_spectrum
+    from specparam.sim import sim_power_spectrum
 
     # init
     spectra = np.zeros([len(params), len(params.freqs)])
@@ -109,35 +109,43 @@ def params_to_spectra(params, component='both'):
     # simulate aperiodic spectra for each
     if component == 'both':
         for ii in range(len(params)):
-            _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
-                                                params[ii].aperiodic_params, params[ii].peak_params, 
-                                                freq_res=params.freq_res, nlv=0, freqs=params.freqs)
+            _, spectra[ii] = sim_power_spectrum([params.freqs[0], 
+                                                params.freqs[-1]],
+                                                params[ii].aperiodic_params, 
+                                                params[ii].peak_params, 
+                                                freq_res=params.freq_res, nlv=0, 
+                                                freqs=params.freqs)
     elif component == 'aperiodic':
         for ii in range(len(params)):
-            _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+            _, spectra[ii] = sim_power_spectrum([params.freqs[0], 
+                                                 params.freqs[-1]],
                                                 params[ii].aperiodic_params, [], 
-                                                freq_res=params.freq_res, nlv=0, freqs=params.freqs)
+                                                freq_res=params.freq_res, nlv=0, 
+                                                freqs=params.freqs)
     # simulate aperiodic spectra for each
     elif component == 'peak':
         for ii in range(len(params)):
-            _, spectra[ii] = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+            _, spectra[ii] = sim_power_spectrum([params.freqs[0], 
+                                                 params.freqs[-1]],
                                                 [], params[ii].peak_params, 
-                                                freq_res=params.freq_res, nlv=0, freqs=params.freqs)
+                                                freq_res=params.freq_res, nlv=0, 
+                                                freqs=params.freqs)
     else:
-        raise ValueError('Invalid component specified. Must be "both", "aperiodic", or "peak".')
+        raise ValueError('Invalid component specified. Must be "both", \
+                         "aperiodic", or "peak".')
     
     return spectra
 
 def params_to_spectrum(params, component='both'):
     """
-    Simulate aperiodic power spectra from FOOOFGroup object.
+    Simulate aperiodic power spectra from SpectralModel object.
 
     Parameters
     ----------
-    params : FOOOF object
-        FOOOF object containing aperiodic parameters.
+    params : SpectralModel object
+        SpectralModel object containing aperiodic parameters.
     component : str
-        Component to simulate ('both', 'aperiodic', or 'peak'). Default is 'both'.
+        Component to simulate ('both', 'aperiodic', or 'peak'). Default: 'both'.
 
     Returns
     -------
@@ -146,44 +154,46 @@ def params_to_spectrum(params, component='both'):
 
     """
     # imports
-    from fooof.sim import gen_power_spectrum
+    from specparam.sim import sim_power_spectrum
 
     # simulate aperiodic spectra for each
     if component == 'both':
-        _, spectrum = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+        _, spectrum = sim_power_spectrum([params.freqs[0], params.freqs[-1]],
                                             params.get_params('aperiodic'),
                                             params.get_params('peak'),
                                             freq_res=params.freq_res, nlv=0)
     elif component == 'aperiodic':
-        _, spectrum = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+        _, spectrum = sim_power_spectrum([params.freqs[0], params.freqs[-1]],
                                             params.get_params('aperiodic'), [], 
                                             freq_res=params.freq_res, nlv=0)
     # simulate aperiodic spectra for each
     elif component == 'peak':
-        _, spectrum = gen_power_spectrum([params.freqs[0], params.freqs[-1]],
+        _, spectrum = sim_power_spectrum([params.freqs[0], params.freqs[-1]],
                                             [], params.get_params('peak'), 
                                             freq_res=params.freq_res, nlv=0)
     else:
-        raise ValueError('Invalid component specified. Must be "both", "aperiodic", or "peak".')
+        raise ValueError('Invalid component specified. Must be "both", \
+                         "aperiodic", or "peak".')
     
     return spectrum
 
 
 def params_to_df(params, max_peaks):
     """
-    Convert FOOOFGroup object to pandas dataframe.
+    Convert SpectralGroupModel object to pandas dataframe.
 
     Parameters
     ----------
-    params : FOOOFGroup object
-        FOOOFGroup object.
+    params : SpectralGroupModel object
+        SpectralGroupModel object.
     max_peaks : int
-        'max_n_peaks' parameter used to fit FOOOFGroup object.
+        'max_n_peaks' parameter used to fit SpectralGroupModel object.
 
     Returns
     -------
     df : pandas dataframe
-        Pandas dataframe containing aperiodic parameters and gaussian parameters for each peak.
+        Pandas dataframe containing aperiodic parameters and gaussian parameters 
+        for each peak.
     """
     
     # imports
@@ -228,12 +238,12 @@ def params_to_df(params, max_peaks):
 
 
 def compute_adj_r2(params):
-    """Calculate the adjusted r-squared for an existing FOOOF model.
+    """Calculate the adjusted r-squared for an existing SpectralModel.
     
     Parameters
     ----------
-    params : FOOOF object
-        FOOOF object that has been fit to data.
+    params : SpectralModel object
+        SpectralModel object that has been fit to data.
 
     Returns
     -------
@@ -245,7 +255,7 @@ def compute_adj_r2(params):
     
     # compute adjusted r-squared
     n_samples = len(params.freqs) # number of data points
-    n_params = len(params.peak_params_) * 3 + 2 # number of parameters
+    n_params = len(params.peak_params_) * 3 + len(params.aperiodic_params_) # number of parameters
     r_squared = params.get_params('r_squared')
     adj_r2 = adjust_r_squared(r_squared, n_params, n_samples)
 
@@ -258,10 +268,10 @@ def comp_intersection(param_pre, param_post):
 
     Parameters
     ----------
-    param_pre : FOOOFGroup
-        FOOOFGroup object containing pre-stimulus parameters
-    param_post : FOOOFGroup
-        FOOOFGroup object containing post-stimulus parameters        
+    param_pre : SpectralGroupModel
+        SpectralGroupModel object containing pre-stimulus parameters
+    param_post : SpectralGroupModel
+        SpectralGroupModel object containing post-stimulus parameters        
 
     Returns
     -------
@@ -276,15 +286,15 @@ def comp_intersection(param_pre, param_post):
 
     """
     # imports
-    from fooof.sim import gen_power_spectrum
+    from specparam.sim import sim_power_spectrum
     
     # count channels
     n_chans = len(param_pre.get_params('r_squared'))
     
     if n_chans == 1:
         # generate aperiodic spectra from parameters
-        _, psd_pre = gen_power_spectrum(param_pre.f_range, param_pre.get_params('aperiodic'), [], freq_res=param_pre.freq_res)
-        _, psd_post = gen_power_spectrum(param_post.f_range, param_post.get_params('aperiodic'), [], freq_res=param_pre.freq_res)
+        _, psd_pre = sim_power_spectrum(param_pre.f_range, param_pre.get_params('aperiodic'), [], freq_res=param_pre.freq_res)
+        _, psd_post = sim_power_spectrum(param_post.f_range, param_post.get_params('aperiodic'), [], freq_res=param_pre.freq_res)
 
         # calc intersect of aperiodic spectra
         idx = np.argwhere(np.diff(np.sign(psd_post - psd_pre))).flatten()
@@ -302,8 +312,8 @@ def comp_intersection(param_pre, param_post):
 
         for chan in range(n_chans):
             # generate aperiodic spectra from parameters
-            _, psd_pre[chan] = gen_power_spectrum(param_pre.freq_range, param_pre.get_params('aperiodic')[chan], [], freq_res=param_pre.freq_res, nlv=0)
-            _, psd_post[chan] = gen_power_spectrum(param_post.freq_range, param_post.get_params('aperiodic')[chan], [], freq_res=param_post.freq_res, nlv=0)
+            _, psd_pre[chan] = sim_power_spectrum(param_pre.freq_range, param_pre.get_params('aperiodic')[chan], [], freq_res=param_pre.freq_res, nlv=0)
+            _, psd_post[chan] = sim_power_spectrum(param_post.freq_range, param_post.get_params('aperiodic')[chan], [], freq_res=param_post.freq_res, nlv=0)
             
             # calc intersect of aperiodic spectra
             idx = np.argwhere(np.diff(np.sign(psd_post[chan] - psd_pre[chan]))).flatten()
@@ -328,7 +338,7 @@ def comp_intersection(param_pre, param_post):
         
     return psd_pre, psd_post, intersection, intersection_idx
 
-def save_report_fm(fm, file_name, file_path=None, plot_peaks=None, plot_aperiodic=True, plt_log=True, 
+def save_report_sm(sm, file_name, file_path=None, plot_peaks=None, plot_aperiodic=True, plt_log=True, 
                     add_legend=True, data_kwargs=None, model_kwargs=None, aperiodic_kwargs=None, 
                     peak_kwargs=None, show_fig=False):
     """ Modified from FOOOF.core.reports.save_report_fm
@@ -336,7 +346,7 @@ def save_report_fm(fm, file_name, file_path=None, plot_peaks=None, plot_aperiodi
 
     Parameters
     ----------
-    fm : FOOOF
+    sm : SpectralModel
         Object containing a power spectrum and (optionally) results from fitting.    
     file_name : str
         Name to give the saved out file.    
@@ -359,8 +369,8 @@ def save_report_fm(fm, file_name, file_path=None, plot_peaks=None, plot_aperiodi
     # imports 
     import matplotlib.pyplot as plt
     from matplotlib import gridspec
-    from fooof.core.strings import gen_settings_str, gen_results_fm_str
-    from fooof.core.io import fname, fpath
+    from specparam.core.strings import gen_settings_str, gen_model_results_str
+    from specparam.core.io import fname, fpath
 
     # settings
     REPORT_FIGSIZE = (16, 20)
@@ -375,7 +385,7 @@ def save_report_fm(fm, file_name, file_path=None, plot_peaks=None, plot_aperiodi
 
     # First - text results
     ax0 = plt.subplot(grid[0])
-    results_str = gen_results_fm_str(fm)
+    results_str = gen_model_results_str(sm)
     ax0.text(0.5, 0.7, results_str, REPORT_FONT, ha='center', va='center')
     ax0.set_frame_on(False)
     ax0.set_xticks([])
@@ -383,13 +393,13 @@ def save_report_fm(fm, file_name, file_path=None, plot_peaks=None, plot_aperiodi
 
     # Second - data plot
     ax1 = plt.subplot(grid[1])
-    fm.plot(plot_peaks=plot_peaks, plot_aperiodic=plot_aperiodic, plt_log=plt_log, add_legend=add_legend,
+    sm.plot(plot_peaks=plot_peaks, plot_aperiodic=plot_aperiodic, plt_log=plt_log, add_legend=add_legend,
             ax=ax1, data_kwargs=data_kwargs, model_kwargs=model_kwargs, aperiodic_kwargs=aperiodic_kwargs, 
             peak_kwargs=peak_kwargs)
 
-    # Third - FOOOF settings
+    # Third - specparam settings
     ax2 = plt.subplot(grid[2])
-    settings_str = gen_settings_str(fm, False)
+    settings_str = gen_settings_str(sm, False)
     ax2.text(0.5, 0.1, settings_str, REPORT_FONT, ha='center', va='center')
     ax2.set_frame_on(False)
     ax2.set_xticks([])
@@ -405,11 +415,11 @@ def save_report_fm(fm, file_name, file_path=None, plot_peaks=None, plot_aperiodi
 def print_report_from_group(params, i_model, fname_out, show_fig=False):
     """
     Generate and save out a PDF report for a power spectrum model fit within a
-    FOOOFGroup object.
+    SpectralGroupModel object.
 
     Parameters
     ----------
-    params : FOOOFGroup
+    params : SpectralGroupModel
         Object with results from fitting a group of power spectra.
     i_model : int
         Index of the model for which to generate a report.
@@ -420,24 +430,24 @@ def print_report_from_group(params, i_model, fname_out, show_fig=False):
     
     """
     # imports
-    from fooof import FOOOF
-    from fooof.sim.gen import gen_aperiodic, gen_periodic
+    from specparam import SpectralGroupModel
+    from specparam.sim.gen import gen_aperiodic, gen_periodic
 
-    # create fooof object and add settings
-    fm = FOOOF()
-    fm.add_settings(params.get_settings())
+    # create specparam object and add settings
+    sm = SpectralGroupModel()
+    sm.add_settings(params.get_settings())
 
     # Copy results for model of interest and additional data needed for plotting
-    fm.add_results(params[i_model])
-    fm.power_spectrum = params.power_spectra[i_model]
-    fm.freq_range = params.freq_range
-    fm.freq_res = params.freq_res
-    fm.freqs = params.freqs
+    sm.add_results(params[i_model])
+    sm.power_spectrum = params.power_spectra[i_model]
+    sm.freq_range = params.freq_range
+    sm.freq_res = params.freq_res
+    sm.freqs = params.freqs
 
     # generate and perioidc/aperiodic fits from parameters
-    fm._ap_fit = gen_aperiodic(params.freqs, params[i_model].aperiodic_params)
-    fm._peak_fit = gen_periodic(params.freqs, np.ndarray.flatten(params[i_model].gaussian_params))
-    fm.fooofed_spectrum_ = fm._ap_fit + fm._peak_fit
+    sm._ap_fit = gen_aperiodic(params.freqs, params[i_model].aperiodic_params)
+    sm._peak_fit = gen_periodic(params.freqs, np.ndarray.flatten(params[i_model].gaussian_params))
+    sm.modeled_spectrum_ = sm._ap_fit + sm._peak_fit
 
     # save report
-    save_report_fm(fm, fname_out, plt_log=True, show_fig=show_fig)
+    save_report_sm(sm, fname_out, plt_log=True, show_fig=show_fig)

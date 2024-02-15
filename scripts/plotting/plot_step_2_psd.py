@@ -1,36 +1,25 @@
-# -*- coding: utf-8 -*-
 """
 This script plots the PSD results of code/2_time_frequency_analysis.py
 
 """
-
-# Set path
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 
 # Imports
 import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from time import time as timer
 
 # Imports - custom
 import sys
-sys.path.append(f"{PROJECT_PATH}/code")
+sys.path.append("code")
+from paths import PROJECT_PATH
 from utils import hour_min_sec, diff_spectra
 from plots import plot_spectra_2conditions, plot_psd_diff
 
 # set plotting parameers
-mpl.rcParams['figure.facecolor'] = 'w'
-mpl.rcParams['axes.facecolor'] = 'w'
-mpl.rcParams['figure.titlesize'] = 18
-mpl.rcParams['axes.titlesize'] = 16
-mpl.rcParams['axes.labelsize'] = 14
-mpl.rcParams['xtick.labelsize'] = 12
-mpl.rcParams['ytick.labelsize'] = 12
-mpl.rcParams['legend.fontsize'] = 10
-mpl.rcParams['font.size'] = 10
+plt.style.use('mpl_styles/default.mplstyle')
+
 
 def main():
     # time it
@@ -91,7 +80,7 @@ def main():
                         continue
 
                     # create figure
-                    fig, (ax1, ax2) = plt.subplots(1,2, figsize=(10,4), constrained_layout=True)
+                    fig, (ax1, ax2) = plt.subplots(1,2, figsize=(10,4))
                     fig.suptitle(f"{patient}, chan{chan_idx}: {material}-{memory}")
 
                     # plot pre v post spectra

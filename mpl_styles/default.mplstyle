@@ -1,0 +1,18 @@
+### Font
+font.family : sans-serif
+font.sans-serif : arial
+font.size : 8
+
+### Text size
+figure.titlesize : 12
+axes.titlesize : 12
+axes.labelsize : 10
+xtick.labelsize : 8
+ytick.labelsize : 8
+legend.fontsize : 8
+
+### Saving
+figure.constrained_layout.use : True
+savefig.pad_inches:	0.2
+savefig.dpi : 300	
+savefig.format : tif
