@@ -16,6 +16,7 @@ N_JOBS = -1 # number of jobs for parallel processing
 ALPHA_RANGE = [7, 13] # alpha frequency range
 GAMMA_BANGE = [50, 90] # gamma frequency range
 BANDS = {'alpha' : ALPHA_RANGE, 'gamma' : GAMMA_BANGE} # oscillation bands
+FELLNER_BANDS = {'theta' : [2, 5], 'alpha' : [8, 20], 'gamma' : [50, 90]} # oscillation bands used in Fellner et al. 2016
 
 # SpecParam hyperparameters
 FREQ_RANGE = [4, 100] # frequency range to fit
