@@ -196,9 +196,10 @@ def plot_electrodes(positions, hemisphere='right', view='lateral',
         return plotter
 
 
-def plot_data_spatial(values, positions, plotter=None, hemisphere='right', view='lateral', 
-                      cmap='viridis', clim=None, cbar_label='', plot_cbar=True,
-                      elec_size=8, brain_color='w', brain_opacity=0.75, 
+def plot_data_spatial(values, positions, plotter=None, hemisphere='right', 
+                      view='lateral', cmap='viridis', clim=None, cbar_label='', 
+                      plot_cbar=True, elec_size=8, elec_offset=[0,0,0], 
+                      brain_color='w', brain_opacity=0.75, 
                       return_plotter=False, fname_out=None):
     """
     Plot data at electrode locations on brain surface. 
@@ -223,6 +224,8 @@ def plot_data_spatial(values, positions, plotter=None, hemisphere='right', view=
         Whether to plot colorbar. The default is True.
     elec_size : int, optional
         Size of electrodes. The default is 8.
+    elec_offset : list, optional
+        Offset to add to electrode positions [x,y,z]. The default is [0,0,0].
     brain_color : str, optional
         Color of brain surface. The default is 'w'.
     brain_opacity : float, optional
@@ -254,7 +257,7 @@ def plot_data_spatial(values, positions, plotter=None, hemisphere='right', view=
     plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
     
     # create electrode mesh and add to plotter
-    elec_mesh = create_electrode_mesh(positions)
+    elec_mesh = create_electrode_mesh(positions, hemisphere, elec_offset)
     
     if plot_cbar:
         scalar_bar_args = {'title' : cbar_label, 
