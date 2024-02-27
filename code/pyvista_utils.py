@@ -90,25 +90,19 @@ def create_electrode_mesh(elec_pos, hemisphere='both', offset=[0,0,0]):
     '''
 
     # drop electrodes in opposite hemisphere
-    if hemisphere == 'right':
-        xyz = elec_pos[elec_pos[:, 0]>0]
-    elif hemisphere == 'left':
-        xyz = elec_pos[elec_pos[:, 0]<0]
-    elif hemisphere == 'both':
-        xyz = elec_pos
-    else:
-        print('Invalid hemisphere. Must be "right", "left", or "both"')
+    mask = get_hemisphere_bool(elec_pos, hemisphere)
+    elec_pos = elec_pos[mask]
 
     # check if any electrodes are in given hemisphere
-    if not xyz.any():
+    if not elec_pos.any():
         print('No electrodes in given hemisphere')
         return None
     
     # add offset to electrode positions
-    xyz = xyz + offset
+    elec_pos = elec_pos + offset
 
     # create pyvista object for electrodes
-    electrodes = pv.PolyData(xyz)
+    electrodes = pv.PolyData(elec_pos)
     
     return electrodes
 
@@ -230,4 +224,65 @@ def default_camera_pos():
                         (-0.0024849751700573297, 0.47178555248856824, 0.8817098260547291)]})
     
     return cpos
-    
+
+
+def get_camera_pos(hemisphere, view):
+    """
+    Get camera position for given hemisphere and view.
+
+    Parameters
+    ----------
+    hemisphere : string
+        hemisphere to load (right or left).
+    view : string
+        view of the brain (lateral or medial).
+
+    Returns
+    -------
+    cpos : 3x3 array
+        camera position for given hemisphere and view.
+
+    """
+
+    cpos = default_camera_pos()
+
+    if (hemisphere == 'left') and (view == 'lateral'):
+        cpos = cpos['left']
+    elif (hemisphere == 'left') and (view == 'medial'):
+        cpos = cpos['right']
+    elif (hemisphere == 'right') and (view == 'lateral'):
+        cpos = cpos['right']
+    elif (hemisphere == 'right') and (view == 'medial'):
+        cpos = cpos['left']
+
+    return cpos
+
+
+def get_hemisphere_bool(elec_pos, hemisphere):
+    """
+    Get boolean array indicating whether electrode is in given hemisphere.
+
+    Parameters
+    ----------
+    elec_pos : Nx3 array (pos_x, pos_y, pos_z)
+        electrode positions.
+    hemisphere : string
+        hemisphere to load (right or left).
+
+    Returns
+    -------
+    bool_hemisphere : Nx1 array
+        boolean array indicating whether electrode is in given hemisphere.
+
+    """
+
+    if hemisphere == 'right':
+        mask = elec_pos[:, 0] > 0
+    elif hemisphere == 'left':
+        mask = elec_pos[:, 0] < 0
+    elif hemisphere == 'both':
+        mask = np.ones(elec_pos.shape[0], dtype=bool)
+    else:
+        raise ValueError('Invalid hemisphere. Must be "right", "left", or "both"')
+
+    return mask
