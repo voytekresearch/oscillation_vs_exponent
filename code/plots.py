@@ -122,7 +122,7 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         plt.savefig(fname_out)
 
 
-def plot_data_spatial(values, positions, hemisphere='right', view='lateral', 
+def plot_data_spatial(values, positions, plotter=None, hemisphere='right', view='lateral', 
                       cmap='viridis', clim=None, cbar_label='', plot_cbar=True,
                       elec_size=8, brain_color='w', brain_opacity=0.75, 
                       return_plotter=False, fname_out=None):
@@ -170,7 +170,8 @@ def plot_data_spatial(values, positions, hemisphere='right', view='lateral',
     values = values[mask]
     
     # create plotter object
-    plotter = pv.Plotter(off_screen=True)
+    if plotter is None:
+        plotter = pv.Plotter(off_screen=True)
     plotter.set_background('w')
 
     # create brain mesh and add to plotter
