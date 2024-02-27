@@ -69,7 +69,7 @@ def load_brain_mesh(hemisphere='both'):
     
     return mesh
 
-def create_electrode_mesh(elec_pos, hemisphere='both', offset=None):
+def create_electrode_mesh(elec_pos, hemisphere='both', offset=[0,0,0]):
     '''
     Create a PyVista mesh object for electrode positions.
 
@@ -79,8 +79,8 @@ def create_electrode_mesh(elec_pos, hemisphere='both', offset=None):
         electrode positions.
     hemisphere : string, optional
         hemisphere to load. The default is 'both'.
-    offset : float, optional
-        offset to add to electrode positions. The default is None.
+    offset : 1x3 array, optional
+        offset to add to electrode positions. The default is [0,0,0].
 
     Returns
     -------
@@ -105,8 +105,7 @@ def create_electrode_mesh(elec_pos, hemisphere='both', offset=None):
         return None
     
     # add offset to electrode positions
-    if offset is not None:
-        xyz[:, 0] = xyz[:, 0] + offset
+    xyz = xyz + offset
 
     # create pyvista object for electrodes
     electrodes = pv.PolyData(xyz)
