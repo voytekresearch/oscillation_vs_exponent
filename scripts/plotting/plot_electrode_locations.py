@@ -27,8 +27,10 @@ ELEC_COLOR = 'r'
 def main():
     # make directory for output figures
     dir_fig = f"{PROJECT_PATH}/figures/ieeg_electrode_locations"
-    if not os.path.exists(dir_fig):
-        os.makedirs(dir_fig)
+    if not os.path.exists(f"{dir_fig}/group"): 
+        os.makedirs(f"{dir_fig}/group")
+    if not os.path.exists(f"{dir_fig}/patient"): 
+        os.makedirs(f"{dir_fig}/patient")
         
     # camera postions for each hemispheres
     cpos = default_camera_pos()
@@ -53,7 +55,7 @@ def main():
                             brain_color=BRAIN_COLOR, elec_color=ELEC_COLOR, 
                             point_size=PNT_SIZE, brain_opacity=OPACITY, 
                             offset=offset, off_screen=True, show=False, 
-                            fname=f"{dir_fig}/{fname_fig}")
+                            fname=f"{dir_fig}/patient/{fname_fig}")
     
         # aggregate data for next plot
         elec_pos_all.append(elec_pos)
@@ -67,7 +69,7 @@ def main():
                         brain_color=BRAIN_COLOR, elec_color=ELEC_COLOR, 
                         point_size=PNT_SIZE, brain_opacity=OPACITY, 
                         offset=offset, off_screen=True, show=False, 
-                        fname=f"{dir_fig}/{fname_fig}")
+                        fname=f"{dir_fig}/group/{fname_fig}")
 
         
 if __name__ == "__main__":
