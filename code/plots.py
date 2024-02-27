@@ -122,205 +122,93 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         plt.savefig(fname_out)
 
 
-def plot_data_spatial(brain_mesh, elec_pos, value=None, 
-                       value_label='', title=None,
-                       x_offset=None, y_offset=None, z_offset=None,
-                       cpos=None, fname_out=None, off_screen=False,
-                       elec_size=8, elec_color='r', cmap=None,
-                       brain_color='w', brain_opacity=1, 
-                       backgrouond_color='k', backend='static',
-                       return_plotter=False, divide_hemispheres=False):
+def plot_data_spatial(values, positions, hemisphere='right', view='lateral', 
+                      cmap='viridis', clim=None, cbar_label='', plot_cbar=True,
+                      elec_size=8, brain_color='w', brain_opacity=0.75, 
+                      return_plotter=False, fname_out=None):
     """
-    Plot data at electrode locations on brain surface. If value is not None, electrodes 
-    are plotted as spheres with color determined by 'elec_color.'
+    Plot data at electrode locations on brain surface. 
 
     Parameters
     ----------
-    brain_mesh : pyvista object
-        Brain mesh.
-    elec_pos : numpy array
+    values : numpy array
+        Values to plot at electrodes.
+    positions : numpy array
         Electrode positions.
-    value : numpy array, optional
-        Values to plot at electrodes. The default is None.
-    value_label : str, optional
+    hemisphere : str, optional
+        Hemisphere to plot. The default is 'right'.
+    view : str, optional
+        View of hemisphere ('lateral' or 'medial'). The default is 'lateral'.
+    cmap : str, optional
+        Colormap for electrodes plotted. The default is 'viridis'.
+    clim : list, optional
+        Color limits for colormap. The default is None.
+    cbar_label : str, optional
         Label for colorbar. The default is ''.
-    title : str, optional
-        Title for plot. The default is None.
-    x_offset, y_offset, z_offset : float, optional
-        Offset for electrode positions to avoid overlap with brain surface. 
-        The default is None.
-    cpos : list, optional
-        Camera position (Pyvista). The default is None.
+    plot_cbar : bool, optional
+        Whether to plot colorbar. The default is True.
+    elec_size : int, optional
+        Size of electrodes. The default is 8.
+    brain_color : str, optional
+        Color of brain surface. The default is 'w'.
+    brain_opacity : float, optional
+        Opacity of brain surface. The default is 1.        
+    return_plotter : bool, optional
+        Whether to return plotter object. The default is False.
     fname_out : str, optional
         File name to save figure. The default is None.
-    off_screen : bool, optional
-        Whether to plot off screen. The default is False.
-    elec_size and elec_color : int, optional
-        Electrode size and color for plotting. The default is 8 and 'r'.
-    cmap : str, optional
-        Colormap for electrodes plotted. The default is None.
-    brain_color and brain_opacity: str, optional
-        Brain color and opacity for plotting. The default is 'w' and 1.
-    backgrouond_color : str, optional
-        Background color of plot. The default is 'k'.
-    backend : str, optional
-        Jupyter backend for plotting. The default is 'static'.
-    return_plotter : bool, optional
-        Whether to return the plotter object. The default is False.
-    divide_hemispheres : bool, optional
-        Whether to divide hemispheres with a plane. The default is False.
     """
+
     # imports
     import pyvista as pv
+    from pyvista_utils import (get_hemisphere_bool, load_brain_mesh, 
+                               create_electrode_mesh, get_camera_pos)
     
-    # shift electrode positions to avoid overlap with brain surface
-    if not x_offset is None:
-        elec_pos[:, 0] = elec_pos[:, 0] + x_offset
-    if not y_offset is None:
-        elec_pos[:, 1] = elec_pos[:, 1] + y_offset
-    if not z_offset is None:
-        elec_pos[:, 2] = elec_pos[:, 2] + z_offset
+    # filter values and positions for hemisphere
+    mask = get_hemisphere_bool(positions, hemisphere)
+    positions = positions[mask]
+    values = values[mask]
     
-    # create figure and add brain mesh
-    plotter = pv.Plotter(off_screen=off_screen)
-    plotter.set_background(backgrouond_color)
+    # create plotter object
+    plotter = pv.Plotter(off_screen=True)
+    plotter.set_background('w')
+
+    # create brain mesh and add to plotter
+    brain_mesh = load_brain_mesh(hemisphere)
     plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
     
-    # plot electrodes
-    if value is None:
-        plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, color=elec_color, \
-                        render_points_as_spheres=True)
+    # create electrode mesh and add to plotter
+    elec_mesh = create_electrode_mesh(positions)
+    
+    if plot_cbar:
+        scalar_bar_args = {'title' : cbar_label, 
+                        'title_font_size' : 24,
+                        'color' : 'k'}
+        if clim is None:
+            clim = [np.nanmin(values), np.nanmax(values)]
+        plotter.add_mesh(elec_mesh, point_size=elec_size, scalars=values, 
+                        cmap=cmap, clim=clim, render_points_as_spheres=True, 
+                        scalar_bar_args=scalar_bar_args)
     else:
-        scalar_bar_args = {'title' : value_label, 'title_font_size' : 26}
-        if cmap is None:
-            plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, scalars=value, \
-                            render_points_as_spheres=True, scalar_bar_args=scalar_bar_args)
-        else:
-            plotter.add_mesh(pv.PolyData(elec_pos), point_size=elec_size, scalars=value, \
-                            cmap=cmap, render_points_as_spheres=True, scalar_bar_args=scalar_bar_args)  
+        plotter.add_mesh(elec_mesh, point_size=elec_size, scalars=values, 
+                        cmap=cmap, clim=clim, render_points_as_spheres=True,
+                        show_scalar_bar=False)
         
-    # add plane to divide hemisphers
-    if divide_hemispheres:
-        l = 400
-        verts = np.array([[0,l,l], [0,l,-l], [0,-l,-l], [0,-l,l]])
-        faces = np.array([4,0,1,2,3])
-        divider = pv.PolyData(verts, faces)
-        plotter.add_mesh(divider, color=backgrouond_color)
-
     # set camera position
-    if cpos is not None:
-        plotter.camera_position = cpos
-
-    # add title
-    if title is not None:
-        plotter.add_text(title, position='upper_left', font_size=20)
+    cpos = get_camera_pos(hemisphere, view)
+    plotter.camera_position = cpos
 
     # save figure
     if fname_out is not None:
         plotter.screenshot(fname_out)
-
-    # plot
-    if not off_screen:
-        plotter.show(jupyter_backend=backend)
 
     # return plotter
     if return_plotter:
-        return plotter.screenshot()
+        return plotter
     else:
-        plotter.close()
+        if fname_out is None:
+            plotter.show(jupyter_backend='static')
 
-        
-def plot_binary_spatial(brain_mesh, elec_pos, binary, title=None,
-                        x_offset=None, y_offset=None, z_offset=None,
-                        cpos=None, fname_out=None, off_screen=False,
-                        elec_size=8, elec_colors=['r','grey'], 
-                        brain_color='w', brain_opacity=1, 
-                        backgrouond_color='k', backend='static',
-                        divide_hemispheres=False):
-    """
-    Plot binary data at electrode locations on brain surface. 
-
-    Parameters
-    ----------
-    brain_mesh : pyvista object
-        Brain mesh.
-    elec_pos : numpy array
-        Electrode positions.
-    binary : numpy array of bool
-        Binary values to plot at electrodes. (True = elec_color[0], False = elec_color[1])
-    title : str, optional
-        Title for plot. The default is None.
-    x_offset, y_offset, z_offset : float, optional
-        Offset for electrode positions to avoid overlap with brain surface. 
-        The default is None.
-    cpos : list, optional
-        Camera position (Pyvista). The default is None.
-    fname_out : str, optional
-        File name to save figure. The default is None.
-    off_screen : bool, optional
-        Whether to plot off screen. The default is False.
-    elec_size and elec_color : int, optional
-        Electrode size and color for plotting. The default is 8 and 'r'.
-    cmap : str, optional
-        Colormap for electrodes plotted. The default is None.
-    brain_color and brain_opacity: str, optional
-        Brain color and opacity for plotting. The default is 'w' and 1.
-    backgrouond_color : str, optional
-        Background color of plot. The default is 'k'.
-    backend : str, optional
-        Jupyter backend for plotting. The default is 'static'.
-    divide_hemispheres : bool, optional
-        Whether to divide hemispheres with a plane. The default is False.
-    """
-    # imports
-    import pyvista as pv
-    
-    # shift electrode positions to avoid overlap with brain surface
-    if not x_offset is None:
-        elec_pos[:, 0] = elec_pos[:, 0] + x_offset
-    if not y_offset is None:
-        elec_pos[:, 1] = elec_pos[:, 1] + y_offset
-    if not z_offset is None:
-        elec_pos[:, 2] = elec_pos[:, 2] + z_offset
-    
-    # create figure and add brain mesh
-    plotter = pv.Plotter(off_screen=off_screen)
-    plotter.set_background(backgrouond_color)
-    plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
-    
-    # plot electrodes - color according to significance value
-    chans_sig = pv.PolyData(elec_pos[binary])
-    plotter.add_mesh(chans_sig, point_size=elec_size, color=elec_colors[0], \
-                     render_points_as_spheres=True)
-    chans_ns = pv.PolyData(elec_pos[~binary])
-    plotter.add_mesh(chans_ns, point_size=elec_size, color=elec_colors[1], \
-                    render_points_as_spheres=True)
-    
-    # add plane to divide hemisphers
-    if divide_hemispheres:
-        l = 400
-        verts = np.array([[0,l,l], [0,l,-l], [0,-l,-l], [0,-l,l]])
-        faces = np.array([4,0,1,2,3])
-        divider = pv.PolyData(verts, faces)
-        plotter.add_mesh(divider, color=backgrouond_color)
-
-    # set camera position
-    if cpos is not None:
-        plotter.camera_position = cpos
-
-    # add title
-    if title is not None:
-        plotter.add_text(title, position='upper_left', font_size=20)
-
-    # save figure
-    if fname_out is not None:
-        plotter.screenshot(fname_out)
-
-    # plot
-    if not off_screen:
-        plotter.show(jupyter_backend=backend)
-    else:
-        plotter.close()
 
 def find_cpos_interactive():
     """
