@@ -22,11 +22,10 @@ from specparam.utils import trim_spectrum
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from info import ALPHA_RANGE
+from settings import ALPHA_RANGE, AP_MODE
 from specparam_utils import load_ap_params, params_to_spectra, compute_adj_r2
 
 # Settings - spectral analysis hyperparameters
-AP_MODE = 'knee' # aperiodic mode
 DECOMP_METHOD = 'tfr' # analyze PSDs or average TFRs
 
 def main():

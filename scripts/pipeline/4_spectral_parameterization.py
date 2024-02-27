@@ -14,17 +14,13 @@ from time import time as timer
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from info import N_JOBS, FREQ_RANGE, SPEC_PARAM_SETTINGS
+from settings import N_JOBS, SPEC_PARAM_SETTINGS, FREQ_RANGE
 from utils import hour_min_sec
 
 # Settings
 RUN_TFR = False # run TFR parameterization
-N_SAMPLES = 2**7 # number of time samples after downsampling
-
-# SpecParam hyperparameters
-AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode
-FREQ_RANGE = [4, 100] # frequency range to fit
-DECOMP_METHOD = 'tfr' # paraneterize PSDs or average TFRs
+AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode for SpecParam
+DECOMP_METHOD = 'tfr' # parameterize PSDs or time-averaged TFRs
 OVERWRITE = False # overwrite existing results
 
 # This fixed the error: "Tcl_AsyncDelete: async handler deleted by the wrong thread"

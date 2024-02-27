@@ -14,12 +14,15 @@ from specparam import SpectralGroupModel
 from specparam.bands import Bands
 from specparam.analysis import get_band_peak
 
-# FOOOF is causing some warnings about ragged arrays
-import warnings
-warnings.filterwarnings("ignore")
+# Imports - custom
+import sys
+sys.path.append("code")
+from paths import PROJECT_PATH
+from info import PATIENTS
+from settings import AP_MODE, BANDS, SPEC_PARAM_SETTINGS, N_JOBS
+from stats import gen_random_order, comp_resampling_pval
 
 # analysis/statistical settings
-AP_MODE = 'knee' # Specparam aperiodic mode ('fixed' or 'knee')
 N_ITER = 100 # number of iterations for permutation test
 
 def main():
@@ -54,8 +57,8 @@ def main():
             param_post.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{material}s_{memory}_poststim_params_{AP_MODE}.json")
             
             # change NaN to 0 (no detectable alpha peak)
-            alpha_pre = get_band_peak(param_pre, BANDS.alpha)
-            alpha_post = get_band_peak(param_post, BANDS.alpha)
+            alpha_pre = get_band_peak(param_pre, BANDS['alpha'])
+            alpha_post = get_band_peak(param_post, BANDS['alpha'])
             
             # calc change in parameters (exponent and adjusted alpha power)
             exp_diff = param_post.get_params('aperiodic','exponent') - \
@@ -88,7 +91,7 @@ def main():
                 df_i = resampling_analysis(data_pre['freq'], data_pre['psd'], 
                                             data_post['psd'], exp_diff_pat,
                                             alpha_diff_pat, AP_MODE, 
-                                            ALPHA_RANGE, n_iterations=N_ITER, 
+                                            BANDS['alpha'], n_iterations=N_ITER, 
                                             n_jobs=N_JOBS)
 
                 # aggregate
@@ -200,8 +203,8 @@ def calc_param_change(freq, spectra_0, spectra_1, ap_mode, f_range, n_jobs=-1):
                sp_0.get_params('aperiodic', 'exponent')
     
     # calculate change in alpha amplitude
-    alpha_0 = get_band_peak(sp_0, bands.alpha)
-    alpha_1 = get_band_peak(sp_1, bands.alpha)
+    alpha_0 = get_band_peak(sp_0, f_range)
+    alpha_1 = get_band_peak(sp_1, f_range)
     alpha_diff = alpha_1[:,1] - alpha_0[:,1] 
     
     return exp_diff, alpha_diff

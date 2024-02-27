@@ -17,23 +17,16 @@ from time import time as timer
 # Imports - custom
 import sys
 sys.path.append("code")
-from info import PATIENTS, N_JOBS
 from paths import PROJECT_PATH
+from info import PATIENTS
+from settings import N_JOBS, N_TFR_SAMPLES, EPOCH_TIMES, EPOCH_LABELS
 from utils import hour_min_sec
 from tfr_utils import crop_tfr
 
-# Settings - multitaper analysis
-BANDWIDTH = 2 # frequencies at ± bandwidth are smoothed 
-TIME_RANGE = np.array([[-1.0, 1.0],    # epoch
-                       [-1.0, 0.0],    # pre-stim
-                       [0.0, 1.0]])    # post-stim
-TIME_RANGE_LABELS = np.array(['epoch',
-                              'prestim',
-                              'poststim'])
+# Settings
+RUN_TFR = True # set to False to skip tfr analysis (long run time)
+PSD_BANDWIDTH = 2 # frequencies at ± bandwidth are smoothed 
 
-# Settings - tfr analysis
-RUN_TFR = True # set to False to skip tfr analysis
-N_SAMPLES = 2**8 # approx. number of time samples after downsampling
 
 def main():
     # identify / create directories
@@ -91,11 +84,11 @@ def comp_psd(epochs, fname, dir_output):
     '''
     
     # for the pre-stimulus and post-stimulus condition
-    for label, time_range in zip(TIME_RANGE_LABELS, TIME_RANGE):
+    for label, time_range in zip(EPOCH_LABELS, EPOCH_TIMES):
         
         # calculate PSD
         results = epochs.compute_psd(tmin=time_range[0], tmax=time_range[1], 
-                                       bandwidth=BANDWIDTH, n_jobs=N_JOBS, 
+                                       bandwidth=PSD_BANDWIDTH, n_jobs=N_JOBS, 
                                        verbose=False)
         psd = results.get_data()
         freq = results.freqs
@@ -109,13 +102,13 @@ def compute_channel_tfr(epochs, fname, dir_output):
     '''
     This function takes an MNE epochsArray and computes the time-frequency
     representatoin of power for each channel sequentially, saving the results
-    for each channel seperately. Data is downsampled to N_SAMPLES time points.
+    for each channel seperately. Data is downsampled to N_TFR_SAMPLES points.
     '''
     
     # get single channel epochs, and compute TFR for each channel
     for channel in range(len(epochs.info['ch_names'])):        
         # run time-frequency analysis
-        decim = int(np.ceil(len(epochs.times) / N_SAMPLES))
+        decim = int(np.ceil(len(epochs.times) / N_TFR_SAMPLES))
         time, freq, tfr = compute_tfr(epochs, picks=channel, decim=decim)
         
         # save time-frequency results
@@ -237,9 +230,9 @@ def aggregate_tfr(dir_input, dir_output):
             tfr = np.nanmedian(data_in['tfr'], axis=0)
 
             # crop time windows of interest
-            tfr_eopch, _ = crop_tfr(tfr, data_in['time'], TIME_RANGE[0])
-            tfr_pre, _ = crop_tfr(tfr, data_in['time'], TIME_RANGE[1])
-            tfr_post, _ = crop_tfr(tfr, data_in['time'], TIME_RANGE[2])
+            tfr_eopch, _ = crop_tfr(tfr, data_in['time'], EPOCH_TIMES[0])
+            tfr_pre, _ = crop_tfr(tfr, data_in['time'], EPOCH_TIMES[1])
+            tfr_post, _ = crop_tfr(tfr, data_in['time'], EPOCH_TIMES[2])
 
             # average across time for each time window of interest
             tfr_mean_epoch[ii] = np.nanmean(tfr_eopch, axis=1)
