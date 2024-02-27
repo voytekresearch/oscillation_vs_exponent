@@ -24,8 +24,6 @@ from info import FELLNER_BANDS as BANDS
 # plotting setting
 plt.style.use('mpl_styles/default.mplstyle')
 FIG_SIZE = (7.5, 2)
-COLORS = (np.array([1,133,113])/255, np.array([166,97,26])/255) # PSD colors
-ALPHA = 0.8 # PSD line transparency
 
 # Set PSD simulation parameters
 FREQ_RANGE = [1, 100] # frequency range for simulated power spectra
@@ -36,6 +34,7 @@ ROTATION_FREQ = 40 # frequency at which to rotate the spectra
 ROTATION_DELTA = -0.75 # change in exponent for rotation
 NOISE_LEVEL = 0 # noise level for simulated power spectra
 ANNOTATE_ROATATION = True # whether to annotate the rotation frequency
+
 
 def main():
     # set paths
@@ -62,17 +61,15 @@ def main():
                                  delta_exponent=ROTATION_DELTA, 
                                  f_rotation=ROTATION_FREQ)
 
-    # plot each model and shade oscillation bands
+    # plot each model
+    labels = ['baseline', 'encoding']
     _, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=FIG_SIZE)
-    plot_2_spectra(psd_pre, psd_post_0, freqs, ax=ax0, colors=COLORS,
-                    alpha=ALPHA, labels=['baseline', 'encoding'],
+    plot_2_spectra(psd_pre, psd_post_0, freqs, ax=ax0, labels=labels,
                     title='Oscillatory Amplitude Change')
-    plot_2_spectra(psd_pre, psd_post_1, freqs, ax=ax1, colors=COLORS,
-                    alpha=ALPHA, labels=['baseline', 'encoding'],
-                    title='Aperiodic Exponent Shift')
-    plot_2_spectra(psd_pre, psd_post_2, freqs, ax=ax2, colors=COLORS,
-                    alpha=ALPHA, labels=['baseline', 'encoding'], 
-                    title='Combined Effect')
+    plot_2_spectra(psd_pre, psd_post_1, freqs, ax=ax1, labels=labels,
+                   title='Aperiodic Exponent Shift')
+    plot_2_spectra(psd_pre, psd_post_2, freqs, ax=ax2, labels=labels,
+                   title='Combined Effect')
     
     # shade oscillation bands
     for band in ['alpha', 'gamma']:
@@ -84,8 +81,8 @@ def main():
     if ANNOTATE_ROATATION:
         for ax in [ax1, ax2]:
             idx_rotation = np.argmin(np.abs(freqs - ROTATION_FREQ))
-            ax.scatter(freqs[idx_rotation], psd_post_1[idx_rotation], color='k', 
-                       s=15, zorder=10)
+            ax.scatter(freqs[idx_rotation], psd_post_1[idx_rotation], 
+                       color='grey', s=15, zorder=10)
             
     # remove crowded y-labels
     for ax in [ax1, ax2]:
@@ -96,15 +93,15 @@ def main():
 
 
 def plot_2_spectra(spectrum_0, spectrum_1, freqs, labels=['0', '1'], 
-                   colors=['grey', 'k'], alpha=1, title=None, ax=None):
+                   title=None, ax=None):
     
     # Create figure
     if ax is None:
         _, ax = plt.subplots()
     
     # plot spectra
-    ax.loglog(freqs, spectrum_0, label=labels[0], color=colors[0], alpha=alpha)
-    ax.loglog(freqs, spectrum_1, label=labels[1], color=colors[1], alpha=alpha)
+    ax.loglog(freqs, spectrum_0, label=labels[0], color='k')
+    ax.loglog(freqs, spectrum_1, label=labels[1], color='k', linestyle='--')
     
     # label
     ax.set(xlabel='Frequency (Hz)', ylabel='Power (\u03BCV\u00b2/Hz)')
