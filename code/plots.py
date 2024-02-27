@@ -121,6 +121,80 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
     if not fname_out is None:
         plt.savefig(fname_out)
 
+ 
+def plot_electrodes(positions, hemisphere='right', view='lateral', 
+                    elec_color='r', elec_size=8, elec_offset=[0,0,0],
+                    brain_color='w', brain_opacity=0.75, return_plotter=False,
+                    fname_out=None):
+    """
+    plot channel locations on brain mesh
+
+    Parameters
+    ----------
+    positions : Nx3 array (pos_x, pos_y, pos_z)
+        channle positions.
+    hemisphere : string, optional
+        hemisphere to plot ('right' or 'left'). The default is 'right'.
+    view : string, optional
+        view of hemisphere ('lateral' or 'medial'). The default is 'lateral'.
+    elec_color : string, optional
+        color to plot electodes. The default is 'r'.
+    elec_size : float, optional
+        DESCRIPTION. The default is 8.
+    elec_offset : list, optional
+        offset to add to electrode positions [x,y,z]. The default is [0,0,0].
+    brain_color : string, optional
+        color to plot brain. The default is 'w'.
+    brain_opacity : float, optional
+        opacity of brainmesh. The default is 0.75.
+    return_plotter : bool, optional
+        whether to return plotter object. If False, plotter is shown. The
+        default is False.
+    fname_out : str, optional
+        file name for figure. If None, figure is not saved. The default is None.
+
+    Returns
+    -------
+    plotter : pyvista plotter object
+        plotter object with brain and electrode locations. Only returned if
+        return_plotter is True.
+
+    """
+
+    # imports
+    import pyvista as pv
+    from pyvista_utils import (load_brain_mesh, create_electrode_mesh, 
+                               get_camera_pos)
+    
+    # generate brain mesh
+    brain_mesh = load_brain_mesh(hemisphere)
+    
+    # create figure and add brain mesh
+    plotter = pv.Plotter(off_screen=True)
+    plotter.set_background('w')
+    plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
+    
+    # plot electrode locations
+    electrodes = create_electrode_mesh(positions, hemisphere, elec_offset)
+    if electrodes is not None:
+        plotter.add_mesh(electrodes, point_size=elec_size, color=elec_color,
+                        render_points_as_spheres=True)
+
+    # set camera position
+    cpos = get_camera_pos(hemisphere, view)
+    plotter.camera_position = cpos
+    
+    # save
+    if fname_out is not None:
+        plotter.screenshot(fname_out)
+
+    # return plotter
+    if not return_plotter:
+        if fname_out is None:
+            plotter.show(jupyter_backend='static')
+    else:
+        return plotter
+
 
 def plot_data_spatial(values, positions, plotter=None, hemisphere='right', view='lateral', 
                       cmap='viridis', clim=None, cbar_label='', plot_cbar=True,
@@ -152,9 +226,10 @@ def plot_data_spatial(values, positions, plotter=None, hemisphere='right', view=
     brain_color : str, optional
         Color of brain surface. The default is 'w'.
     brain_opacity : float, optional
-        Opacity of brain surface. The default is 1.        
+        Opacity of brain surface. The default is 0.75.       
     return_plotter : bool, optional
-        Whether to return plotter object. The default is False.
+        Whether to return plotter object. If False, plotter is shown. The
+        default is False.
     fname_out : str, optional
         File name to save figure. The default is None.
     """
@@ -204,11 +279,11 @@ def plot_data_spatial(values, positions, plotter=None, hemisphere='right', view=
         plotter.screenshot(fname_out)
 
     # return plotter
-    if return_plotter:
-        return plotter
-    else:
+    if not return_plotter:
         if fname_out is None:
             plotter.show(jupyter_backend='static')
+    else:
+        return plotter
 
 
 def find_cpos_interactive():
