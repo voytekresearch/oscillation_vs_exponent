@@ -123,8 +123,8 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
 
  
 def plot_electrodes(positions, hemisphere='right', view='lateral', plotter=None, 
-                    elec_color='r', elec_size=8, elec_offset=[0,0,0],
-                    brain_color='w', brain_opacity=0.75, return_plotter=False,
+                    elec_color='r', elec_size=12, elec_offset=[0,0,0],
+                    brain_color='w', brain_opacity=0.7, return_plotter=False,
                     fname_out=None):
     """
     plot channel locations on brain mesh
@@ -203,8 +203,8 @@ def plot_electrodes(positions, hemisphere='right', view='lateral', plotter=None,
 
 def plot_data_spatial(values, positions, hemisphere='right', view='lateral', 
                       plotter=None, cmap='viridis', clim=None, cbar_label='', 
-                      plot_cbar=True, elec_size=8, elec_offset=[0,0,0], 
-                      brain_color='w', brain_opacity=0.75, 
+                      plot_cbar=True, elec_size=12, elec_offset=[0,0,0], 
+                      brain_color='w', brain_opacity=0.7, 
                       return_plotter=False, fname_out=None):
     """
     Plot data at electrode locations on brain surface. 
