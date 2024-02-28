@@ -4,25 +4,20 @@ plot for all patients.
 
 """
 
-# Imports - general
-import numpy as np
+# Imports - standard
 import os
-from pymatreader import read_mat
+import numpy as np
+import pandas as pd
 
 # Imports - custom
 import sys
 sys.path.append("code")
-from paths import PROJECT_PATH, DATASET_PATH
-from pyvista_utils import default_camera_pos, plot_electrodes
+from paths import PROJECT_PATH
+from plots import plot_electrodes
     
 # Plot settings
-X_OFFSET = 4 # lateral offset for electrode positions
-PNT_SIZE = 8 # electrode plotting size 
-OPACITY = 0.75 # opacity of brain mesh
-BACKGROUND_COLOR = 'w'
-BRAIN_COLOR = 'grey'
-ELEC_COLOR = 'r'
-
+COLORS = ['#00000','#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
+          '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'] # colors for each patient
 
 def main():
     # make directory for output figures
@@ -32,44 +27,42 @@ def main():
     if not os.path.exists(f"{dir_fig}/patient"): 
         os.makedirs(f"{dir_fig}/patient")
         
-    # camera postions for each hemispheres
-    cpos = default_camera_pos()
+    # load electrode info
+    fname_in = f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv"
+    elec_info = pd.read_csv(fname_in, index_col=0)
+    patients = np.unique(elec_info['patient'])
 
-    # plot electrodes for each patient
-    elec_pos_all = []
-    files = os.listdir(f"{DATASET_PATH}/ieeg")
-    files = [f for f in files if 'words' in f]
-    for i_file, fname in enumerate(files):
-        # display progress
-        print(f"Processing:\t{fname} (file {i_file+1}/{len(files)})")
+    # loop through hemispheres and views
+    for hemisphere in ['right', 'left']:
+        for view in ['lateral', 'medial']:
+            # display progress
+            print(f"Plotting {hemisphere} hemisphere, {view} view")
 
-        # load electrode positions for patient
-        data_elec = read_mat(f"{DATASET_PATH}/ieeg/{fname}")
-        elec_pos = data_elec['data']['elecinfo']['elecpos_bipolar']
-        
-        # plot each hemisphere
-        for hemisphere, offset in zip(['right', 'left'], [X_OFFSET, -X_OFFSET]):        
-            fname_fig = fname.replace('_words.mat', f"_{hemisphere}")
-            plot_electrodes(elec_pos, cpos[hemisphere], hemisphere=hemisphere,
-                            background_color=BACKGROUND_COLOR, 
-                            brain_color=BRAIN_COLOR, elec_color=ELEC_COLOR, 
-                            point_size=PNT_SIZE, brain_opacity=OPACITY, 
-                            offset=offset, off_screen=True, show=False, 
-                            fname=f"{dir_fig}/patient/{fname_fig}")
-    
-        # aggregate data for next plot
-        elec_pos_all.append(elec_pos)
-    elec_pos_all = np.concatenate(elec_pos_all)
+            # plot group (all patients one color)
+            fname_out = f"{dir_fig}/group/{hemisphere}_hemisphere_{view}.png"
+            elec_pos_all = elec_info[['pos_x', 'pos_y', 'pos_z']].values
+            plot_electrodes(elec_pos_all, hemisphere, view, fname_out=fname_out)
+            
+            # loop through each patient
+            plotter = None # initialize group plotter
+            for i_pat, patient in enumerate(patients):
+                # get electrode positions for patient
+                df_p = elec_info.loc[elec_info['patient'] == patient]
+                elec_pos = df_p[['pos_x', 'pos_y', 'pos_z']].values
 
-    # plot electrodes for all patient on one brain 
-    for hemisphere, offset in zip(['right', 'left'], [X_OFFSET, -X_OFFSET]):        
-        fname_fig = f"all_patients_{hemisphere}"
-        plot_electrodes(elec_pos_all, cpos[hemisphere], hemisphere=hemisphere,
-                        background_color=BACKGROUND_COLOR, 
-                        brain_color=BRAIN_COLOR, elec_color=ELEC_COLOR, 
-                        point_size=PNT_SIZE, brain_opacity=OPACITY, 
-                        offset=offset, off_screen=True, show=False, 
-                        fname=f"{dir_fig}/group/{fname_fig}")
+                # create plot for individual patient
+                fname_out = f"{dir_fig}/patient/{patient}_{hemisphere}_hemisphere_{view}.png"
+                plot_electrodes(elec_pos, hemisphere, view, fname_out=fname_out)
+
+                # plot each patient on a shared group plot (individually colored)
+                plotter = plot_electrodes(elec_pos, hemisphere, view,
+                                            elec_color=COLORS[i_pat], 
+                                            plotter=plotter, 
+                                            return_plotter=True)
+                    
+            # save group plot for given hemisphere and view
+            fname_out = f"{dir_fig}/group/{hemisphere}_hemisphere_{view}_color.png"
+            plotter.screenshot(fname_out)
 
         
 if __name__ == "__main__":
