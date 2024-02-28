@@ -6,6 +6,7 @@ seaborn
 statsmodels
 scikit-learn
 mne
+joblib
 pymatreader
 pyvista
 neurodsp
