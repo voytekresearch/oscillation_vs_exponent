@@ -122,7 +122,7 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         plt.savefig(fname_out)
 
  
-def plot_electrodes(positions, hemisphere='right', view='lateral', 
+def plot_electrodes(positions, hemisphere='right', view='lateral', plotter=None, 
                     elec_color='r', elec_size=8, elec_offset=[0,0,0],
                     brain_color='w', brain_opacity=0.75, return_plotter=False,
                     fname_out=None):
@@ -137,6 +137,9 @@ def plot_electrodes(positions, hemisphere='right', view='lateral',
         hemisphere to plot ('right' or 'left'). The default is 'right'.
     view : string, optional
         view of hemisphere ('lateral' or 'medial'). The default is 'lateral'.
+    plotter : pyvista plotter object, optional
+        Pyvista plotter object to add data to. If None, a new plotter is created. 
+        The default is None.
     elec_color : string, optional
         color to plot electodes. The default is 'r'.
     elec_size : float, optional
@@ -166,16 +169,18 @@ def plot_electrodes(positions, hemisphere='right', view='lateral',
     from pyvista_utils import (load_brain_mesh, create_electrode_mesh, 
                                get_camera_pos)
     
-    # generate brain mesh
-    brain_mesh = load_brain_mesh(hemisphere)
-    
-    # create figure and add brain mesh
-    plotter = pv.Plotter(off_screen=True)
-    plotter.set_background('w')
-    plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
+    # create plotter object
+    if plotter is None:
+        plotter = pv.Plotter(off_screen=True)
+        plotter.set_background('w')
+
+        # create brain mesh and add to plotter
+        brain_mesh = load_brain_mesh(hemisphere)
+        plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
     
     # plot electrode locations
-    electrodes = create_electrode_mesh(positions, hemisphere, elec_offset)
+    electrodes = create_electrode_mesh(positions, hemisphere, elec_offset, 
+                                       verbose=False)
     if electrodes is not None:
         plotter.add_mesh(electrodes, point_size=elec_size, color=elec_color,
                         render_points_as_spheres=True)
@@ -196,8 +201,8 @@ def plot_electrodes(positions, hemisphere='right', view='lateral',
         return plotter
 
 
-def plot_data_spatial(values, positions, plotter=None, hemisphere='right', 
-                      view='lateral', cmap='viridis', clim=None, cbar_label='', 
+def plot_data_spatial(values, positions, hemisphere='right', view='lateral', 
+                      plotter=None, cmap='viridis', clim=None, cbar_label='', 
                       plot_cbar=True, elec_size=8, elec_offset=[0,0,0], 
                       brain_color='w', brain_opacity=0.75, 
                       return_plotter=False, fname_out=None):
@@ -214,6 +219,9 @@ def plot_data_spatial(values, positions, plotter=None, hemisphere='right',
         Hemisphere to plot. The default is 'right'.
     view : str, optional
         View of hemisphere ('lateral' or 'medial'). The default is 'lateral'.
+    plotter : pyvista plotter object, optional
+        Pyvista plotter object to add data to. If None, a new plotter is created. 
+        The default is None.
     cmap : str, optional
         Colormap for electrodes plotted. The default is 'viridis'.
     clim : list, optional
@@ -250,14 +258,15 @@ def plot_data_spatial(values, positions, plotter=None, hemisphere='right',
     # create plotter object
     if plotter is None:
         plotter = pv.Plotter(off_screen=True)
-    plotter.set_background('w')
+        plotter.set_background('w')
 
-    # create brain mesh and add to plotter
-    brain_mesh = load_brain_mesh(hemisphere)
-    plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
+        # create brain mesh and add to plotter
+        brain_mesh = load_brain_mesh(hemisphere)
+        plotter.add_mesh(brain_mesh, color=brain_color, opacity=brain_opacity)
     
     # create electrode mesh and add to plotter
-    elec_mesh = create_electrode_mesh(positions, hemisphere, elec_offset)
+    elec_mesh = create_electrode_mesh(positions, hemisphere, elec_offset, 
+                                      verbose=False)
     
     if plot_cbar:
         scalar_bar_args = {'title' : cbar_label, 
