@@ -69,6 +69,18 @@ def main():
             fname_out = f"{dir_fig}/group/{hemisphere}_hemisphere_{view}_color.png"
             plotter.screenshot(fname_out)
 
+    # combine hemispheres and views into a single figure and save
+    print("Combining hemispheres and views ")
+    images_0 = [plt.imread(f"{dir_fig}/group/{f}") for f in os.listdir(f"{dir_fig}/group") if 'color' in f]
+    images_1 = [plt.imread(f"{dir_fig}/group/{f}") for f in os.listdir(f"{dir_fig}/group") if 'color' not in f]
+    for images, tag in zip([images_0, images_1], ['_color', '']):
+        image = np.concatenate(images, axis=1)
+        fig, ax = plt.subplots(1,1, figsize=(20, 10))
+        ax.imshow(image)
+        ax.axis('off')
+        fig.savefig(f"{dir_fig}/electrode_locations{tag}.png", 
+                    bbox_inches='tight', dpi=300)
+
         
 if __name__ == "__main__":
     main()
