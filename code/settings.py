@@ -21,7 +21,7 @@ FELLNER_BANDS = {'theta' : [2, 5], 'alpha' : [8, 20], 'gamma' : [50, 90]} # osci
 # power analysis settings
 WINDOW = 0.3 # time window for spectral decomposition
 TFR_METHOD = 'multitaper' # 'morlet' or 'multitaper'
-N_DOWNSAMPLE = 2**8 # number of samples after downsampling TFR
+N_TFR_SAMPLES = 2**8 # number of samples after downsampling TFR
 
 # SpecParam hyperparameters
 FREQ_RANGE = [4, 100] # frequency range to fit
