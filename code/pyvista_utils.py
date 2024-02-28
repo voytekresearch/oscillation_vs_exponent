@@ -69,7 +69,8 @@ def load_brain_mesh(hemisphere='both'):
     
     return mesh
 
-def create_electrode_mesh(elec_pos, hemisphere='both', offset=[0,0,0]):
+def create_electrode_mesh(elec_pos, hemisphere='both', offset=[0,0,0],
+                          verbose=True):
     '''
     Create a PyVista mesh object for electrode positions.
 
@@ -81,6 +82,8 @@ def create_electrode_mesh(elec_pos, hemisphere='both', offset=[0,0,0]):
         hemisphere to load. The default is 'both'.
     offset : 1x3 array, optional
         offset to add to electrode positions. The default is [0,0,0].
+    verbose : bool, optional
+        print warning if no electrodes in given hemisphere. The default is True.
 
     Returns
     -------
@@ -95,7 +98,8 @@ def create_electrode_mesh(elec_pos, hemisphere='both', offset=[0,0,0]):
 
     # check if any electrodes are in given hemisphere
     if not elec_pos.any():
-        print('No electrodes in given hemisphere')
+        if verbose:
+            print('No electrodes in given hemisphere')
         return None
     
     # add offset to electrode positions
@@ -134,7 +138,7 @@ def find_cpos_interactive():
     return cpos
 
 
-def default_camera_pos():
+def default_camera_pos(zoomed=True):
     """
     Default camera positions for brain images.
 
@@ -148,17 +152,31 @@ def default_camera_pos():
         default camera position for posterior brain surface.
 
     """
-    cpos = dict({
-        'right'     :   [(522.8751422878058, -8.533968557192056, 2.1119098264702054),
-                        (0.21547583547528149, -18.471318770726832, 15.236837161591453),
-                        (0.023688404036230154, 0.07114592740239216, 0.9971845950115104)],    
-        'left'      :   [(-520.3531805339194, -38.83703309211285, 60.37721009778639),
-                        (0.21547583547528149, -18.471318770726832, 15.236837161591453),
-                        (0.08481614834082721, 0.038835387452391915, 0.9956395098940428)],    
-        'posterior' :   [(15.14386468264713, -479.3300209752663, 261.87532035441575),
-                        (0.21547583547528149, -18.471318770726832, 15.236837161591453),
-                        (-0.0024849751700573297, 0.47178555248856824, 0.8817098260547291)]})
-    
+
+    if zoomed:
+        cpos = dict({
+            'right'     :   [(294.5505622450821, -33.4531639749581, -1.1988451541504688),
+                            (0.21547583547528149, -18.471318770726832, 15.236837161591453),
+                            (0.05767181828374215, 0.03863366567995549, 0.9975877912504628)],    
+            'left'      :   [(-290.36988862408833, 22.497181438511667, -16.535137645887435),
+                            (0.21547583547528149, -18.471318770726832, 15.236837161591453),
+                            (-0.09617116070670201, 0.08685102622515647, 0.9915684580965467)],    
+            'posterior' :   [(9.742748987576016, -309.67398621660396, 56.02085566672592),
+                            (-0.12530094483760684, -18.295654359106592, 9.879553722280129),
+                            (0.0029693699749435204, 0.15650379629321212, 0.9876728935167577)]})
+
+    else:
+        cpos = dict({
+            'right'     :   [(522.8751422878058, -8.533968557192056, 2.1119098264702054),
+                            (0.21547583547528149, -18.471318770726832, 15.236837161591453),
+                            (0.023688404036230154, 0.07114592740239216, 0.9971845950115104)],    
+            'left'      :   [(-520.3531805339194, -38.83703309211285, 60.37721009778639),
+                            (0.21547583547528149, -18.471318770726832, 15.236837161591453),
+                            (0.08481614834082721, 0.038835387452391915, 0.9956395098940428)],    
+            'posterior' :   [(15.14386468264713, -479.3300209752663, 261.87532035441575),
+                            (0.21547583547528149, -18.471318770726832, 15.236837161591453),
+                            (-0.0024849751700573297, 0.47178555248856824, 0.8817098260547291)]})
+        
     return cpos
 
 
