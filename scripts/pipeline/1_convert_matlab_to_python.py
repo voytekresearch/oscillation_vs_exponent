@@ -55,7 +55,7 @@ def main():
     
             # collect channel info for file
             info = collect_channel_info(dir_input, fname)
-            meta = pd.concat([meta, info], sort=False)
+            meta = pd.concat([meta, info], sort=False, ignore_index=True)
         
     # export aggregate channel info
     save_metadata(meta, join(PROJECT_PATH, 'data/ieeg_metadata'))
