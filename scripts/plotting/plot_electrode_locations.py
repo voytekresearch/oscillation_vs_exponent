@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
+from info import PATIENTS
 from plots import plot_electrodes
     
 # Plot settings
@@ -32,7 +33,6 @@ def main():
     # load electrode info
     fname_in = f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv"
     elec_info = pd.read_csv(fname_in, index_col=0)
-    patients = np.unique(elec_info['patient'])
 
     # loop through hemispheres and views
     for hemisphere in ['right', 'left']:
@@ -48,7 +48,7 @@ def main():
             
             # loop through each patient
             plotter = None # initialize group plotter
-            for i_pat, patient in enumerate(patients):
+            for i_pat, patient in enumerate(PATIENTS):
                 # get electrode positions for patient
                 df_p = elec_info.loc[elec_info['patient'] == patient]
                 elec_pos = df_p[['pos_x', 'pos_y', 'pos_z']].values
