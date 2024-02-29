@@ -85,7 +85,7 @@ def main():
             p_val = run_resampling_analysis(power_pre, power_post, N_ITER)
 
             # determine sign of effect
-            sign = np.sign(np.mean(power_post) - np.mean(power_pre))
+            sign = np.sign(np.nanmean(power_post) - np.nanmean(power_pre))
             
             # save results
             df.loc[0, f'pval_{band}'] = p_val
