@@ -76,3 +76,26 @@ def diff_spectra(spectra_a, spectra_b):
     spectra = np.log(spectra_b) - np.log(spectra_a)
 
     return spectra
+
+
+def combine_images(dir_fig, fname_out):
+    """
+    Combine images within a folder into a single figure and save. This 
+    function is used to combine brain images of each hemisphere (and view i.e.
+    lateral and medial) into a single figure.
+
+    """
+    # imports
+    import os
+    import matplotlib.pyplot as plt
+
+    # load images and join
+    images = [plt.imread(f"{dir_fig}/{f}") for f in os.listdir(f"{dir_fig}")]
+    image = np.concatenate(images, axis=1)
+
+    # save figure
+    fig, ax = plt.subplots(1,1, figsize=(20, 10))
+    ax.imshow(image)
+    ax.axis('off')
+    fig.savefig(fname_out, bbox_inches='tight', dpi=300)  
+
