@@ -32,7 +32,6 @@ ALPHA = 0.05 # significance level
 
 def main():
    # time it
-
     t_start = timer()
 
     # identify / create directories
@@ -56,7 +55,7 @@ def main():
             print(f"    Elapsed time: \t{hours}h {minutes}m {seconds}s")      
         
         # init dataframe
-        columns=['patient', 'material', 'memory', 'chan_idx', 'p_val', 'sign']
+        columns=['patient', 'material', 'memory', 'chan_idx']
         df = pd.DataFrame(columns=columns)
         
         # load pre- and post-stim psd
@@ -99,16 +98,16 @@ def main():
     results = pd.concat(dfs, ignore_index=True)
 
     # find significant results (p-value < alpha)
-    for band in enumerate(bands.labels):
+    for band in bands.labels:
         results[f'sig_tm_{band}'] = results[f'pval_{band}'] < ALPHA # determine significance within condition
-        results[f'sig_{band}'] = np.nan # init
 
     # find channels that are task modulated in both material conditions 
     results_s = results.loc[results['memory']=='hit'] # select successful trials
     results_s = results_s.groupby(['patient','chan_idx']).all().reset_index() # find channels that are task modulated in both conditions
-    results_s.drop(columns=['material', 'memory', 'p_val', 'sign'], inplace=True)
+    results_s.drop(columns=['material', 'memory'], inplace=True)
     for band in bands.labels:
         results_s.rename(columns={f'sig_tm_{band}': f'sig_{band}'}, inplace=True)
+        results_s.drop(columns=[f'pval_{band}', f'sign_{band}'], inplace=True)
     results = results.merge(results_s, on=['patient','chan_idx'])
             
     # find channels that are task modulated in all frequency bands
