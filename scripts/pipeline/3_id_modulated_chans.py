@@ -17,10 +17,9 @@ from specparam.bands import Bands
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from settings import EPOCH_TIMES, BANDS
+from settings import BANDS
 from stats import run_resampling_analysis
 from utils import hour_min_sec
-from tfr_utils import crop_tfr
 
 # ignore mean of empty slice warnings
 import warnings
@@ -35,7 +34,7 @@ def main():
     t_start = timer()
 
     # identify / create directories
-    dir_input = f"{PROJECT_PATH}/data/ieeg_tfr/"
+    dir_input = f"{PROJECT_PATH}/data/ieeg_psd/"
     files = os.listdir(dir_input)
     dir_output = f"{PROJECT_PATH}/data/results"
     if not os.path.exists(dir_output): 
@@ -46,11 +45,12 @@ def main():
 
     # loop through files
     dfs = []
-    for i_file, file in enumerate(files):
+    fnames = [f for f in files if "prestim" in f]
+    for i_file, file in enumerate(fnames):
         # display progress - every 100 files
         if i_file % 100 == 0:
             hours, minutes, seconds = hour_min_sec(timer() - t_start)
-            print(f"\n    Analyzing file {i_file} of {len(files)}...")
+            print(f"\n    Analyzing file {i_file} of {len(fnames)}...")
             print(f"    Current time: \t{time_now()}")
             print(f"    Elapsed time: \t{hours}h {minutes}m {seconds}s")      
         
@@ -59,10 +59,9 @@ def main():
         df = pd.DataFrame(columns=columns)
         
         # load pre- and post-stim psd
-        data_in = np.load(f"{dir_input}/{file}")
-        freq = data_in['freq']
-        tfr = data_in['tfr']
-        time = data_in['time']
+        data_pre = np.load(f"{dir_input}/{file}")
+        data_post = np.load(f"{dir_input}/{file.replace('pre', 'post')}")
+        freq = data_pre['freq']
 
         # save metadata
         f_parts = file.split('_')
@@ -71,15 +70,13 @@ def main():
         df.loc[0, 'material'] = f_parts[1]
         df.loc[0, 'memory'] = f_parts[2]
 
-        # trim tfr in time windows of interest and average across time
-        psd_pre = np.mean(crop_tfr(tfr, time, EPOCH_TIMES[1])[0], axis=2)
-        psd_post = np.mean(crop_tfr(tfr, time, EPOCH_TIMES[2])[0], axis=2)
-
         # loop through bands of interst
         for band, f_range in zip(bands.labels, bands.definitions):
-            # trim tf in frequency bands of interest and average across freqs
-            power_pre = np.mean(trim_spectrum(freq, psd_pre, f_range)[1], axis=1)
-            power_post = np.mean(trim_spectrum(freq, psd_post, f_range)[1], axis=1)
+            # trim psd in frequency bands of interest and average across freqs
+            power_pre = np.mean(trim_spectrum(freq, data_pre['psd_pre'], 
+                                              f_range)[1], axis=1)
+            power_post = np.mean(trim_spectrum(freq, data_post['psd_post'], 
+                                               f_range)[1], axis=1)
 
             # determine whether bandpower was task modulation
             p_val = run_resampling_analysis(power_pre, power_post, N_ITER)
