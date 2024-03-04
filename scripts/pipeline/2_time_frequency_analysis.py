@@ -156,7 +156,7 @@ def aggregate_spectra(dir_input, dir_output):
     
     # load frequency vector
     files = os.listdir(dir_input)
-    temp = np.load(f"{dir_input}/{files[0]}")
+    temp = np.load(f"{dir_input}/{files[1]}")
     freq = temp['freq']
     
     # aggregate psd data for each condition
