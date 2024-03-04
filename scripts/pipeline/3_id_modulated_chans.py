@@ -110,8 +110,9 @@ def main():
         results_s.drop(columns=[f'pval_{band}', f'sign_{band}'], inplace=True)
     results = results.merge(results_s, on=['patient','chan_idx'])
             
-    # find channels that are task modulated in all frequency bands
-    results['sig'] = results[[f'sig_{band}' for band in bands.labels]].all(axis=1)
+    # find channels that are task modulated in all/any frequency bands
+    results['sig_all'] = results[[f'sig_{band}' for band in bands.labels]].all(axis=1)
+    results['sig_any'] = results[[f'sig_{band}' for band in bands.labels]].any(axis=1)
 
     # save results
     results.to_csv(f"{dir_output}/ieeg_modulated_channels.csv")
