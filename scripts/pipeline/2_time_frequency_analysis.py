@@ -7,8 +7,7 @@ also computed for each epoch using the multitaper method.
 """
 
 # Imports - standard
-from os.path import join, exists
-from os import mkdir, listdir
+import os
 import numpy as np
 from mne import read_epochs
 from mne.time_frequency import tfr_multitaper
@@ -31,19 +30,18 @@ N_TFR_FREQS = 256 # number of frequency bins for tfr analysis
 
 def main():
     # identify / create directories
-    dir_input = join(PROJECT_PATH, 'data/ieeg_epochs')
-    dir_psd = join(PROJECT_PATH, 'data/ieeg_psd')
-    dir_tfr = join(PROJECT_PATH, 'data/ieeg_tfr')
-    dir_results = join(PROJECT_PATH, 'data/ieeg_spectral_results')
-    if not exists(dir_psd): mkdir(dir_psd)
-    if not exists(dir_tfr): mkdir(dir_tfr)
-    if not exists(dir_results): mkdir(dir_results)
+    dir_input = f"{PROJECT_PATH}/data/ieeg_epochs/"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_spectral_results/"
+    dir_psd = f"{PROJECT_PATH}/data/ieeg_psd/"
+    dir_tfr = f"{PROJECT_PATH}/data/ieeg_tfr/"
+    for path in [dir_output, dir_psd, dir_tfr]:
+        if not os.path.exists(path): os.makedirs(path)
     
     # display progress
     t_start = timer()
 
     # for each fif file
-    files = listdir(dir_input)
+    files = os.listdir(dir_input)
     for ii, fname in enumerate(files):
 
         # display progress
@@ -52,27 +50,27 @@ def main():
         print(f"\tfilename: \t{fname}")
         
         # load eeg data
-        epochs = read_epochs(join(dir_input, fname), verbose=False)
+        epochs = read_epochs(f"{dir_input}/{fname}", verbose=False)
         print(f"\tchannels: \t{len(epochs.info['ch_names'])}")
         
         # compute power spectral density
-        comp_psd(epochs, fname, dir_psd)
+        comp_psd(epochs, fname, f"{dir_output}/psd")
     
         # compute time-frequency representation of power,
         # for each trial/channel
         if RUN_TFR:
-            compute_channel_tfr(epochs, fname, dir_tfr)
+            compute_channel_tfr(epochs, fname, f"{dir_output}/tfr")
         
         # display progress
         hour, min, sec = hour_min_sec(timer() - t_start_f)
         print(f"\tanalysis time: \t{hour} hour, {min} min, and {sec :0.1f} s")
 
     # aggregate psd results. average over trials
-    aggregate_spectra(dir_psd, dir_results)
+    aggregate_spectra(dir_psd, dir_output)
     
     # aggregate tfr results. average over trials
     if RUN_TFR:
-        aggregate_tfr(dir_tfr, dir_results)
+        aggregate_tfr(dir_tfr, dir_output)
 
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
@@ -96,7 +94,7 @@ def comp_psd(epochs, fname, dir_output):
         
         # save power results
         fname_out = str.replace(fname, '_epo.fif', '_%s_psd' %(label))
-        np.savez(join(dir_output, fname_out), psd=psd, freq=freq)
+        np.savez(f"{dir_output}/{fname_out}", psd=psd, freq=freq)
 
 
 def compute_channel_tfr(epochs, fname, dir_output):
@@ -115,8 +113,7 @@ def compute_channel_tfr(epochs, fname, dir_output):
         
         # save time-frequency results
         fname_out = fname.replace('_epo.fif', f'_chan{channel}_tfr')
-        np.savez(join(dir_output, fname_out), 
-                    tfr=tfr, freq=freq, time=time)
+        np.savez(f"{dir_output}/{fname_out}", tfr=tfr, freq=freq, time=time)
 
 def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256,
                 time_window_length=0.5, freq_bandwidth=4, n_jobs=-1, picks=None, 
@@ -158,9 +155,9 @@ def aggregate_spectra(dir_input, dir_output):
     '''
     
     # load frequency vector
-    files = listdir(dir_input)
-    data_in = np.load(join(dir_input, files[1]))
-    freq = data_in['freq']
+    files = os.listdir(dir_input)
+    temp = np.load(f"{dir_input}/{files[0]}")
+    freq = temp['freq']
     
     # aggregate psd data for each condition
     conditions = ['words_hit_prestim', 'words_hit_poststim', 
@@ -172,13 +169,13 @@ def aggregate_spectra(dir_input, dir_output):
         spectra = np.zeros(len(freq))
         for patient in PATIENTS:    
             # load psd data               
-            data_in = np.load(join(dir_input, '%s_%s_psd.npz' %(patient, cond)))
+            data_in = np.load(f"{dir_input}/{patient}_{cond}_psd.npz")
             spectra = np.vstack([spectra, np.nanmedian(data_in['psd'], axis=0)])
 
         # remove place-holder and save results
         spectra = spectra[1:]
         fname_out = 'psd_%s' %cond
-        np.savez(join(dir_output, fname_out), freq=freq, spectra=spectra)
+        np.savez(f"{dir_output}/{fname_out}", freq=freq, spectra=spectra)
         
 def aggregate_tfr(dir_input, dir_output):
     '''
@@ -187,13 +184,13 @@ def aggregate_tfr(dir_input, dir_output):
     '''
     
     # load frequency vector
-    files = listdir(dir_input)
-    data_in = np.load(join(dir_input, files[0]))
-    freq = data_in['freq']
+    files = os.listdir(dir_input)
+    temp = np.load(f"{dir_input}/{files[0]}")
+    freq = temp['freq']
     
     # load channel meta data
-    meta = np.load(join(PROJECT_PATH, 'data/ieeg_metadata', 
-                        'ieeg_channel_info.pkl'), allow_pickle=True)
+    meta = np.load(f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.pkl",
+                   allow_pickle=True)
     
     # aggregate psd data for each condition
     for condition in ['words_hit', 'faces_hit', 'words_miss', 'faces_miss']:
@@ -219,7 +216,7 @@ def aggregate_tfr(dir_input, dir_output):
             if not fname_in in files: continue
         
             # load tfr data
-            data_in = np.load(join(dir_input, fname_in))
+            data_in = np.load(f"{dir_input}/{fname_in}")
 
             # if all values are NaN, set means to Nan and continue
             if np.all(np.isnan(data_in['tfr'])):
@@ -242,11 +239,11 @@ def aggregate_tfr(dir_input, dir_output):
             tfr_mean_post[ii] = np.nanmean(tfr_post, axis=1)
 
         #  save results
-        np.savez(join(dir_output, f"tfr_{condition}_epoch"), freq=freq, 
+        np.savez(f"{dir_output}/tfr_{condition}_epoch", freq=freq, 
                  spectra=tfr_mean_epoch)
-        np.savez(join(dir_output, f"tfr_{condition}_prestim"), freq=freq, 
+        np.savez(f"{dir_output}/tfr_{condition}_prestim", freq=freq, 
                  spectra=tfr_mean_pre)
-        np.savez(join(dir_output, f"tfr_{condition}_poststim"), freq=freq, 
+        np.savez(f"{dir_output}/tfr_{condition}_poststim", freq=freq, 
                  spectra=tfr_mean_post)
 
 if __name__ == "__main__":
