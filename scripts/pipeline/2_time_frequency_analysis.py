@@ -26,6 +26,7 @@ from tfr_utils import crop_tfr
 # Settings
 RUN_TFR = True # set to False to skip tfr analysis (long run time)
 PSD_BANDWIDTH = 2 # frequencies at ± bandwidth are smoothed 
+N_TFR_FREQS = 256 # number of frequency bins for tfr analysis
 
 
 def main():
@@ -109,14 +110,15 @@ def compute_channel_tfr(epochs, fname, dir_output):
     for channel in range(len(epochs.info['ch_names'])):        
         # run time-frequency analysis
         decim = int(np.ceil(len(epochs.times) / N_TFR_SAMPLES))
-        time, freq, tfr = compute_tfr(epochs, picks=channel, decim=decim)
+        time, freq, tfr = compute_tfr(epochs, picks=channel, decim=decim,
+                                      n_freqs=N_TFR_FREQS, n_jobs=N_JOBS)
         
         # save time-frequency results
         fname_out = fname.replace('_epo.fif', f'_chan{channel}_tfr')
         np.savez(join(dir_output, fname_out), 
                     tfr=tfr, freq=freq, time=time)
 
-def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256, 
+def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256,
                 time_window_length=0.5, freq_bandwidth=4, n_jobs=-1, picks=None, 
                 average=False, decim=1, verbose=False):
     '''
@@ -132,7 +134,7 @@ def compute_tfr(epochs, f_min=None, f_max=None, n_freqs=256,
     if f_max is None:
         f_max = epochs.info['sfreq'] / 2 # Nyquist
 
-    freq = np.logspace(*np.log10([f_min, f_max]), n_freqs) # log-spaced 
+    freq = np.linspace(f_min, f_max, n_freqs)
     n_cycles = freq * time_window_length # set based on fixed window length
     time_bandwidth =  time_window_length * freq_bandwidth # must be >= 2
 
