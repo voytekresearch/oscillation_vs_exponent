@@ -54,12 +54,12 @@ def main():
         print(f"\tchannels: \t{len(epochs.info['ch_names'])}")
         
         # compute power spectral density
-        comp_psd(epochs, fname, f"{dir_output}/psd")
+        comp_psd(epochs, fname, dir_psd)
     
         # compute time-frequency representation of power,
         # for each trial/channel
         if RUN_TFR:
-            compute_channel_tfr(epochs, fname, f"{dir_output}/tfr")
+            compute_channel_tfr(epochs, fname, dir_tfr)
         
         # display progress
         hour, min, sec = hour_min_sec(timer() - t_start_f)
