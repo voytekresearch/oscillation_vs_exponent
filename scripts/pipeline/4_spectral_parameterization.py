@@ -19,19 +19,15 @@ from utils import hour_min_sec
 
 # Settings
 RUN_TFR = False # run TFR parameterization
-AP_MODE = ['knee'] # ['fixed', 'knee'] # aperiodic mode for SpecParam
-DECOMP_METHOD = 'tfr' # parameterize PSDs or time-averaged TFRs
+AP_MODE = ['fixed', 'knee'] # aperiodic mode for SpecParam
 OVERWRITE = False # overwrite existing results
 
-# This fixed the error: "Tcl_AsyncDelete: async handler deleted by the wrong thread"
-import matplotlib
-matplotlib.use('TkAgg')
 
 def main():
     
     # parameterize PSDs
     print('\nParameterizing PSDs...')
-    # param_group_psd_results()
+    param_group_psd_results()
 
     # parameterize TFRs
     if RUN_TFR:
@@ -41,15 +37,15 @@ def main():
 def param_group_psd_results():
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_spectral_results"
-    dir_output = f"{PROJECT_PATH}/data/ieeg_psd_specparam"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_psd_param"
     if not os.path.exists(dir_output): 
-        os.makedirs(f"{dir_output}/fooof_reports")
+        os.makedirs(f"{dir_output}/reports")
     
     # display progress
     t_start = timer()
     
     # loop through conditions
-    files = [f for f in os.listdir(dir_input) if f.startswith(DECOMP_METHOD)]
+    files = [f for f in os.listdir(dir_input) if f.startswith('psd')]
     for i_file, fname in enumerate(files):
         # display progress
         t_start_c = timer()
@@ -70,7 +66,7 @@ def param_group_psd_results():
             fname_out = fname.replace('.npz', f'_params_{ap_mode}')
             fg.save(f"{dir_output}/{fname_out}", save_results=True, 
                     save_settings=True, save_data=True)
-            fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
+            fg.save_report(f"{dir_output}/reports/{fname_out}")
 
         # display progress
         hour, min, sec = hour_min_sec(timer() - t_start_c)
@@ -87,13 +83,13 @@ def parameterize_tfr():
 
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_tfr"
-    dir_output = f"{PROJECT_PATH}/data/ieeg_tfr_specparam"
-    if not os.path.exists(f"{dir_output}/fooof_reports"): 
-        os.makedirs(f"{dir_output}/fooof_reports")
+    dir_output = f"{PROJECT_PATH}/data/ieeg_tfr_param"
+    if not os.path.exists(f"{dir_output}/reports"): 
+        os.makedirs(f"{dir_output}/reports")
 
     # load alpha/beta bandpower modulation results (resampling ananlysis)
     results = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv")
-    df = results[results['sig']==1].reset_index(drop=True)
+    df = results.loc[results['sig']].reset_index(drop=True)
     
     # loop through significant channels
     for i_chan, row in df.iterrows():
@@ -123,7 +119,7 @@ def parameterize_tfr():
         
         # parameterize
         for ap_mode in AP_MODE:
-            # print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
+            print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
             fg = SpectralTimeModel(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_modes(check_freqs=False, check_data=False)
             fg.fit(freq, tfr, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
@@ -132,7 +128,7 @@ def parameterize_tfr():
             fname_out = fname.replace('.npz','_param_%s' %ap_mode)
             fg.save(f"{dir_output}/{fname_out}", save_results=True, 
                     save_settings=True)
-            fg.save_report(f"{dir_output}/fooof_reports/{fname_out}")
+            fg.save_report(f"{dir_output}/reports/{fname_out}")
 
         # display progress
         hour, min, sec = hour_min_sec(timer() - t_start_c)
