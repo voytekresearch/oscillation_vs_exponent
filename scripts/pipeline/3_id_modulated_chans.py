@@ -48,11 +48,10 @@ def main():
     fnames = [f for f in files if "prestim" in f]
     for i_file, file in enumerate(fnames):
         # display progress - every 100 files
-        if i_file % 100 == 0:
-            hours, minutes, seconds = hour_min_sec(timer() - t_start)
-            print(f"\n    Analyzing file {i_file} of {len(fnames)}...")
-            print(f"    Current time: \t{time_now()}")
-            print(f"    Elapsed time: \t{hours}h {minutes}m {seconds}s")      
+        hours, minutes, seconds = hour_min_sec(timer() - t_start)
+        print(f"\nAnalyzing file {i_file} of {len(fnames)}...")
+        print(f"    Current time: \t{time_now()}")
+        print(f"    Elapsed time: \t{hours}h {minutes}m {seconds}s")      
         
         # init dataframe
         columns=['patient', 'material', 'memory', 'chan_idx']
