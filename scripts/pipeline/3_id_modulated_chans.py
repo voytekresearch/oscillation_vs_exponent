@@ -66,32 +66,38 @@ def main():
         # save metadata
         f_parts = file.split('_')
         df.loc[0, 'patient'] = f_parts[0]
-        df.loc[0, 'chan_idx'] = int(f_parts[3].replace('chan', ''))
         df.loc[0, 'material'] = f_parts[1]
         df.loc[0, 'memory'] = f_parts[2]
 
-        # loop through bands of interst
-        for band, f_range in zip(bands.labels, bands.definitions):
-            # trim psd in frequency bands of interest and average across freqs
-            power_pre = np.mean(trim_spectrum(freq, data_pre['psd_pre'], 
-                                              f_range)[1], axis=1)
-            power_post = np.mean(trim_spectrum(freq, data_post['psd_post'], 
-                                               f_range)[1], axis=1)
+        # loop through channels
+        psd_pre = data_pre['psd']
+        psd_post = data_post['psd']
+        for i_chan in range(psd_pre.shape[1]):
+            # save metadata
+            df.loc[0, 'chan_idx'] = i_chan
 
-            # determine whether bandpower was task modulation
-            p_val = run_resampling_analysis(power_pre, power_post, N_ITER)
+            # loop through bands of interst
+            for band, f_range in zip(bands.labels, bands.definitions):
+                # trim psd in frequency bands of interest and average across freqs
+                power_pre = np.mean(trim_spectrum(freq, psd_pre[:, i_chan], 
+                                                 f_range)[1], axis=1)
+                power_post = np.mean(trim_spectrum(freq, psd_post[:, i_chan],
+                                                  f_range)[1], axis=1)
 
-            # determine sign of effect
-            sign = np.sign(np.nanmean(power_post) - np.nanmean(power_pre))
-            
-            # save results
-            df.loc[0, f'{band}_pre'] = power_pre
-            df.loc[0, f'{band}_post'] = power_post
-            df.loc[0, f'{band}_pval'] = p_val
-            df.loc[0, f'{band}_sign'] = sign
+                # determine whether bandpower was task modulation
+                p_val = run_resampling_analysis(power_pre, power_post, N_ITER)
 
-            # aggreate results
-            dfs.append(df)
+                # determine sign of effect
+                sign = np.sign(np.nanmean(power_post) - np.nanmean(power_pre))
+                
+                # save results
+                df.loc[0, f'{band}_pre'] = np.nanmean(power_pre)
+                df.loc[0, f'{band}_post'] = np.nanmean(power_post)
+                df.loc[0, f'{band}_pval'] = p_val
+                df.loc[0, f'{band}_sign'] = sign
+
+                # aggreate results
+                dfs.append(df)
 
     # concatenate results
     results = pd.concat(dfs, ignore_index=True)
