@@ -18,7 +18,7 @@ from settings import N_JOBS, SPEC_PARAM_SETTINGS, FREQ_RANGE
 from utils import hour_min_sec
 
 # Settings
-RUN_TFR = False # run TFR parameterization (takes a long time)
+RUN_TFR = True # run TFR parameterization (takes a long time)
 AP_MODE = ['fixed', 'knee'] # aperiodic mode for SpecParam
 
 
@@ -26,7 +26,7 @@ def main():
     
     # parameterize PSDs
     print('\nParameterizing PSDs...')
-    param_group_psd_results()
+    # param_group_psd_results()
 
     # parameterize TFRs
     if RUN_TFR:
@@ -87,41 +87,40 @@ def parameterize_tfr():
         os.makedirs(f"{dir_output}/reports")
 
     # load alpha/beta bandpower modulation results (resampling ananlysis)
-    results = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv")
-    df = results.loc[results['sig']].reset_index(drop=True)
+    results = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv", index_col=0)
+    df = results.loc[results['sig_any']].reset_index(drop=True)
     
     # loop through significant channels
     for i_chan, row in df.iterrows():
-        # get file name
-        fname = f"{row['patient']}_{row['material']}_{row['memory']}" + \
-            f"_chan{row['chan_idx']}_tfr.npz"
-
         # display progress
         print(f"    Analyzing file {i_chan}/{len(df)}") 
-        print(f"\t{fname}")
         t_start_c = timer()
+        
+        # loop through materials and conditions
+        for material in ['words', 'faces']:
+            for memory in ['hit', 'miss']:
 
-        # load tfr
-        data_in = np.load(f"{dir_input}/{fname}")
-        tfr_in = data_in['tfr']
-        freq = data_in['freq']
-        
-        # average over trials
-        tfr = np.squeeze(np.nanmean(tfr_in, axis=0))
-        
-        # parameterize
-        for ap_mode in AP_MODE:
-            print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
-            fg = SpectralGroupModel(**SPEC_PARAM_SETTINGS, 
-                                    aperiodic_mode=ap_mode, verbose=False)
-            fg.set_check_modes(check_freqs=False, check_data=False)
-            fg.fit(freq, tfr, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
-            
-            # save results and report
-            fname_out = fname.replace('.npz','_param_%s' %ap_mode)
-            fg.save(f"{dir_output}/{fname_out}", save_results=True, 
-                    save_settings=True)
-            fg.save_report(f"{dir_output}/reports/{fname_out}")
+                # load tfr
+                fname = f"{row['patient']}_{material}_{memory}_chan{row['chan_idx']}_tfr.npz"
+                data_in = np.load(f"{dir_input}/{fname}")
+                tfr_in = data_in['tfr']
+                freq = data_in['freq']
+                
+                # average over trials
+                tfr = np.squeeze(np.nanmean(tfr_in, axis=0))
+                
+                # parameterize
+                for ap_mode in AP_MODE:
+                    fg = SpectralGroupModel(**SPEC_PARAM_SETTINGS, 
+                                            aperiodic_mode=ap_mode, verbose=False)
+                    fg.set_check_modes(check_freqs=False, check_data=False)
+                    fg.fit(freq, tfr.T, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
+                    
+                    # save results and report
+                    fname_out = fname.replace('.npz','_param_%s' %ap_mode)
+                    fg.save(f"{dir_output}/{fname_out}", save_results=True, 
+                            save_settings=True)
+                    fg.save_report(f"{dir_output}/reports/{fname_out}")
 
         # display progress
         hour, min, sec = hour_min_sec(timer() - t_start_c)
