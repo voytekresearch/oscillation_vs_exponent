@@ -9,6 +9,7 @@ also computed for each epoch using the multitaper method.
 # Imports - standard
 import os
 import numpy as np
+import pandas as pd
 from mne import read_epochs
 from mne.time_frequency import tfr_multitaper
 from time import time as timer
@@ -189,8 +190,7 @@ def aggregate_tfr(dir_input, dir_output):
     freq = temp['freq']
     
     # load channel meta data
-    meta = np.load(f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.pkl",
-                   allow_pickle=True)
+    meta = pd.read_csv(f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv")
     
     # aggregate psd data for each condition
     for condition in ['words_hit', 'faces_hit', 'words_miss', 'faces_miss']:
