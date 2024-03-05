@@ -85,8 +85,10 @@ def main():
             sign = np.sign(np.nanmean(power_post) - np.nanmean(power_pre))
             
             # save results
-            df.loc[0, f'pval_{band}'] = p_val
-            df.loc[0, f'sign_{band}'] = sign
+            df.loc[0, f'{band}_pre'] = power_pre
+            df.loc[0, f'{band}_post'] = power_post
+            df.loc[0, f'{band}_pval'] = p_val
+            df.loc[0, f'{band}_sign'] = sign
 
             # aggreate results
             dfs.append(df)
@@ -96,16 +98,19 @@ def main():
 
     # find significant results (p-value < alpha)
     for band in bands.labels:
-        results[f'sig_tm_{band}'] = results[f'pval_{band}'] < ALPHA # determine significance within condition
+        results[f'{band}_sig'] = results[f'{band}_pval'] < ALPHA # determine significance within condition
 
+    # save intermediate results
+    results.to_csv(f"{dir_output}/band_power_statistics.csv")
+    
     # find channels that are task modulated in both material conditions 
     results_s = results.loc[results['memory']=='hit'] # select successful trials
     results_s = results_s.groupby(['patient','chan_idx']).all().reset_index() # find channels that are task modulated in both conditions
-    results_s.drop(columns=['material', 'memory'], inplace=True)
-    for band in bands.labels:
-        results_s.rename(columns={f'sig_tm_{band}': f'sig_{band}'}, inplace=True)
-        results_s.drop(columns=[f'pval_{band}', f'sign_{band}'], inplace=True)
-    results = results.merge(results_s, on=['patient','chan_idx'])
+    results_s.drop(columns=['material', 'memory'], inplace=True) # drop unnecessary columns
+    for band in bands.labels: # drop unnecessary columns
+        results_s.rename(columns={f'{band}_sig' : f'sig_{band}'}, inplace=True)
+        results_s.drop(columns=[f'{band}_pre', f'{band}_post', f'{band}_pval', 
+                                f'{band}_sign'], inplace=True)
             
     # find channels that are task modulated in all/any frequency bands
     results['sig_all'] = results[[f'sig_{band}' for band in bands.labels]].all(axis=1)
