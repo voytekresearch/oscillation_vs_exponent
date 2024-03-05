@@ -26,7 +26,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # analysis parameters
-N_ITER = 10000 # random permutation iterations/shuffles
+N_ITER = 1000 # random permutation iterations/shuffles
 ALPHA = 0.05 # significance level
 
 def main():
