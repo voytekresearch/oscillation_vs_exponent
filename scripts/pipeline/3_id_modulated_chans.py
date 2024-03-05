@@ -1,6 +1,6 @@
 """
 This script identifies channels with significant task-related modulation of 
-total alpha/beta bandpower using permutation testing.
+total canonical oscillatory bandpower using permutation testing.
 
 """
 
@@ -60,20 +60,18 @@ def main():
         # load pre- and post-stim psd
         data_pre = np.load(f"{dir_input}/{file}")
         data_post = np.load(f"{dir_input}/{file.replace('pre', 'post')}")
-        freq = data_pre['freq']
-
-        # save metadata
-        f_parts = file.split('_')
-        df.loc[0, 'patient'] = f_parts[0]
-        df.loc[0, 'material'] = f_parts[1]
-        df.loc[0, 'memory'] = f_parts[2]
-
-        # loop through channels
         psd_pre = data_pre['psd']
         psd_post = data_post['psd']
+        freq = data_pre['freq']
+
+        # loop through channels
         for i_chan in range(psd_pre.shape[1]):
             # save metadata
-            df.loc[0, 'chan_idx'] = i_chan
+            f_parts = file.split('_')
+            df.loc[i_chan, 'patient'] = f_parts[0]
+            df.loc[i_chan, 'material'] = f_parts[1]
+            df.loc[i_chan, 'memory'] = f_parts[2]
+            df.loc[i_chan, 'chan_idx'] = i_chan
 
             # loop through bands of interst
             for band, f_range in zip(bands.labels, bands.definitions):
@@ -90,10 +88,10 @@ def main():
                 sign = np.sign(np.nanmean(power_post) - np.nanmean(power_pre))
                 
                 # save results
-                df.loc[0, f'{band}_pre'] = np.nanmean(power_pre)
-                df.loc[0, f'{band}_post'] = np.nanmean(power_post)
-                df.loc[0, f'{band}_pval'] = p_val
-                df.loc[0, f'{band}_sign'] = sign
+                df.loc[i_chan, f'{band}_pre'] = np.nanmean(power_pre)
+                df.loc[i_chan, f'{band}_post'] = np.nanmean(power_post)
+                df.loc[i_chan, f'{band}_pval'] = p_val
+                df.loc[i_chan, f'{band}_sign'] = sign
 
                 # aggreate results
                 dfs.append(df)
@@ -107,6 +105,7 @@ def main():
 
     # save intermediate results
     results.to_csv(f"{dir_output}/band_power_statistics.csv")
+    # results = pd.read_csv(f"{dir_output}/band_power_statistics.csv", index_col=0)
     
     # find channels that are task modulated in both material conditions 
     results_s = results.loc[results['memory']=='hit'] # select successful trials
@@ -118,11 +117,11 @@ def main():
                                 f'{band}_sign'], inplace=True)
             
     # find channels that are task modulated in all/any frequency bands
-    results['sig_all'] = results[[f'{band}_sig' for band in bands.labels]].all(axis=1)
-    results['sig_any'] = results[[f'{band}_sig' for band in bands.labels]].any(axis=1)
+    results_s['sig_all'] = results_s[[f'sig_{band}' for band in bands.labels]].all(axis=1)
+    results_s['sig_any'] = results_s[[f'sig_{band}' for band in bands.labels]].any(axis=1)
 
     # save results
-    results.to_csv(f"{dir_output}/ieeg_modulated_channels.csv")
+    results_s.to_csv(f"{dir_output}/ieeg_modulated_channels.csv")
 
     # display progress
     hour, min, sec = hour_min_sec(timer() - t_start)
