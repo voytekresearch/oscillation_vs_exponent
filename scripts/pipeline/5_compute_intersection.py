@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
 """
-Created on Mon Sep 20 09:27:01 2021
-
-Data Repo: https://osf.io/3csku/
-Associated Paper: https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000403
-
-This script analyzes the spectral results from 
-ieeg_4_spectral_parameterization.py
+This script computes the intersection frequency of the baseline and encoding  
+power spectra. It analyzes the spectral results from 
+scripts.ieeg_4_spectral_parameterization.py
 
 """
 
@@ -23,8 +18,8 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from specparam_utils import comp_intersection
 
-# Settings
-DECOMP_METHOD = 'tfr' # 'psd'
+# settings
+AP_MODE = ['knee'] # array. aperiodic modes for SpecParam. 
 
 def main():
     # identify / create directories
@@ -36,13 +31,12 @@ def main():
     # loop through conditions
     for material in ['words', 'faces']:
         for memory in ['hit', 'miss']:
-            for ap_mode in ['knee']: # ['fixed', 'knee']:
+            for ap_mode in AP_MODE:
                 # load parameterization results
                 param_pre = SpectralGroupModel()
-                param_pre.load(join(dir_input, '%s_%s_%s_prestim_params_%s.json' %(DECOMP_METHOD, material, memory, ap_mode)))
+                param_pre.load(join(dir_input, 'psd_%s_%s_prestim_params_%s.json' %(material, memory, ap_mode)))
                 param_post = SpectralGroupModel()
-                param_post.load(join(dir_input, '%s_%s_%s_poststim_params_%s.json' %(DECOMP_METHOD, material, memory, ap_mode)))
-        
+                param_post.load(join(dir_input, 'psd_%s_%s_poststim_params_%s.json' %(material, memory, ap_mode)))
         
                 # calc intersection 
                 psd_pre, psd_post, intersection, intersection_idx = \
