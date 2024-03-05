@@ -18,9 +18,8 @@ from settings import N_JOBS, SPEC_PARAM_SETTINGS, FREQ_RANGE
 from utils import hour_min_sec
 
 # Settings
-RUN_TFR = False # run TFR parameterization
+RUN_TFR = False # run TFR parameterization (takes a long time)
 AP_MODE = ['fixed', 'knee'] # aperiodic mode for SpecParam
-OVERWRITE = False # overwrite existing results
 
 
 def main():
@@ -101,13 +100,6 @@ def parameterize_tfr():
         print(f"    Analyzing file {i_chan}/{len(df)}") 
         print(f"\t{fname}")
         t_start_c = timer()
-        
-        # skip file is output already exists
-        if not OVERWRITE:
-            fname_out = fname.replace('.npz','_param_%s.json' %AP_MODE[0])
-            if os.path.exists(f"{dir_output}/{fname_out}"):
-                print("\t\tOutput already exists. Skipping...")
-                continue
 
         # load tfr
         data_in = np.load(f"{dir_input}/{fname}")
