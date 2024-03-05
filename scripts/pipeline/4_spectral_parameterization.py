@@ -7,7 +7,7 @@ This script parameterizes the spectral results from 2_time_frequency_analysis.py
 import os
 import numpy as np
 import pandas as pd
-from specparam import SpectralGroupModel, SpectralTimeModel
+from specparam import SpectralGroupModel
 from time import time as timer
 
 # Imports - custom
@@ -112,7 +112,8 @@ def parameterize_tfr():
         # parameterize
         for ap_mode in AP_MODE:
             print(f"\t\tParameterizing with '{ap_mode}' aperiodic mode...")
-            fg = SpectralTimeModel(**SPEC_PARAM_SETTINGS, aperiodic_mode=ap_mode, verbose=False)
+            fg = SpectralGroupModel(**SPEC_PARAM_SETTINGS, 
+                                    aperiodic_mode=ap_mode, verbose=False)
             fg.set_check_modes(check_freqs=False, check_data=False)
             fg.fit(freq, tfr, n_jobs=N_JOBS, freq_range=FREQ_RANGE)
             
