@@ -12,8 +12,7 @@ Associated Paper:
 """
 
 # Imports - standard
-from os.path import join, exists
-from os import makedirs
+import os
 import mne
 from pymatreader import read_mat
 import numpy as np
@@ -39,16 +38,16 @@ def main():
     meta = pd.DataFrame(columns=columns)
     
     # loop through all files in dataset
-    dir_input = join(DATASET_PATH, 'iEEG')
+    dir_input = f"{DATASET_PATH}/iEEG"
     for patient in PATIENTS:
-        for material in ['word', 'face']:
-            fname = '%s_%ss.mat' %(patient, material)
+        for material in ['words', 'faces']:
+            fname = f"{patient}_{material}.mat"
             
             # display progress
             print('\n__________Reformatting: %s ____________________\n' %fname)
         
             # import epoch data
-            epochs = import_epochs(join(dir_input, fname))
+            epochs = import_epochs(f"{dir_input}/{fname}")
     
             # export epochs data
             save_epochs(epochs, fname)
@@ -58,7 +57,8 @@ def main():
             meta = pd.concat([meta, info], sort=False, ignore_index=True)
         
     # export aggregate channel info
-    save_metadata(meta, join(PROJECT_PATH, 'data/ieeg_metadata'))
+    save_metadata(meta, f"{PROJECT_PATH}/data/ieeg_metadata")
+
 
 def create_montage(fname):
     """
@@ -111,29 +111,28 @@ def save_epochs(epochs, fname):
     """
     
     # identify / create directories
-    dir_dataset = join(PROJECT_PATH, 'data/ieeg_dataset')
-    dir_output = join(PROJECT_PATH, 'data/ieeg_epochs')
-    
-    if not exists(dir_output): makedirs(dir_output)
-    if not exists(join(dir_dataset, 'fif')): makedirs(join(dir_dataset, 'fif'))
-    if not exists(join(dir_dataset, 'npy')): makedirs(join(dir_dataset, 'npy'))
+    dir_dataset = f'{PROJECT_PATH}/data/ieeg_dataset'
+    dir_output = f'{PROJECT_PATH}/data/ieeg_epochs'
+    for path in [dir_output, f"{dir_dataset}/fif", f"{dir_dataset}/npy"]:
+        if not os.path.exists(path): 
+            os.makedirs(f"{path}")
 
     # save data as .fif 
-    epochs.save(join(dir_dataset, 'fif', fname.replace('.mat','_epo.fif')),
+    epochs.save(f"{dir_dataset}/fif/{fname.replace('.mat','_epo.fif')}",
                 overwrite=True)
 
     # save data as .npy
     lfp = epochs.get_data()
-    np.save(join(dir_dataset, 'npy', fname.replace('.mat', '.npy')), lfp)
+    np.save(f"{dir_dataset}/npy/{fname.replace('.mat', '.npy')}", lfp)
     
     # split successful and unsuccessful trials
     epochs_hit = epochs[epochs.metadata['recalled'].values.astype('bool')]
     epochs_miss = epochs[~epochs.metadata['recalled'].values.astype('bool')]
 
-    # save data as .fif - after dropping unsuccessful trials 
-    epochs_hit.save(join(dir_output, fname.replace('.mat', '_hit_epo.fif')), 
+    # save epoch data for successful and unsuccessful trials
+    epochs_hit.save(f"{dir_output}/{fname.replace('.mat', '_hit_epo.fif')}", 
                     overwrite=True)
-    epochs_miss.save(join(dir_output, fname.replace('.mat', '_miss_epo.fif')), 
+    epochs_miss.save(f"{dir_output}/{fname.replace('.mat', '_miss_epo.fif')}", 
                      overwrite=True)
     
 def collect_channel_info(dir_input, fname):
@@ -148,12 +147,12 @@ def collect_channel_info(dir_input, fname):
     info = pd.DataFrame(columns=columns)
     
     # get channel locations from Fieldtrip data structure
-    data_in = read_mat(join(dir_input, fname))
+    data_in = read_mat(f"{dir_input}/{fname}")
     label = data_in['data']['elecinfo']['label_bipolar']
     info['label'] = label
     elecpos = data_in['data']['elecinfo']['elecpos_bipolar']
     for ii in range(elecpos.shape[0]):
-        info['pos_x'][ii], info['pos_y'][ii], info['pos_z'][ii] = elecpos[ii]
+        info.loc[ii, ['pos_x', 'pos_y', 'pos_z']] = elecpos[ii]
     
     # Get metadata from filename
     f_parts = fname.split('_')
@@ -165,7 +164,8 @@ def collect_channel_info(dir_input, fname):
 
 def save_metadata(meta, dir_output):
     # make folder for output
-    if not exists(dir_output): makedirs(dir_output)
+    if not os.path.exists(dir_output): 
+        os.makedirs(f"{dir_output}")
     
     # remove duplicates reset index
     meta = meta[meta['material'] == 'faces']
@@ -173,8 +173,7 @@ def save_metadata(meta, dir_output):
     meta.reset_index(inplace=True)
     
     # save metadata to file
-    meta.to_pickle(join(dir_output, 'ieeg_channel_info.pkl'))
-    meta.to_csv(join(dir_output, 'ieeg_channel_info.csv'))        
+    meta.to_csv(f"{dir_output}/ieeg_channel_info.csv")
 
 if __name__ == "__main__":
     main()
