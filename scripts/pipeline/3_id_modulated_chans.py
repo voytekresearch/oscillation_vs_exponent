@@ -118,8 +118,8 @@ def main():
                                 f'{band}_sign'], inplace=True)
             
     # find channels that are task modulated in all/any frequency bands
-    results['sig_all'] = results[[f'sig_{band}' for band in bands.labels]].all(axis=1)
-    results['sig_any'] = results[[f'sig_{band}' for band in bands.labels]].any(axis=1)
+    results['sig_all'] = results[[f'{band}_sig' for band in bands.labels]].all(axis=1)
+    results['sig_any'] = results[[f'{band}_sig' for band in bands.labels]].any(axis=1)
 
     # save results
     results.to_csv(f"{dir_output}/ieeg_modulated_channels.csv")
