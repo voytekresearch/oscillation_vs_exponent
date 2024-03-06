@@ -4,8 +4,6 @@ intersection analyses (scripts 4 and 5) and saves them to a single dataframe.
 
 """
 
-# SET PATH
-PROJECT_PATH = 'C:/Users/micha/projects/oscillation_vs_exponent/'
 
 # Imports - standard
 import os
@@ -15,18 +13,17 @@ import pandas as pd
 # Imports - specparam
 from specparam import SpectralGroupModel
 from specparam.bands import Bands
-from specparam.analysis import get_band_peak
 from specparam.utils import trim_spectrum
 
 # Imports - custom
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from settings import ALPHA_RANGE, AP_MODE
-from specparam_utils import load_ap_params, params_to_spectra, compute_adj_r2
+from settings import AP_MODE, BANDS, FREQ_RANGE
+from specparam_utils import params_to_spectra, compute_adj_r2
 
-# Settings - spectral analysis hyperparameters
-DECOMP_METHOD = 'tfr' # analyze PSDs or average TFRs
+# settings
+BAND_POWER_METHOD = 'mean'
 
 def main():
     # id directories
@@ -35,68 +32,15 @@ def main():
         os.makedirs(dir_output)
 
     # load channel info
-    fname_in = F"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.pkl"
-    chan_info = pd.read_pickle(fname_in)
-    chan_info.drop(columns=['index'], inplace=True)
+    fname_in = f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv"
+    chan_info = pd.read_csv(fname_in, index_col=0)
 
     # get data for each parameter and condition
     df_list = []
     for material in ['words', 'faces']:
         for memory in ['hit', 'miss']:
             for epoch in ['pre', 'post']:
-                # add condition info (material, memory, epoch)
-                df = chan_info.copy()
-                df['material'] = material
-                df['memory'] = memory
-                df['epoch'] = epoch
-
-                # load aperiodic parameters
-                fname = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}"
-                print(f"Loading {fname}...")
-                data_in = load_ap_params(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname}")
-                df['offset'], df['knee'], df['exponent'] = data_in
-
-                # load intersection frequency results
-                fname = f"intersection_results_{material}_{memory}_{AP_MODE}.npz"
-                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}", 
-                                  allow_pickle=True)
-                df['f_rotation'] = data_in['intersection']
-
-                # load specparam results
-                params = SpectralGroupModel()
-                fname_in = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}_params_{AP_MODE}.json"
-                params.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
-
-                # add alpha results
-                alpha = get_band_peak(params, bands['alpha'])
-                df["alpha_cf"] = alpha[:,0]
-                df["alpha_pw"] = alpha[:,1]
-                df["alpha_bw"] = alpha[:,2]
-
-                # add alpha power results
-                fname = f"{DECOMP_METHOD}_{material}_{memory}_{epoch}stim.npz"
-                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/{fname}")
-                _, alpha = trim_spectrum(data_in['freq'], data_in['spectra'],
-                                          f_range=ALPHA_RANGE)
-                df['alpha'] = np.nanmean(alpha, axis=1)
-
-                # drop first index (0 Hz)
-                spectra = data_in['spectra'][:,1:]
-                freq = data_in['freq'][1:]
-
-                # add adjusted alpha power results
-                params.freqs = freq
-                spectra_ap = params_to_spectra(params, component='aperiodic')
-                spectra_adjusted = spectra - spectra_ap
-                _, alpha_adj = trim_spectrum(freq, spectra_adjusted, 
-                                             f_range=ALPHA_RANGE)
-                df['alpha_adj'] = np.nanmean(alpha_adj, axis=1)
-
-                # add r-squared and adjusted r-squared
-                df['r2'] = params.get_params('r_squared')
-                df['r2_adj'] = compute_adj_r2(params)
-
-                # add to list
+                df = aggregate_results(chan_info, material, memory, epoch)
                 df_list.append(df)
 
     # join dataframes for hit and miss conditions
@@ -104,6 +48,79 @@ def main():
         
     # save dataframe for OLS analysis
     df.to_csv(f"{dir_output}/spectral_parameters.csv")
+
+
+def aggregate_results(chan_info, material, memory, epoch):
+    # add channel and condition (material, memory, epoch)
+    df = chan_info.loc[chan_info['material'] == material].reset_index(drop=True)
+    df['material'] = material
+    df['memory'] = memory
+    df['epoch'] = epoch
+
+    # add specparam results
+    sp = SpectralGroupModel()
+    fname_in = f"psd_{material}_{memory}_{epoch}stim_params_{AP_MODE}"
+    sp.load(f"{PROJECT_PATH}/data/ieeg_psd_param/{fname_in}")
+    params = sp.to_df(Bands(BANDS))
+    df = pd.concat([df, params], axis=1)
+
+    # add adjusted r-squared
+    df['r2_adj'] = compute_adj_r2(sp)
+
+    # add intersection frequency results
+    fname = f"intersection_results_{material}_{memory}_{AP_MODE}.npz"
+    data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}", 
+                        allow_pickle=True)
+    df['f_rotation'] = data_in['intersection']
+
+    # add band power results
+    fname = f"psd_{material}_{memory}_{epoch}stim.npz"
+    data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/{fname}")
+    for band in BANDS:
+        # add band power 
+        power = compute_band_power(data_in['freq'], data_in['spectra'],
+                                    BANDS[band], method=BAND_POWER_METHOD)
+        df[band] = power
+
+        # add adjusted band power
+        power = compute_adjusted_band_power(data_in['freq'], data_in['spectra'], 
+                                            sp, BANDS[band], 
+                                            method=BAND_POWER_METHOD)
+        df[f"{band}_adj"] = power
+
+
+    return df
+
+
+def compute_band_power(freq, spectra, band, method='mean'):
+    _, band = trim_spectrum(freq, spectra, band)
+
+    if method == 'mean':
+        power = np.nanmean(band, axis=1)
+    elif method == 'max':
+        power = np.nanmax(band, axis=1)
+    elif method == 'sum':
+        power = np.nansum(band, axis=1)
+
+    return power
+
+
+def compute_adjusted_band_power(freq, spectra, params, band, method='mean'):
+    # account for freq[0] = 0 Hz
+    if freq[0] == 0:
+        freq = freq[1:]
+        spectra = spectra[:, 1:]
+
+    # compute aperiodic component and subtract from spectra
+    spectra_ap = params_to_spectra(params, component='aperiodic')
+    freq_mask = np.logical_and(freq >= FREQ_RANGE[0], freq <= FREQ_RANGE[1])
+    spectra_adjusted = spectra[:, freq_mask] - spectra_ap
+
+    # compute band power
+    power = compute_band_power(freq[freq_mask], spectra_adjusted, band, 
+                               method=method)
+
+    return power
 
 
 if __name__ == "__main__":
