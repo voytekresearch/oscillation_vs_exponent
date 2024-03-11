@@ -133,6 +133,7 @@ def params_to_spectra(params, component='both'):
     
     return spectra
 
+
 def params_to_spectrum(params, component='both'):
     """
     Simulate aperiodic power spectra from SpectralModel object.
@@ -259,81 +260,135 @@ def compute_adj_r2(params):
     return adj_r2
 
 
-def comp_intersection(param_pre, param_post):
+def _comp_intersection(params_0, params_1, return_spectra=False):
     """ 
-    Calculate intersection of pre and post stim psd
+    Calculate intersection of two spectra from SpectralModel objects.
 
     Parameters
     ----------
-    param_pre : SpectralGroupModel
-        SpectralGroupModel object containing pre-stimulus parameters
-    param_post : SpectralGroupModel
-        SpectralGroupModel object containing post-stimulus parameters        
+    params_0, params_1 : SpectralModel
+        SpectralModel objects containing power spectra.
+    return_spectra : bool, optional, default: False
+        Whether to return the power spectra.    
 
     Returns
     -------
-    psd_pre : 1d array
-        pre-stimulus spectra
-    psd_post : 1d array
-        post-stimulus spectra
     intersection : 1d array
         intersection frequency
     intersection_idx : 1d array
         index of intersection frequency
+    spectra_0, spectra_1 : 1d array
+        Power spectra from each model, if requested.
+
+    """
+
+    # sim spectra from parameters
+    spectra_0 = params_to_spectrum(params_0, component='aperiodic')
+    spectra_1 = params_to_spectrum(params_1, component='aperiodic')
+
+    # calc intersect of aperiodic spectra
+    idx = np.argwhere(np.diff(np.sign(spectra_1 - spectra_0))).flatten()
+
+    # account for no intersection or multiple intersections
+    if not idx.any(): 
+        intersection = np.nan
+        intersection_idx = np.nan
+    elif len(idx)==1: 
+        intersection = params_0.freqs[np.squeeze(idx)]
+        intersection_idx = np.squeeze(idx)
+    elif len(idx)==2: 
+        intersection = params_0.freqs[np.max(idx)]
+        intersection_idx = np.max(idx)
+    elif len(idx)==len(params_0.freqs):
+        intersection = np.nan
+        intersection_idx = np.nan
+
+    if return_spectra:
+        return intersection, intersection_idx, spectra_0, spectra_1
+    else:
+        return intersection, intersection_idx
+
+
+def compute_intersection(params_0, params_1, return_spectra=False):
+    """ 
+    Calculate intersection of two spectra from SpectralGroupModel objects.
+
+    Parameters
+    ----------
+    params_0, params_1 : SpectralGroupModel
+        SpectralGroupModel objects containing power spectra.
+    return_spectra : bool, optional, default: False
+        Whether to return the power spectra.    
+
+    Returns
+    -------
+    intersection : 1d array
+        intersection frequency
+    intersection_idx : 1d array
+        index of intersection frequency
+    spectra_0, spectra_1 : 1d array
+        Power spectra from each model, if requested.
 
     """
     # imports
-    from specparam.sim import sim_power_spectrum
+    from specparam import SpectralModel
+
+    # Check inputs
+    if not isinstance(params_0, SpectralModel) or not isinstance(params_1, SpectralModel):
+        raise ValueError('Input must be SpectralModel of SpectralGroupModel objects.')
+    n_chans = len(params_0)
     
-    # count channels
-    n_chans = len(param_pre.get_params('r_squared'))
-    
+    # Run analysis for SpectralModel input
     if n_chans == 1:
-        # generate aperiodic spectra from parameters
-        _, psd_pre = sim_power_spectrum(param_pre.f_range, param_pre.get_params('aperiodic'), [], freq_res=param_pre.freq_res)
-        _, psd_post = sim_power_spectrum(param_post.f_range, param_post.get_params('aperiodic'), [], freq_res=param_pre.freq_res)
+        results = _comp_intersection(params_0, params_1, return_spectra)
+        intersection, intersection_idx = results[:2]
+        if return_spectra:
+            spectra_0 = results[2]
+            spectra_1 = results[3]
 
-        # calc intersect of aperiodic spectra
-        idx = np.argwhere(np.diff(np.sign(psd_post - psd_pre))).flatten()
-        if idx.any(): 
-            intersection = param_pre.freqs[np.squeeze(idx)]
-            intersection_idx = np.squeeze(idx)
-            
+    # Run analysis for SpectralGroupModel input
     elif n_chans > 1:
-        # initialize variables
-        psd_pre = np.zeros([n_chans, len(param_pre.freqs)])
-        psd_post = psd_pre.copy()
-        intersection = np.zeros([n_chans])
-        intersection[:] = np.nan
+
+        # check if input is same size
+        if len(params_0) != len(params_1):
+            raise ValueError('Input must be same size.')
+
+        # initiate variables
+        intersection = np.zeros([len(params_0)]) * np.nan
         intersection_idx = intersection.copy()
+        spectra_0 = np.zeros([len(params_0), len(params_0.freqs)])
+        spectra_1 = spectra_0.copy()
 
-        for chan in range(n_chans):
-            # generate aperiodic spectra from parameters
-            _, psd_pre[chan] = sim_power_spectrum(param_pre.freq_range, param_pre.get_params('aperiodic')[chan], [], freq_res=param_pre.freq_res, nlv=0)
-            _, psd_post[chan] = sim_power_spectrum(param_post.freq_range, param_post.get_params('aperiodic')[chan], [], freq_res=param_post.freq_res, nlv=0)
-            
-            # calc intersect of aperiodic spectra
-            idx = np.argwhere(np.diff(np.sign(psd_post[chan] - psd_pre[chan]))).flatten()
+        # compute intersection for each channel
+        for i_chan in range(len(params_0)):
+            try:
+                # get model parameters for channel
+                params_0_i = params_0.get_model(i_chan)
+                params_1_i = params_1.get_model(i_chan)
 
-            # if no intersect or multiple intersects 
-            if not idx.any(): 
+                # compute intersection
+                results = _comp_intersection(params_0_i, params_1_i, return_spectra)
+                intersection[i_chan], intersection_idx[i_chan] = results[:2]
+                if return_spectra:
+                    spectra_0[i_chan] = results[2]
+                    spectra_1[i_chan] = results[3]
+
+            # return nan if no model parameters are available
+            except:
+                intersection[i_chan], intersection_idx[i_chan] = np.nan, np.nan
+                if return_spectra:
+                    spectra_0[i_chan] = [np.nan] * len(params_0.freqs)
+                    spectra_1[i_chan] = [np.nan] * len(params_0.freqs)
                 continue
-            elif len(idx)==1: 
-                intersection[chan] = param_pre.freqs[np.squeeze(idx)]
-                intersection_idx[chan] = np.squeeze(idx)
-            elif len(idx)==2: 
-                intersection[chan] = param_pre.freqs[np.max(idx)]
-                intersection_idx[chan] = np.max(idx)
-            elif len(idx)==len(param_pre.freqs):
-                intersection[chan] = np.nan
-                intersection_idx[chan] = np.nan
-                
     else:
-        intersection = np.nan
-        intersection_idx = np.nan
-        print('check size of input')
-        
-    return psd_pre, psd_post, intersection, intersection_idx
+        raise ValueError('Check size of input.')
+
+    # return results
+    if return_spectra:
+        return intersection, intersection_idx, spectra_0, spectra_1
+    else:
+        return intersection, intersection_idx
+
 
 def save_report_sm(sm, file_name, file_path=None, plot_peaks=None, plot_aperiodic=True, plt_log=True, 
                     add_legend=True, data_kwargs=None, model_kwargs=None, aperiodic_kwargs=None, 
@@ -408,6 +463,7 @@ def save_report_sm(sm, file_name, file_path=None, plot_peaks=None, plot_aperiodi
         plt.show()
     else:
         plt.close()
+
 
 def print_report_from_group(params, i_model, fname_out, show_fig=False):
     """

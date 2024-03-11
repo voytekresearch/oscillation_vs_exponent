@@ -16,7 +16,7 @@ from specparam import SpectralGroupModel
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from specparam_utils import comp_intersection
+from specparam_utils import compute_intersection
 
 # settings
 AP_MODE = ['knee'] # array. aperiodic modes for SpecParam. 
@@ -39,13 +39,13 @@ def main():
                 param_post.load(join(dir_input, 'psd_%s_%s_poststim_params_%s.json' %(material, memory, ap_mode)))
         
                 # calc intersection 
-                psd_pre, psd_post, intersection, intersection_idx = \
-                    comp_intersection(param_pre, param_post)
+                results = compute_intersection(param_pre, param_post)
+                intersection, intersection_idx = results
                 
                 # save results
-                fname_out = 'intersection_results_%s_%s_%s' %(material, memory, ap_mode)
-                np.savez(join(dir_output, fname_out), psd_pre=psd_pre, psd_post=psd_post, 
-                        intersection=intersection, intersection_idx=intersection_idx)
+                fname_out = f"intersection_results_{material}_{memory}_{ap_mode}"
+                np.savez(join(dir_output, fname_out), intersection=intersection, 
+                         intersection_idx=intersection_idx)
 
     
 if __name__ == "__main__":
