@@ -8,13 +8,13 @@ spectral parameters using the hierarchical bootstrap.
 import os
 import numpy as np
 import pandas as pd
-from timeit import default_timer as timer
 
 # Imports - custom
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from bootstrap import run_hierarchical_bootstrap as hb
+from utils import get_start_time, print_time_elapsed
 
 # analysis/statistical settings
 N_ITERATIONS = 1000 # number of iterations for permutation test
@@ -23,7 +23,7 @@ ACTIVE_ONLY = True # whether to analyze task-modulated channels only
 
 def main():
     # display progress
-    start_time = timer()
+    start_time = get_start_time()
     
     # id directories
     dir_output = f'{PROJECT_PATH}/data/ieeg_stats'
@@ -43,10 +43,9 @@ def main():
         for memory in ['hit','miss']:
 
             # display progress
-            start_time_c = timer()
+            start_time_c = get_start_time()
             print('---------------------------------------')
-            print(f'Condition: {material} - {memory}')
-            print('---------------------------------------')
+            print(f'Analyzing condition: {material} - {memory}')
             
             # get data for condition
             df_cond = df_params.loc[(df_params['material'] == material) & \
@@ -66,7 +65,7 @@ def main():
                 results = pd.concat([results, results_i], ignore_index=True)
 
             # display progress
-            print(f'Condition complete. Time: {timer() - start_time_c}')
+            print_time_elapsed(start_time_c)
 
     # save results
     if ACTIVE_ONLY:
@@ -78,7 +77,7 @@ def main():
     # display progress
     print('\n---------------------------------------')
     print('Analysis complete!')
-    print(f'Total time: {timer() - start_time}')
+    print_time_elapsed(start_time)
         
         
 
