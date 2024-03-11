@@ -19,7 +19,7 @@ from bootstrap import run_hierarchical_bootstrap as hb
 # analysis/statistical settings
 N_ITERATIONS = 1000 # number of iterations for permutation test
 FEATURES = ['exponent', 'alpha', 'alpha_adj', 'gamma', 'gamma_adj']
-
+ACTIVE_ONLY = True # whether to analyze task-modulated channels only
 
 def main():
     # display progress
@@ -31,6 +31,7 @@ def main():
     
     # load data
     df_params = pd.read_csv(f"{PROJECT_PATH}/data/results/spectral_parameters.csv", index_col=0)
+    df_sig = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv", index_col=0)
 
     # init
     columns = ['material', 'memory', 'feature', 'pvalue']
@@ -51,6 +52,11 @@ def main():
             df_cond = df_params.loc[(df_params['material'] == material) & \
                                     (df_params['memory']==memory)].reset_index(drop=True)
             
+            # filter for task-modulated channels
+            if ACTIVE_ONLY:
+                df_cond = df_cond.merge(df_sig, on=['patient', 'chan_idx'])
+                df_cond = df_cond.loc[df_cond['sig_all']].reset_index(drop=True)
+            
             # run bootstrap
             for feature in FEATURES:
                 stats = hb(df_cond, feature, 'epoch', 'chan_idx', 'patient', 
@@ -63,7 +69,10 @@ def main():
             print(f'Condition complete. Time: {timer() - start_time_c}')
 
     # save results
-    fname_out = "group_level_hierarchical_bootstrap.csv"
+    if ACTIVE_ONLY:
+        fname_out = "group_level_hierarchical_bootstrap_active.csv"
+    else:
+        fname_out = "group_level_hierarchical_bootstrap.csv"
     results.to_csv(f"{dir_output}/{fname_out}")
 
     # display progress
