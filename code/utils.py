@@ -7,6 +7,19 @@ Utility functions
 import numpy as np
 
 
+def get_start_time():
+    from time import time
+
+    return time()
+
+
+def print_time_elapsed(t_start):
+    from time import time
+
+    hour, min, sec = hour_min_sec(time() - t_start)
+    print(f"Time elapsed: {hour} hour, {min} min, and {sec :0.1f} s")
+
+
 def hour_min_sec(duration):
     """
     Convert duration in seconds to hours, minutes, and seconds.
@@ -22,8 +35,8 @@ def hour_min_sec(duration):
         Duration in hours, minutes, and seconds.
     """
 
-    hours = int(np.floor(duration / 3600))
-    mins = int(np.floor(duration%3600 / 60))
+    hours = int(duration // 3600)
+    mins = int(duration % 3600 // 60)
     secs = int(duration % 60)
     
     return hours, mins, secs
