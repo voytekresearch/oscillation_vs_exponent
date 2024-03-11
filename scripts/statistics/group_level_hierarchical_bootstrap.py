@@ -17,7 +17,7 @@ from paths import PROJECT_PATH
 from bootstrap import run_hierarchical_bootstrap as hb
 
 # analysis/statistical settings
-N_ITERATIONS = 1 # number of iterations for permutation test
+N_ITERATIONS = 1000 # number of iterations for permutation test
 FEATURES = ['exponent', 'alpha', 'alpha_adj', 'gamma', 'gamma_adj']
 
 
