@@ -13,7 +13,7 @@ and multiple subjects within each experimental condition.
 import numpy as np
 
 def run_hierarchical_bootstrap(df, variable, condition, level_1, level_2, n_iterations=1000,
-                               verbose=True, plot=True):    
+                               verbose=True, plot=True, **kwargs):    
     """
     Perform hierarchical bootstrap. This function performs a hierarchical bootstrap
     to test whether the means of two distributions are significantly different. 
@@ -40,6 +40,8 @@ def run_hierarchical_bootstrap(df, variable, condition, level_1, level_2, n_iter
         Whether to print p-value.
     plot : bool
         Whether to plot results.
+    **kwargs : dict
+        Additional keyword arguments for plotting.
 
     Returns
     -------
@@ -66,7 +68,7 @@ def run_hierarchical_bootstrap(df, variable, condition, level_1, level_2, n_iter
         print(f"p-value: {p_value:.3f}")
     if plot:
         _plot_bootstrap_results(df, variable, condition, distribution_0, distribution_1,
-                               joint_prob, bin_edges)
+                               joint_prob, bin_edges, **kwargs)
 
     # return p_value, distribution_0, distribution_1
     return p_value, joint_prob, bin_edges, distribution_0, distribution_1
@@ -185,7 +187,8 @@ def _compute_p_value(distribution_0, distribution_1, n_bins=30):
 
 
 def _plot_bootstrap_results(df, variable, condition, distribution_0, distribution_1,
-                           joint_prob, bin_edges):
+                           joint_prob, bin_edges, colors=['k','b'], 
+                           labels=['0', '1']):
     """
     Plot bootstrap results. PLotting function for run_hierarchical_bootstrap().
     """
@@ -194,10 +197,21 @@ def _plot_bootstrap_results(df, variable, condition, distribution_0, distributio
     import matplotlib.pyplot as plt
 
     # create figure
-    fig, (ax1, ax2) = plt.subplots(1,2, figsize=(12,4))
+    fig, (ax0, ax1, ax2) = plt.subplots(1,3, figsize=(18,4))
 
-    # ax1: plot distributions
+    # ax0: plot orignal distributions
     conditions = np.sort(df[condition].unique())
+    data_0 = df.loc[df[condition]==conditions[0], variable].values
+    data_1 = df.loc[df[condition]==conditions[1], variable].values
+    print(data_0.shape, data_1.shape)
+    bin_edges_ = np.linspace(np.nanmin([data_0, data_1]), np.nanmax([data_0, data_1]), 30)
+    ax0.hist(data_0.ravel(), bins=bin_edges_, color=colors[0], alpha=0.5, label=labels[0])
+    ax0.hist(data_1.ravel(), bins=bin_edges_, color=colors[1], alpha=0.5, label=labels[1])
+    ax0.set_xlabel('value')
+    ax0.set_ylabel('count')
+    ax0.set_title('Original dataset')
+    
+    # ax1: plot distributions
     ax1.hist(distribution_0, bins=bin_edges, color='k', alpha=0.5, label=conditions[0])
     ax1.hist(distribution_1, bins=bin_edges, color='b', alpha=0.5, label=conditions[1])
     ax1.set_xlabel(variable)
@@ -211,6 +225,4 @@ def _plot_bootstrap_results(df, variable, condition, distribution_0, distributio
     ax2.set_ylabel(conditions[1])
     ax2.set_title('Joint probability')
     fig.colorbar(im, ax=ax2)
-
-    plt.show()
 
