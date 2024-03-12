@@ -58,7 +58,7 @@ def create_brain_map(results, feature, template):
     return brain_map
 
 
-def plot_glass_brain_map(brain_map, affine, symmatric=False):
+def plot_glass_brain_map(brain_map, affine, symmatric=False, fname_out=None):
     """
     Plot brain map using Nilearn.plotting.plot_glass_brain(). Input map
     is converted to a Nifti1Image and then plotted.
@@ -74,9 +74,11 @@ def plot_glass_brain_map(brain_map, affine, symmatric=False):
     # plot
     if symmatric:
         plotting.plot_glass_brain(image, symmetric_cbar=True, plot_abs=False,
-                                cmap='bwr', colorbar=True, threshold=None)
+                                cmap='bwr', colorbar=True, threshold=None,
+                                output_file=fname_out)
     else:
-        plotting.plot_glass_brain(image, colorbar=True, threshold=None)
+        plotting.plot_glass_brain(image, colorbar=True, threshold=None,
+                                  output_file=fname_out)
 
 
 def apply_affine(affine, coordinates, forward=True):
