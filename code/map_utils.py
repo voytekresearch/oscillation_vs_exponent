@@ -7,6 +7,28 @@ adapted from: Gao et al., 2021 (https://github.com/rdgao/field-echos).
 # imports
 import numpy as np
 
+
+def plot_glass_brain_map(brain_map, affine, symmatric=False):
+    """
+    Plot brain map using Nilearn.plotting.plot_glass_brain(). Input map
+    is converted to a Nifti1Image and then plotted.
+    """
+    
+    # imports
+    import nibabel as nib
+    from nilearn import plotting
+
+    # create image
+    image = nib.Nifti1Image(brain_map, affine)
+
+    # plot
+    if symmatric:
+        plotting.plot_glass_brain(image, symmetric_cbar=True, plot_abs=False,
+                                cmap='bwr', colorbar=True, threshold=None)
+    else:
+        plotting.plot_glass_brain(image, colorbar=True, threshold=None)
+
+
 def apply_affine(affine, coordinates, forward=True):
     """
     Apply forward (index to MNI coor) or reverse (MNI to index) affine transformation.
