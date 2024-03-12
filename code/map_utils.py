@@ -8,12 +8,62 @@ adapted from: Gao et al., 2021 (https://github.com/rdgao/field-echos).
 import numpy as np
 
 
+def weight_group(results, feature):
+    """
+    Load results for each patient and apply weight matrix.
+
+    NOTE: this function is not generalizable beyond this project.
+    """
+
+
+    # imports
+    from paths import PROJECT_PATH
+    from info import PATIENTS
+
+    feat_weighted, w_max = [], []
+    for patient in PATIENTS:
+        print(f"Analyzing patient:\t{patient}")
+        df_patient = results.loc[results['patient']==patient]
+        fname = f"{PROJECT_PATH}/data/neuromaps/mni_surface_weights/{patient}.npy"
+        weights = np.load(fname)
+        values = df_patient[feature].values
+        nan_mask = ~np.isnan(values)
+        w_max.append(np.nanmax(weights,0))
+        feat_weighted.append(apply_feature_weights(values[nan_mask], 
+                                                   weights[nan_mask]))
+    feat_weighted = np.array(feat_weighted)
+    w_max = np.array(w_max)
+
+    return feat_weighted, w_max
+
+
+def create_brain_map(results, feature, template):
+    """
+    Create a brain map of group-level results. Results are loaded for each
+    patient and weighted; then the group average is computed; then the average
+    brain map is generated.
+
+    NOTE: this function is not generalizable beyond this project.
+    """
+
+    # compute weighted average over subjects
+    feat_weighted, w_max = weight_group(results, feature)
+    feat_weighted_avg = compute_weighted_average(feat_weighted, w_max)
+
+    # convert to brain map
+    brain_coords = np.array(np.where(np.asarray(template.get_fdata())>0)).T 
+    brain_map = surface_coordinates_to_map(brain_coords, feat_weighted_avg, 
+                                           template.shape)
+    
+    return brain_map
+
+
 def plot_glass_brain_map(brain_map, affine, symmatric=False):
     """
     Plot brain map using Nilearn.plotting.plot_glass_brain(). Input map
     is converted to a Nifti1Image and then plotted.
     """
-    
+
     # imports
     import nibabel as nib
     from nilearn import plotting
