@@ -229,12 +229,12 @@ def aggregate_tfr(dir_input, dir_output):
             tfr = np.nanmedian(data_in['tfr'], axis=0)
 
             # crop time windows of interest
-            tfr_eopch, _ = crop_tfr(tfr, data_in['time'], EPOCH_TIMES[0])
+            tfr_epoch, _ = crop_tfr(tfr, data_in['time'], EPOCH_TIMES[0])
             tfr_pre, _ = crop_tfr(tfr, data_in['time'], EPOCH_TIMES[1])
             tfr_post, _ = crop_tfr(tfr, data_in['time'], EPOCH_TIMES[2])
 
             # average across time for each time window of interest
-            tfr_mean_epoch[ii] = np.nanmean(tfr_eopch, axis=1)
+            tfr_mean_epoch[ii] = np.nanmean(tfr_epoch, axis=1)
             tfr_mean_pre[ii] = np.nanmean(tfr_pre, axis=1)
             tfr_mean_post[ii] = np.nanmean(tfr_post, axis=1)
 
