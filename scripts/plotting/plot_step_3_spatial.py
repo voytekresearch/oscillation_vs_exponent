@@ -23,10 +23,6 @@ def main():
     # load results of step 3
     fname = f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv"
     results = pd.read_csv(fname, index_col=0)
-    results = results.groupby(['patient','chan_idx']).all().reset_index()
-    results.rename(columns={'sig':'sig_both'}, inplace=True)
-    results['sig_either'] = results[['sig_alpha', 'sig_gamma']].any(axis=1)
-    results = results[['patient', 'chan_idx', 'sig_alpha', 'sig_gamma', 'sig_both', 'sig_either']]
 
     # load electrode coordinate info and merge with results
     fname_in = f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv"
@@ -35,7 +31,7 @@ def main():
     elec_pos = results[['pos_x', 'pos_y', 'pos_z']].values
 
     # loop through frequency bands
-    for band in ['alpha', 'gamma', 'either', 'both']:
+    for band in ['alpha', 'gamma', 'all', 'any']:
         # display progress
         print(f"Plotting {band} modulated channels...")
 
