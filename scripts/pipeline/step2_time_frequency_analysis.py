@@ -18,7 +18,7 @@ from time import time as timer
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from info import PATIENTS
+from info import PATIENTS, MATERIALS
 from settings import N_JOBS, N_TFR_SAMPLES, EPOCH_TIMES, EPOCH_LABELS
 from utils import hour_min_sec
 from tfr_utils import crop_tfr
@@ -158,25 +158,22 @@ def aggregate_spectra(dir_input, dir_output):
     # load frequency vector
     files = os.listdir(dir_input)
     temp = np.load(f"{dir_input}/{files[1]}")
-    freq = temp['freq']
     
-    # aggregate psd data for each condition
-    conditions = ['words_hit_prestim', 'words_hit_poststim', 
-                  'faces_hit_prestim', 'faces_hit_poststim',
-                  'words_miss_prestim', 'words_miss_poststim', 
-                  'faces_miss_prestim', 'faces_miss_poststim']
-    for cond in conditions:    
-        # create placeholder for output data
-        spectra = np.zeros(len(freq))
-        for patient in PATIENTS:    
-            # load psd data               
-            data_in = np.load(f"{dir_input}/{patient}_{cond}_psd.npz")
-            spectra = np.vstack([spectra, np.nanmedian(data_in['psd'], axis=0)])
+    # aggregate psd data across subjects for each condition
+    for material in MATERIALS:
+        for memory in ['hit', 'miss']:
+            for epoch in EPOCH_LABELS:
+                spectra = []
+                for patient in PATIENTS:    
+                    fname = f"{patient}_{material}_{memory}_{epoch}_psd.npz"
+                    data_in = np.load(f"{dir_input}/{fname}")
+                    spectra.append(np.nanmedian(data_in['psd'], axis=0))
 
-        # remove place-holder and save results
-        spectra = spectra[1:]
-        fname_out = 'psd_%s' %cond
-        np.savez(f"{dir_output}/{fname_out}", freq=freq, spectra=spectra)
+                # save results for condition
+                spectra = np.concatenate(spectra)
+                freq = data_in['freq']
+                fname_out = f"psd_{material}_{memory}_{epoch}.npz"
+                np.savez(f"{dir_output}/{fname_out}", freq=freq, spectra=spectra)
         
 def aggregate_tfr(dir_input, dir_output):
     '''
