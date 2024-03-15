@@ -9,6 +9,45 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, LogNorm, CenteredNorm, TwoSlopeNorm
 
 
+def set_custom_colors(keyword='default'):
+    """
+    Add custom colors to matplotlib.
+    """
+
+    import matplotlib as mpl
+    from cycler import cycler
+
+    if keyword == 'default':
+        mpl.rcParams['axes.prop_cycle'] = cycler(color=[
+            np.array([166,97,26]) / 255, # brown
+            np.array([1,133,113]) / 255, # blue
+        ])
+    
+    elif keyword == 'browns':
+        mpl.rcParams['axes.prop_cycle'] = cycler(color=[
+            np.array([166,97,26]) / 255, # brown
+            np.array([223,194,125]) / 255, # light brown
+        ])
+
+    elif keyword == 'blues':
+        mpl.rcParams['axes.prop_cycle'] = cycler(color=[
+            np.array([1,133,113]) / 255, # blue
+            np.array([128,205,193]) / 255, # light blue
+        ])
+                
+    elif keyword == 'all':
+        mpl.rcParams['axes.prop_cycle'] = cycler(color=[
+            np.array([166,97,26]) / 255, # brown
+            np.array([223,194,125]) / 255, # light brown
+            np.array([1,133,113]) / 255, # blue
+            np.array([128,205,193]) / 255, # light blue
+        ])
+
+    else:
+        raise ValueError('Keyword not recognized. Options are "default", \
+                         "browns", "blues", or "all".')
+
+
 def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
              norm_type='log', vmin=None, vmax=None, fig=None, ax=None,
              cax=None, cbar_label=None, annotate_zero=False):
