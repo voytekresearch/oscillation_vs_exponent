@@ -6,7 +6,7 @@ Plot results of scripts/pipeline/step4_spectral_parameterization.py as brainmap.
 # Imports - standard
 import os
 import pandas as pd
-
+import matplotlib.pyplot as plt
 from neuromaps.datasets import fetch_atlas
 import nibabel as nib
 
@@ -17,9 +17,9 @@ from paths import PROJECT_PATH
 from map_utils import create_brain_map, plot_glass_brain_map
 from utils import get_start_time, print_time_elapsed
 
-# settigns
+# settings
 FEATURES = ['exponent', 'alpha_adj', 'gamma_adj'] # spectral features of interest
-
+plt.style.use('mplstyle/default.mplstyle')
 
 def main():
     # display progress

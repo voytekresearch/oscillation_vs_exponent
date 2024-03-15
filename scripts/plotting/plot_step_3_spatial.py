@@ -17,6 +17,8 @@ from utils import combine_images
     
 # Plot settings
 ELEC_SIZE = 24 # electrode size 
+plt.style.use('mplstyle/default.mplstyle')
+
 
 def main():
 

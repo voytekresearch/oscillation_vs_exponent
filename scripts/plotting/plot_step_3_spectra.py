@@ -19,7 +19,7 @@ from plots import plot_spectra_2conditions
 
 # settings
 COLORS = [np.array([1,133,113]) / 255, np.array([166,97,26]) / 255]
-plt.style.use("mpl_styles/default.mplstyle")
+plt.style.use('mplstyle/default.mplstyle')
 
 
 def main():

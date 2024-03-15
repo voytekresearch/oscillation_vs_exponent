@@ -22,7 +22,7 @@ from paths import PROJECT_PATH
 from info import FELLNER_BANDS as BANDS
 
 # plotting setting
-plt.style.use('mpl_styles/default.mplstyle')
+plt.style.use('mplstyle/default.mplstyle')
 FIG_SIZE = (7.5, 2)
 
 # Set PSD simulation parameters

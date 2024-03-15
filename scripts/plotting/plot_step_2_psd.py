@@ -18,7 +18,7 @@ from utils import hour_min_sec, diff_spectra
 from plots import plot_spectra_2conditions, plot_psd_diff
 
 # set plotting parameers
-plt.style.use('mpl_styles/default.mplstyle')
+plt.style.use('mplstyle/default.mplstyle')
 
 
 def main():

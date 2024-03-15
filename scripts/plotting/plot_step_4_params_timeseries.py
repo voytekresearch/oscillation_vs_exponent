@@ -29,7 +29,7 @@ T_BASELINE = [-1, 0] # in seconds. These time bins will be averaged for PSD plot
 T_ENCODING = [0, 1] # in seconds. These time bins will be averaged for PSD plot
 
 # set plotting parameers
-plt.style.use('mpl_styles/default.mplstyle')
+plt.style.use('mplstyle/default.mplstyle')
 
 
 def main():

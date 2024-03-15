@@ -26,9 +26,7 @@ from erp_utils import compute_erp, plot_erp
 # settings 
 T_BASELINE = [-0.5, 0.] # baseline time window for ERP computation
 T_TRIM = [-0.5, 2.] # time window to trim signal    
-
-# set plotting style
-plt.style.use('mpl_styles/default.mplstyle')
+plt.style.use('mplstyle/default.mplstyle')
 
 def main():
     # display progress
