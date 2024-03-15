@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, LogNorm, CenteredNorm, TwoSlopeNorm
 
 
-def set_custom_colors(keyword='default'):
+def set_custom_colors(keyword=None):
     """
     Add custom colors to matplotlib.
     """
@@ -17,7 +17,7 @@ def set_custom_colors(keyword='default'):
     import matplotlib as mpl
     from cycler import cycler
 
-    if keyword == 'default':
+    if keyword is None:
         mpl.rcParams['axes.prop_cycle'] = cycler(color=[
             np.array([166,97,26]) / 255, # brown
             np.array([1,133,113]) / 255, # blue
@@ -43,9 +43,12 @@ def set_custom_colors(keyword='default'):
             np.array([128,205,193]) / 255, # light blue
         ])
 
+    elif keyword == 'default':
+        mpl.rcParams['axes.prop_cycle'] = plt.rcParamsDefault['axes.prop_cycle']
+        
     else:
         raise ValueError('Keyword not recognized. Options are "default", \
-                         "browns", "blues", or "all".')
+                         "browns", "blues", "all", or "default".')
 
 
 def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
