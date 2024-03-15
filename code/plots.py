@@ -6,19 +6,8 @@ Plotting functions
 # Imports
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from matplotlib.colors import Normalize, LogNorm, CenteredNorm, TwoSlopeNorm
 
-# set plotting parameers
-mpl.rcParams['figure.facecolor'] = 'w'
-mpl.rcParams['axes.facecolor'] = 'w'
-mpl.rcParams['figure.titlesize'] = 18
-mpl.rcParams['axes.titlesize'] = 16
-mpl.rcParams['axes.labelsize'] = 14
-mpl.rcParams['xtick.labelsize'] = 12
-mpl.rcParams['ytick.labelsize'] = 12
-mpl.rcParams['legend.fontsize'] = 10
-mpl.rcParams['font.size'] = 10
 
 def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
              norm_type='log', vmin=None, vmax=None, fig=None, ax=None,
