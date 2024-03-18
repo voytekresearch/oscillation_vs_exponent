@@ -53,7 +53,7 @@ def set_custom_colors(keyword=None):
 
 def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
              norm_type='log', vmin=None, vmax=None, fig=None, ax=None,
-             cax=None, cbar_label=None, annotate_zero=False):
+             cax=None, cbar_label=None, annotate_zero=False, log_yscale=False):
     """
     Plot time-frequency representation (TFR)
 
@@ -83,6 +83,10 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         Axis to plot colorbar on. The default is None.
     cbar_label : str, optional
         Label for colorbar. The default is None.
+    annotate_zero : bool, optional
+        Whether to annotate zero on the time axis. The default is False.
+    log_yscale : bool, optional
+        Whether to use a log scale for the y-axis. The default is False.
 
     Returns
     -------
@@ -121,9 +125,10 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
     ax.pcolor(time, freqs, tfr, cmap=cmap, norm=norm)
 
     # set labels and scale
-    ax.set(yscale='log')
-    ax.set_yticks([10, 100])
-    ax.set_yticklabels(['10','100'])
+    if log_yscale is True:
+        ax.set(yscale='log')
+        ax.set_yticks([10, 100])
+        ax.set_yticklabels(['10','100'])
 
     # set title
     if not title is None:
