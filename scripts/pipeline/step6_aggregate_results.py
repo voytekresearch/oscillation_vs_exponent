@@ -24,6 +24,7 @@ from specparam_utils import params_to_spectra, compute_adj_r2
 
 # settings
 BAND_POWER_METHOD = 'mean'
+LOG_POWER = True
 
 def main():
     # id directories
@@ -52,7 +53,7 @@ def main():
 
 def aggregate_results(chan_info, material, memory, epoch):
     # add channel and condition (material, memory, epoch)
-    df = chan_info.loc[chan_info['material'] == material].reset_index(drop=True)
+    df = chan_info.copy()
     df['material'] = material
     df['memory'] = memory
     df['epoch'] = epoch
@@ -93,8 +94,14 @@ def aggregate_results(chan_info, material, memory, epoch):
 
 
 def compute_band_power(freq, spectra, band, method='mean'):
+    # get band of interest
     _, band = trim_spectrum(freq, spectra, band)
 
+    # log-transform power
+    if LOG_POWER:
+        band = np.log10(band)
+
+    # compute band power
     if method == 'mean':
         power = np.nanmean(band, axis=1)
     elif method == 'max':
