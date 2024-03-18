@@ -31,3 +31,11 @@ SPEC_PARAM_SETTINGS = {
     'max_n_peaks'       :   4, # default : inf
     'peak_threshold'    :   3} # default : 2.0
 AP_MODE = 'knee'
+
+# Plotting
+COLORS = {
+    "brown"         :   np.array([166,97,26]) / 255,
+    "light_brown"   :   np.array([223,194,125]) / 255,
+    "blue"          :   np.array([1,133,113]) / 255,
+    "light_blue"    :   np.array([128,205,193]) / 255,
+}
