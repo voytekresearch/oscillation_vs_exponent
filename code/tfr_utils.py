@@ -32,6 +32,7 @@ def zscore_tfr(tfr):
         
     return tfr_norm
 
+
 def subtract_baseline(signals, time, t_baseline=None):
     """
     Subtract baseline from signals. Baseline is defined as the mean of the
@@ -71,7 +72,49 @@ def subtract_baseline(signals, time, t_baseline=None):
     
     return signals_bl
 
-def crop_tfr(tfr, time, time_range):
+
+def trim_tfr(tfr, freq, time, freq_range=None, time_range=None):
+    """
+    Crop time-frequency representation (TFR) to specified time and frequency 
+    ranges.
+
+    Parameters
+    ----------
+    tfr : 2D array
+        Time-frequency representation of power (spectrogram).
+    freq : 1D array
+        Associated frequency vector (length should be equal to that of
+        the first dimension of tfr).
+    time : 1D array
+        Associated time vector (length should be equal to that of
+        the last dimension of tfr).
+    freq_range : 1D array
+        Frequency range to keep (f_start, f_stop).
+    time_range : 1D array
+        Time range to keep (t_start, t_stop).
+
+    Returns
+    -------
+    tfr, freq, time : arrays
+        Cropped TFR, frequency-, and time-vectors.
+    """
+
+    # crop frequency
+    if not freq_range is None:
+        freq_mask = np.logical_and(freq>freq_range[0], freq<freq_range[1])
+        tfr = tfr[freq_mask, :]
+        freq = freq[freq_mask]
+
+    # crop time
+    if not time_range is None:
+        time_mask = np.logical_and(time>time_range[0], time<time_range[1])
+        tfr = tfr[:, time_mask]
+        time = time[time_mask]
+    
+    return tfr, freq, time
+
+
+def crop_tfr(tfr, time, time_range=None):
     """
     Crop time-frequency representation (TFR) to time_range.
     TFR can be mulitdimensional (time must be last dimension).
@@ -96,6 +139,7 @@ def crop_tfr(tfr, time, time_range):
     time = time[(time>time_range[0]) & (time<time_range[1])]
     
     return tfr, time
+
 
 def downsample_tfr(tfr, time, n):
     """
@@ -174,4 +218,3 @@ def load_tfr_results(fname, preprocess=True, downsample_n=None, edge=None, avera
                                    t_baseline=t_baseline)
         
     return time, freq, tfr
-
