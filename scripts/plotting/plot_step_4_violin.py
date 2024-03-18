@@ -12,7 +12,6 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.transforms import Bbox
 import seaborn as sns
 
 # Imports - custom
@@ -46,7 +45,7 @@ def main():
         os.makedirs(f"{dir_output}")
 
     # load SpecParam results
-    fname = r"C:\Users\micha\projects\oscillation_vs_exponent\data\results\spectral_parameters.csv"
+    fname = f"{PROJECT_PATH}/data/results/spectral_parameters.csv"
     df = pd.read_csv(fname, index_col=0)
     df = df.loc[df['memory']=='hit'].reset_index(drop=True)
 
@@ -82,7 +81,7 @@ def plot_contrasts_violin(df, y_var, title='', y_label=None, fname_out=None):
     # load each, crop, and join
     img_0 = plt.imread(fname_out.replace('.png', '_browns.png'))
     img_1 = plt.imread(fname_out.replace('.png', '_blues.png'))
-    idx_mid = img_0.shape[1] // 2
+    idx_mid = int(img_0.shape[1] * 0.55)
     image = np.concatenate([img_0[:, :idx_mid], img_1[:, idx_mid:]], axis=1)
 
     # plot combined image
