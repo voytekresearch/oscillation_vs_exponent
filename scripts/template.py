@@ -9,7 +9,7 @@ import pandas as pd
 
 # Imports - custom
 import sys
-sys.path.append("../../code")
+sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
 
