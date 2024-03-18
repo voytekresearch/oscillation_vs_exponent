@@ -51,6 +51,23 @@ def set_custom_colors(keyword=None):
                          "browns", "blues", "all", or "default".')
 
 
+def plot_evoked_tfr(tfr, freq, time, **kwargs):
+    """
+    Plot evoked time-frequency representation (TFR). At each frequnecy, the
+    power is z-scored and baseline subtracted before plotting.
+    """
+
+    # imports
+    from tfr_utils import zscore_tfr, subtract_baseline
+
+    # z-score and subtract baseline for visualization of evoked power
+    tfr  = zscore_tfr(tfr)
+    tfr = subtract_baseline(tfr, time)
+
+    # plot
+    plot_tfr(time, freq, tfr, norm_type='centered', **kwargs)
+
+
 def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
              norm_type='log', vmin=None, vmax=None, fig=None, ax=None,
              cax=None, cbar_label=None, annotate_zero=False, log_yscale=False):
@@ -90,7 +107,7 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
 
     Returns
     -------
-    fNone.
+    None.
     """
 
     # imports
