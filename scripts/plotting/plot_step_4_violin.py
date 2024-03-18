@@ -11,6 +11,7 @@ as a histogram below the violin plot.
 import os
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -97,7 +98,7 @@ def plot_contrasts_violin(params, stats, y_var, title='', y_label=None, fname_ou
     # save
     if fname_out:
         fig.savefig(fname_out)
-        fig.clf()
+        plt.close('all')
     else:
         plt.show()
         
@@ -177,11 +178,18 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
             else:
                 ax.text(0.05, 0.9, f"p={pval[0]:.3f}", transform=ax.transAxes)
         else:
-            print(f"Warning: either no or multiple p-values for '{y_var}' in {material} block")
+            print(f"Warning: missing or multiple p-values for '{y_var}' in {material} block")
+
+    # adjust axis labels
+    ax2l.set_ylim([0, ax2l.get_ylim()[1]+1])
+    ax2r.sharey(ax2l)
+    for ax in [ax1, ax2l, ax2r]:
+        ax.yaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
 
     # save figure
     if fname_out: 
         fig.savefig(fname_out)
+        plt.close('all')
         
     return vp
 
