@@ -167,7 +167,8 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
         ax.set(xlim=[-max_val, max_val])
         ax.set_xlabel(f"$\Delta$ {y_label}")
         ax.set_ylabel('channel count')
-        ax.axvline(np.nanmean(diff), color='k', linestyle='--')
+        ax.axvline(0, color='k')
+        ax.axvline(np.nanmean(diff), color='r', linestyle='--')
 
         # add stats
         pval = stats.loc[((stats['material']==material) & 
