@@ -153,7 +153,16 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
     elif loc == 'right':
         vp.legend(handles=handles, labels=['baseline','encoding'],
                   bbox_to_anchor=(0.82, -0.1, 0.2, 0.1))
-    
+        
+    # connect paired data points on swarm plot
+    params_p = params.pivot_table(index=['patient', 'chan_idx', 'material'],
+                                    columns='epoch', values=y_var).reset_index()
+    for i_mat, material in enumerate(MATERIALS):
+        data = params_p.loc[params_p['material']==material, ['pre', 'post']]
+        for i_chan in range(data.shape[0]):
+            ax1.plot([-0.2+i_mat, 0.2+i_mat], data.iloc[i_chan], color='k', 
+                     alpha=0.5, lw=0.5)
+
     # ===== Lower Subplot =====
     # plot disributions exponent change)
     df_p = params.pivot_table(index=['patient', 'chan_idx', 'material'], 
