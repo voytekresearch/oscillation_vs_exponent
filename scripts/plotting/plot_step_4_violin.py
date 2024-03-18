@@ -25,6 +25,7 @@ from specparam_utils import knee_freq
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
+ALPHA = 0.05 # significance level
 FEATURES = ['offset', 'knee', 'exponent', 'alpha', 'alpha_adj', 'gamma',
             'gamma_adj']
 TITLES = ['Aperiodic offset', 'Aperiodic knee', 'Aperiodic exponent', 
@@ -48,20 +49,24 @@ def main():
     fname = f"{PROJECT_PATH}/data/results/spectral_parameters.csv"
     df = pd.read_csv(fname, index_col=0)
     df = df.loc[df['memory']=='hit'].reset_index(drop=True)
+    df['knee'] = knee_freq(df['knee'], df['exponent']) # convert knee to Hz
 
     # get results for task-modulated channels
     fname = f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv"
-    stats = pd.read_csv(fname, index_col=0)
-    df = df.merge(stats, on=['patient', 'chan_idx'])
+    temp = pd.read_csv(fname, index_col=0)
+    df = df.merge(temp, on=['patient', 'chan_idx'])
     df = df.loc[df['sig_all']].reset_index(drop=True)
 
-    # convert knee to Hz
-    df['knee'] = knee_freq(df['knee'], df['exponent'])
-
+    # load group-level statistical results
+    fname = f"{PROJECT_PATH}/data/ieeg_stats/group_level_hierarchical_bootstrap_active.csv"
+    stats = pd.read_csv(fname, index_col=0)
+    stats = stats.loc[stats['memory'] =='hit'].reset_index(drop=True)
+    stats['p'] = stats['pvalue'].apply(lambda x: min(x, 1-x)) # standardize p-values (currently 0.5 represents equal and <0.05 and >0.95 are both significant)
+    
     # plot
     for feature, title, label in zip(FEATURES, TITLES, LABELS):
         fname_out = f"param_violin_{feature}.png"
-        plot_contrasts_violin(df, feature, title=title, y_label=label,
+        plot_contrasts_violin(df, stats, feature, title=title, y_label=label,
                                 fname_out=f"{dir_output}/{fname_out}")
 
     # display progress
@@ -69,14 +74,14 @@ def main():
     print_time_elapsed(t_start)
 
 
-def plot_contrasts_violin(df, y_var, title='', y_label=None, fname_out=None):
+def plot_contrasts_violin(params, stats, y_var, title='', y_label=None, fname_out=None):
     # plot in each color
     set_custom_colors('browns')
-    _plot_contrasts_violin(df, y_var, title=title, y_label=y_label, loc='left',
-                           fname_out=fname_out.replace('.png', '_browns.png'))
+    _plot_contrasts_violin(params, stats, y_var, title=title, y_label=y_label, 
+                           loc='left', fname_out=fname_out.replace('.png', '_browns.png'))
     set_custom_colors('blues')
-    _plot_contrasts_violin(df, y_var, title=title, y_label=y_label, loc='right',
-                           fname_out=fname_out.replace('.png', '_blues.png'))
+    _plot_contrasts_violin(params, stats, y_var, title=title, y_label=y_label, 
+                           loc='right', fname_out=fname_out.replace('.png', '_blues.png'))
 
     # load each, crop, and join
     img_0 = plt.imread(fname_out.replace('.png', '_browns.png'))
@@ -91,15 +96,14 @@ def plot_contrasts_violin(df, y_var, title='', y_label=None, fname_out=None):
 
     # save
     if fname_out:
-        plt.savefig(fname_out)
-        plt.close()
+        fig.savefig(fname_out)
+        fig.clf()
     else:
         plt.show()
         
         
-def _plot_contrasts_violin(params, y_var, title='', y_label=None, 
-                          fname_out=None, plot_swarm=True, loc='left', 
-                          subplot_label=''):
+def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None, 
+                          fname_out=None, plot_swarm=True, loc='left'):
     # set plotting params
     plotting_params = {
         'data'  :   params,
@@ -126,8 +130,8 @@ def _plot_contrasts_violin(params, y_var, title='', y_label=None,
     vp = sns.violinplot(**plotting_params, ax=ax1)
     if plot_swarm:
         plotting_params.pop('split')
-        sp = sns.swarmplot(**plotting_params, ax=ax1, size=2, 
-                           palette='dark:#000000')
+        sns.swarmplot(**plotting_params, ax=ax1, size=2, 
+                        palette='dark:#000000')
 
     # remove mean and quartile line
     for l in ax1.lines:
@@ -155,7 +159,7 @@ def _plot_contrasts_violin(params, y_var, title='', y_label=None,
                               columns='epoch', values=y_var).reset_index()
     df_p['diff'] = df_p['post'] - df_p['pre']
     max_val = np.nanmax(np.abs(df_p['diff']))
-    bins = np.linspace(-max_val, max_val, 30)
+    bins = np.linspace(-max_val, max_val, 20)
     for ax, material in zip([ax2l, ax2r], MATERIALS):
         diff = df_p.loc[df_p['material']==material, 'diff']
         ax.hist(diff, bins=bins, color='grey', label=material)
@@ -164,10 +168,18 @@ def _plot_contrasts_violin(params, y_var, title='', y_label=None,
         ax.set_ylabel('channel count')
         ax.axvline(np.nanmean(diff), color='k', linestyle='--')
 
-    # add subplot labels
-    fig.text(0, 1.0, subplot_label, fontweight='bold')
-    
-    # # save figure
+        # add stats
+        pval = stats.loc[((stats['material']==material) & 
+                    (stats['feature']==y_var)), 'p'].values
+        if len(pval) == 1:
+            if pval < ALPHA:
+                ax.text(0.05, 0.9, f"*p={pval[0]:.3f}", transform=ax.transAxes)
+            else:
+                ax.text(0.05, 0.9, f"p={pval[0]:.3f}", transform=ax.transAxes)
+        else:
+            print(f"Warning: either no or multiple p-values for '{y_var}' in {material} block")
+
+    # save figure
     if fname_out: 
         fig.savefig(fname_out)
         
