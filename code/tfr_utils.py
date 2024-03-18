@@ -32,7 +32,7 @@ def zscore_tfr(tfr):
         
     return tfr_norm
 
-def subtract_baseline(signals, time, t_baseline):
+def subtract_baseline(signals, time, t_baseline=None):
     """
     Subtract baseline from signals. Baseline is defined as the mean of the
     signal between t_baseline[0] and t_baseline[1]. Signals should be 2D
@@ -55,10 +55,17 @@ def subtract_baseline(signals, time, t_baseline):
     
     # initialize
     signals_bl = np.zeros_like(signals)
+
+    # set mask for baseline time window
+    if t_baseline is None:
+        mask_bl = (time<0)
+    else:
+        mask_bl = ((time>t_baseline[0]) & (time<t_baseline[1]))    
+    if sum(mask_bl)==0:
+        raise ValueError('Baseline time window is empty. Check t_baseline.')
     
     # subtract baseline from each signal
     for ii in range(len(signals)):
-        mask_bl = ((time>t_baseline[0]) & (time<t_baseline[1]))
         bl = np.mean(signals[ii, mask_bl])
         signals_bl[ii] = signals[ii] - bl
     
