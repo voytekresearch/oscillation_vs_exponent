@@ -135,8 +135,10 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         print("norm_type must be 'linear', 'log', 'centered', or 'two_slope'")
     
     # create figure
-    if ax is None:
+    if (ax is None) & (fig is None):
         fig, ax = plt.subplots(constrained_layout=True)
+    elif (ax is None) | (fig is None):
+        raise ValueError('Both fig and ax must be provided if one is provided.')
 
     # plot tfr
     ax.pcolor(time, freqs, tfr, cmap=cmap, norm=norm)
