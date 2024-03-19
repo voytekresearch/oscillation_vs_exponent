@@ -18,15 +18,15 @@ from info import MATERIALS
 from utils import get_start_time, print_time_elapsed
 from tfr_utils import trim_tfr, subtract_baseline
 from plots import plot_evoked_tfr
-from settings import BANDS, AP_MODE
+from settings import BANDS, AP_MODE, FREQ_RANGE
 from specparam_utils import compute_band_power, compute_adjusted_band_power
 
 # settings - example data to plot
 PATIENT = 'pat11'
 MATERIAL = 'words'
 CHANNEL = 34
-X_LIMITS = [-0.5, 1.0]
-Y_LIMITS = [-0.7, 0.7] 
+X_LIMITS = [-0.25, 1.0]
+Y_LIMITS = [-0.9, 0.7]
 
 def main():
 
@@ -46,7 +46,7 @@ def main():
     data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}")
     tfr_mean = np.nanmedian(np.squeeze(data_in['tfr']), axis=0) # average over trials
     tfr, freq, time = trim_tfr(tfr_mean, data_in['freq'], data_in['time'], 
-                                freq_range=[0, 100], time_range=[-0.5, 1.0])
+                                freq_range=FREQ_RANGE, time_range=X_LIMITS)
     plot_evoked_tfr(tfr, freq, time, fig=fig, ax=axes[0,0], annotate_zero=True, 
                     cbar_label='power (z-score)', title='Single electrode')
     
@@ -105,7 +105,7 @@ def main():
 
     # plot
     tfr, freq, time = trim_tfr(tfr, data_in['freq'], data_in['time'], 
-                                freq_range=[0, 100], time_range=[-0.5, 1.0])
+                                freq_range=FREQ_RANGE, time_range=X_LIMITS)
     plot_evoked_tfr(tfr, freq, time, fig=fig, ax=axes[1,0], annotate_zero=True, 
                     cbar_label='power (z-score)', title='Group average')
 
@@ -134,8 +134,13 @@ def main():
             tfr = np.nanmedian(np.squeeze(data_in['tfr']), axis=0)
             
             for band, f_range in BANDS.items():
-                power[band].append(compute_band_power(data_in['freq'], tfr.T, f_range, method='mean', log_power=True))
-                power_adj[band].append(compute_adjusted_band_power(data_in['freq'], tfr.T, sm, f_range, method='mean', log_power=True))
+                temp = compute_band_power(data_in['freq'], tfr.T, f_range, 
+                                          method='mean', log_power=True)
+                power[band].append(temp)
+                temp = compute_adjusted_band_power(data_in['freq'], tfr.T, sm, 
+                                                   f_range, method='mean', 
+                                                   log_power=True)
+                power_adj[band].append(temp)
 
     # convert to arrays
     exponent = np.array(exp_list)
