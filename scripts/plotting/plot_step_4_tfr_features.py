@@ -197,8 +197,8 @@ def main():
 
 def compute_ci(data):
     mean = np.nanmean(data, axis=0)
-    sem = stats.sem(data, axis=0, nan_policy='omit')
-    ci = np.array([mean - sem, mean + sem])
+    std = np.nanstd(data, axis=0)
+    ci = stats.norm.interval(0.95, loc=mean, scale=std/np.sqrt(data.shape[0]))
 
     return ci
 
