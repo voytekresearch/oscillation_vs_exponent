@@ -7,6 +7,46 @@ Utility functions for working with specparam results/objects
 import numpy as np
 
 
+def compute_band_power(freq, spectra, band, method='mean', log_power=False):
+    # imports
+    from specparam.utils import trim_spectrum
+
+    # get band of interest
+    _, band = trim_spectrum(freq, spectra, band)
+
+    # log-transform power
+    if log_power:
+        band = np.log10(band)
+
+    # compute band power
+    if method == 'mean':
+        power = np.nanmean(band, axis=1)
+    elif method == 'max':
+        power = np.nanmax(band, axis=1)
+    elif method == 'sum':
+        power = np.nansum(band, axis=1)
+
+    return power
+
+
+def compute_adjusted_band_power(freq, spectra, params, band, **kwargs):
+    # account for freq[0] = 0 Hz
+    if freq[0] == 0:
+        freq = freq[1:]
+        spectra = spectra[:, 1:]
+
+    # compute aperiodic component and subtract from spectra
+    spectra_ap = params_to_spectra(params, component='aperiodic')
+    freq_mask = np.logical_and(freq >= params.freqs[0], freq <= params.freqs[-1])
+    spectra_adjusted = spectra[:, freq_mask] - spectra_ap
+
+    # compute band power
+    power = compute_band_power(freq[freq_mask], spectra_adjusted, band, 
+                               **kwargs) 
+
+    return power
+
+
 def knee_freq(knee, exponent):
     """
     Convert specparam knee parameter to Hz.

@@ -13,14 +13,14 @@ import pandas as pd
 # Imports - specparam
 from specparam import SpectralGroupModel
 from specparam.bands import Bands
-from specparam.utils import trim_spectrum
 
 # Imports - custom
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from settings import AP_MODE, BANDS, FREQ_RANGE
-from specparam_utils import params_to_spectra, compute_adj_r2
+from settings import AP_MODE, BANDS
+from specparam_utils import (compute_adj_r2, compute_band_power, 
+                             compute_adjusted_band_power)
 
 # settings
 BAND_POWER_METHOD = 'mean'
@@ -80,54 +80,19 @@ def aggregate_results(chan_info, material, memory, epoch):
     for band in BANDS:
         # add band power 
         power = compute_band_power(data_in['freq'], data_in['spectra'],
-                                    BANDS[band], method=BAND_POWER_METHOD)
+                                    BANDS[band], method=BAND_POWER_METHOD,
+                                    log_power=LOG_POWER)
         df[band] = power
 
         # add adjusted band power
         power = compute_adjusted_band_power(data_in['freq'], data_in['spectra'], 
                                             sp, BANDS[band], 
-                                            method=BAND_POWER_METHOD)
+                                            method=BAND_POWER_METHOD,
+                                            log_power=LOG_POWER)
         df[f"{band}_adj"] = power
 
 
     return df
-
-
-def compute_band_power(freq, spectra, band, method='mean'):
-    # get band of interest
-    _, band = trim_spectrum(freq, spectra, band)
-
-    # log-transform power
-    if LOG_POWER:
-        band = np.log10(band)
-
-    # compute band power
-    if method == 'mean':
-        power = np.nanmean(band, axis=1)
-    elif method == 'max':
-        power = np.nanmax(band, axis=1)
-    elif method == 'sum':
-        power = np.nansum(band, axis=1)
-
-    return power
-
-
-def compute_adjusted_band_power(freq, spectra, params, band, method='mean'):
-    # account for freq[0] = 0 Hz
-    if freq[0] == 0:
-        freq = freq[1:]
-        spectra = spectra[:, 1:]
-
-    # compute aperiodic component and subtract from spectra
-    spectra_ap = params_to_spectra(params, component='aperiodic')
-    freq_mask = np.logical_and(freq >= FREQ_RANGE[0], freq <= FREQ_RANGE[1])
-    spectra_adjusted = spectra[:, freq_mask] - spectra_ap
-
-    # compute band power
-    power = compute_band_power(freq[freq_mask], spectra_adjusted, band, 
-                               method=method)
-
-    return power
 
 
 if __name__ == "__main__":
