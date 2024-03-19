@@ -27,6 +27,8 @@ MATERIAL = 'words'
 CHANNEL = 34
 X_LIMITS = [-0.25, 1.0]
 Y_LIMITS = [-0.9, 0.7]
+LOG_POWER = True
+METHOD = 'sum'
 
 def main():
 
@@ -66,11 +68,11 @@ def main():
     power_adj = dict()
     for band, f_range in BANDS.items():
         power[band] = compute_band_power(data_in['freq'], tfr.T, f_range, 
-                                         method='mean', log_power=True)
+                                         method=METHOD, log_power=LOG_POWER)
         power_adj[band] = compute_adjusted_band_power(data_in['freq'], tfr.T, 
                                                       sm, f_range, 
-                                                      method='mean', 
-                                                      log_power=True)
+                                                      method=METHOD, 
+                                                      log_power=LOG_POWER)
         
     # plot exponent
     exponent = np.squeeze(subtract_baseline(exponent[np.newaxis,:], time, 
@@ -135,11 +137,11 @@ def main():
             
             for band, f_range in BANDS.items():
                 temp = compute_band_power(data_in['freq'], tfr.T, f_range, 
-                                          method='mean', log_power=True)
+                                          method=METHOD, log_power=LOG_POWER)
                 power[band].append(temp)
                 temp = compute_adjusted_band_power(data_in['freq'], tfr.T, sm, 
-                                                   f_range, method='mean', 
-                                                   log_power=True)
+                                                   f_range, method=METHOD, 
+                                                   log_power=LOG_POWER)
                 power_adj[band].append(temp)
 
     # convert to arrays
@@ -184,8 +186,8 @@ def main():
             ax.axvline(0, color='k', linestyle='--')
 
     # set/share y axis
-    for ax in axes[:, 1:3].flatten():
-        ax.set_ylim(Y_LIMITS)
+    # for ax in axes[:, 1:3].flatten():
+    #     ax.set_ylim(Y_LIMITS)
 
     # save figure
     fig.savefig(f"{dir_output}/tfr_features.png", dpi=300)
