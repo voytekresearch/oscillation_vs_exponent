@@ -24,6 +24,7 @@ from specparam_utils import compute_band_power, compute_adjusted_band_power
 PATIENT = 'pat11'
 MATERIAL = 'words'
 CHANNEL = 34
+X_LIMITS = [-0.5, 1.0]
 
 def main():
 
@@ -63,18 +64,26 @@ def main():
     power_adj = dict()
     for band, f_range in BANDS.items():
         power[band] = compute_band_power(data_in['freq'], tfr.T, f_range, 
-                                         method='mean')
+                                         method='mean', log_power=True)
         power_adj[band] = compute_adjusted_band_power(data_in['freq'], tfr.T, 
                                                       sm, f_range, 
-                                                      method='mean')
+                                                      method='mean', 
+                                                      log_power=True)
         
     # plot
     axes[0,1].plot(time, exponent)
     axes[0,1].set_title('Aperiodic exponent')
+    axes[0,1].set(xlabel='time (s)', ylabel='exponent')
     for band in BANDS.keys():
-        ts = np.squeeze(subtract_baseline(power_adj[band][np.newaxis, :], time))
+        ts = np.squeeze(subtract_baseline(power_adj[band][np.newaxis, :], time,
+                                          t_baseline=[X_LIMITS[0], 0]))
         axes[0,2].plot(time, ts, label=band)
     axes[0,2].set_title('Adjusted power')
+    axes[0,2].legend()
+    axes[0,2].set(xlabel='time (s)', ylabel='power (a.u.)')
+    for ax in axes[0,1:]:
+        ax.set_xlim(X_LIMITS)
+        ax.axvline(0, color='k', linestyle='--')
 
     # Plot group TFR ===========================================================
     # load stats
