@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from specparam import SpectralGroupModel
 
 # Imports - custom
 import sys
@@ -14,9 +15,10 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from info import MATERIALS
 from utils import get_start_time, print_time_elapsed
-from tfr_utils import trim_tfr
+from tfr_utils import trim_tfr, subtract_baseline
 from plots import plot_evoked_tfr
 from settings import BANDS
+from specparam_utils import compute_band_power, compute_adjusted_band_power
 
 # settings - example data to plot
 PATIENT = 'pat11'
@@ -46,7 +48,33 @@ def main():
                     cbar_label='power (z-score)', title='Single electrode')
     
     # Plot single-electrode time-series ========================================
+    # load SpecParam results
+    fname = f'{PATIENT}_{MATERIAL}_hit_chan{CHANNEL}_tfr_param_knee'
+    sm = SpectralGroupModel()
+    sm.load(f"{PROJECT_PATH}/data/ieeg_tfr_param/{fname}")
+    exponent = sm.get_params('aperiodic','exponent')
 
+    # load spectral results and compute band power
+    fname = f'{PATIENT}_{MATERIAL}_hit_chan{CHANNEL}_tfr.npz'
+    data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}")
+    tfr = np.nanmean(data_in['tfr'], axis=0)
+    time = data_in['time']
+    power = dict()
+    power_adj = dict()
+    for band, f_range in BANDS.items():
+        power[band] = compute_band_power(data_in['freq'], tfr.T, f_range, 
+                                         method='mean')
+        power_adj[band] = compute_adjusted_band_power(data_in['freq'], tfr.T, 
+                                                      sm, f_range, 
+                                                      method='mean')
+        
+    # plot
+    axes[0,1].plot(time, exponent)
+    axes[0,1].set_title('Aperiodic exponent')
+    for band in BANDS.keys():
+        ts = np.squeeze(subtract_baseline(power_adj[band][np.newaxis, :], time))
+        axes[0,2].plot(time, ts, label=band)
+    axes[0,2].set_title('Adjusted power')
 
     # Plot group TFR ===========================================================
     # load stats
