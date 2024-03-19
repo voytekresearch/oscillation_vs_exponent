@@ -17,6 +17,7 @@ from paths import PROJECT_PATH
 from info import MATERIALS
 from utils import get_start_time, print_time_elapsed
 from tfr_utils import trim_tfr, subtract_baseline
+from tfr_utils import zscore_tfr as zscore
 from plots import plot_evoked_tfr
 from settings import BANDS, AP_MODE, FREQ_RANGE
 from specparam_utils import compute_band_power, compute_adjusted_band_power
@@ -25,10 +26,15 @@ from specparam_utils import compute_band_power, compute_adjusted_band_power
 PATIENT = 'pat11'
 MATERIAL = 'words'
 CHANNEL = 34
-X_LIMITS = [-0.25, 1.0]
-Y_LIMITS = [-0.9, 0.7]
-LOG_POWER = True
-METHOD = 'sum'
+
+# settings - analysis
+LOG_POWER = True # log-transform power
+METHOD = 'sum' # method for computing band power
+
+# settings - figure
+X_LIMITS = [-0.25, 1.0] # for time-series plots
+Y_LIMITS = [-3, 3] # for power plots
+
 
 def main():
 
@@ -81,11 +87,12 @@ def main():
     axes[0,3].set_title('Aperiodic exponent')
     axes[0,3].set(xlabel='time (s)', ylabel='exponent')
 
-    # plot power
+    # plot power (after z-scoring and subtracting baseline)
     for pow, ax in zip([power, power_adj], [axes[0,1], axes[0,2]]):
         for band in BANDS.keys():
-            ts = np.squeeze(subtract_baseline(pow[band][np.newaxis, :], time,
-                                                t_baseline=[X_LIMITS[0], 0]))
+            ts = stats.zscore(pow[band], nan_policy='omit')
+            ts = np.squeeze(subtract_baseline(ts[np.newaxis, :], time, 
+                                              t_baseline=[X_LIMITS[0], 0]))
             ax.plot(time, ts, label=band)
         ax.legend()
         ax.set(xlabel='time (s)', ylabel='power (a.u.)')
@@ -112,7 +119,6 @@ def main():
                     cbar_label='power (z-score)', title='Group average')
 
     # Plot group time-series ===================================================
-    
     # initialize lists
     exp_list = []
     power = dict()
@@ -143,17 +149,20 @@ def main():
                                                    f_range, method=METHOD, 
                                                    log_power=LOG_POWER)
                 power_adj[band].append(temp)
-
-    # convert to arrays
-    exponent = np.array(exp_list)
+    
+    # z-score power and subtract baseline
+    time = data_in['time']
+    exponent = subtract_baseline(np.array(exp_list), time, t_baseline=[X_LIMITS[0], 0])
     for band in BANDS.keys():
+        # convert to arrays
         power[band] = np.array(power[band])
         power_adj[band] = np.array(power_adj[band])
-    
-    # subtract baseline
-    time = data_in['time']
-    exponent = subtract_baseline(exponent, time, t_baseline=[X_LIMITS[0], 0])
-    for band in BANDS.keys():
+
+        # z-score
+        power[band] = zscore(power[band])
+        power_adj[band] = zscore(power_adj[band])
+
+        # subtract baseline
         power[band] = subtract_baseline(power[band], time, 
                                         t_baseline=[X_LIMITS[0], 0])
         power_adj[band] = subtract_baseline(power_adj[band], time, 
@@ -186,8 +195,8 @@ def main():
             ax.axvline(0, color='k', linestyle='--')
 
     # set/share y axis
-    # for ax in axes[:, 1:3].flatten():
-    #     ax.set_ylim(Y_LIMITS)
+    for ax in axes[:, 1:3].flatten():
+        ax.set_ylim(Y_LIMITS)
 
     # save figure
     fig.savefig(f"{dir_output}/tfr_features.png", dpi=300)
