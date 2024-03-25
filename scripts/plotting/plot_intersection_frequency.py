@@ -27,7 +27,7 @@ def main():
     t_start = get_start_time()
 
     # identify / create directories
-    dir_output = f"{PROJECT_PATH}/figures/intersection"
+    dir_output = f"{PROJECT_PATH}/figures/main_figures"
     if not os.path.exists(dir_output): 
         os.makedirs(f"{dir_output}")
 
@@ -76,7 +76,7 @@ def main():
             transform=ax2.transAxes, ha='center', va='center')
 
     # save fig
-    fig.savefig(f"{dir_output}/intersection_freq_histograms.png")
+    fig.savefig(f"{dir_output}/intersection_frequency.png")
 
     # display progress
     print(f"\n\nTotal analysis time:")
