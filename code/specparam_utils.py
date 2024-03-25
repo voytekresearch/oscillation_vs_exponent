@@ -300,7 +300,7 @@ def compute_adj_r2(params):
     return adj_r2
 
 
-def _comp_intersection(params_0, params_1, return_spectra=False):
+def compute_intersection(params_0, params_1, return_spectra=False):
     """ 
     Calculate intersection of two spectra from SpectralModel objects.
 
@@ -349,7 +349,7 @@ def _comp_intersection(params_0, params_1, return_spectra=False):
         return intersection, intersection_idx
 
 
-def compute_intersection(params_0, params_1, return_spectra=False):
+def compute_intersections(params_0, params_1, return_spectra=False):
     """ 
     Calculate intersection of two spectra from SpectralGroupModel objects.
 
@@ -380,7 +380,7 @@ def compute_intersection(params_0, params_1, return_spectra=False):
     
     # Run analysis for SpectralModel input
     if n_chans == 1:
-        results = _comp_intersection(params_0, params_1, return_spectra)
+        results = compute_intersection(params_0, params_1, return_spectra)
         intersection, intersection_idx = results[:2]
         if return_spectra:
             spectra_0 = results[2]
@@ -407,7 +407,7 @@ def compute_intersection(params_0, params_1, return_spectra=False):
                 params_1_i = params_1.get_model(i_chan)
 
                 # compute intersection
-                results = _comp_intersection(params_0_i, params_1_i, return_spectra)
+                results = compute_intersection(params_0_i, params_1_i, return_spectra)
                 intersection[i_chan], intersection_idx[i_chan] = results[:2]
                 if return_spectra:
                     spectra_0[i_chan] = results[2]
