@@ -1,6 +1,7 @@
 """
-Plot histogram of intersection frequency. One subplot with all 
-electrodes and another with task-modulated electrodes.
+Plot intersection frequency results. Subplot A: grand average power spectra,
+with the 95% confidence interval of the intersection frequency annotated.
+Subplot B: histogram of intersection frequency, for each condition.
 """
 
 # Imports - standard
@@ -28,6 +29,8 @@ def main():
     dir_output = f"{PROJECT_PATH}/figures/intersection"
     if not os.path.exists(dir_output): 
         os.makedirs(f"{dir_output}")
+
+    # Load data ================================================================
             
     # load rotation analysis results
     intersection = dict()
@@ -61,12 +64,13 @@ def main():
     spectra_pre = np.concatenate([psd[material, 'pre'] for material in MATERIALS])
     spectra_post = np.concatenate([psd[material, 'post'] for material in MATERIALS])
 
+    # subplot 1: grand average power spectra ===================================
+
     # create figure
     fig, (ax1, ax2) = plt.subplots(1,2, figsize=[8, 4])
 
-    # subplot 1: Grand average spectra =========================================
-
     # plot spectra
+    ax1.set_title('Grand average PSD')
     plot_spectra_2conditions(spectra_pre, spectra_post, freq, ax=ax1,
                                 color=[COLORS['light_brown'], COLORS['brown']])
     ax1.set_xlim([4, 100]) # SpecParam fitting range
@@ -75,7 +79,9 @@ def main():
     ax1.axvspan(ci[0], ci[1], color='grey', alpha=0.3)
 
     # subplot 2: histogram of intersection frequency ===========================
-    bin_edges = np.linspace(0,100,11)
+    
+    # plot histogram
+    bin_edges = np.linspace(0, 100, 11)
     ax2.hist(intersection['words'][df['sig_all']], bins=bin_edges, alpha=0.8, 
              label='word block', color=COLORS['brown'])
     ax2.hist(intersection['faces'][df['sig_all']], bins=bin_edges, 
@@ -83,17 +89,12 @@ def main():
     ax2.axvline(np.nanmedian(f_rot_sig), linestyle='--', color='k', 
                 label='median', zorder=2)
 
-    # add legend
-    order = [0,1,2]
-    handles, labels = ax2.get_legend_handles_labels()
-    ax2.legend([handles[idx] for idx in order],[labels[idx] for idx in order])
+    # label plot
+    ax2.set_title('Intersection frequency')
     ax2.set_xlabel('intersection frequency (Hz)')
     ax2.set_ylabel('electrode count')
+    ax2.legend()
 
-    # add titles
-    ax1.set_title('Grand average PSD')
-    ax2.set_title('Intersection frequency')
-        
     # save fig
     fig.savefig(f"{dir_output}/intersection_freq_histograms.png")
 
