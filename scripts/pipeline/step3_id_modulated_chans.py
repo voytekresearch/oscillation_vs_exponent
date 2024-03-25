@@ -42,9 +42,11 @@ def main():
 
     # create bands object
     bands = Bands(BANDS)
+        
+    # init dataframe
+    results = pd.DataFrame()
 
     # loop through files
-    dfs = []
     fnames = [f for f in files if "prestim" in f]
     for i_file, file in enumerate(fnames):
         # display progress - every 100 files
@@ -93,20 +95,17 @@ def main():
                 df.loc[i_chan, f'{band}_pval'] = p_val
                 df.loc[i_chan, f'{band}_sign'] = sign
 
-                # aggreate results
-                dfs.append(df)
-
-    # concatenate results
-    results = pd.concat(dfs, ignore_index=True)
+        # aggreate results
+        results = pd.concat([results, df], ignore_index=True)
 
     # find significant results (p-value < alpha)
     for band in bands.labels:
         results[f'{band}_sig'] = results[f'{band}_pval'] < ALPHA # determine significance within condition
 
-    # save intermediate results
+    # # save intermediate results
     results.to_csv(f"{dir_output}/band_power_statistics.csv")
     # results = pd.read_csv(f"{dir_output}/band_power_statistics.csv", index_col=0)
-    
+
     # find channels that are task modulated in both material conditions 
     results_s = results.loc[results['memory']=='hit'] # select successful trials
     results_s = results_s.groupby(['patient','chan_idx']).all().reset_index() # find channels that are task modulated in both conditions
@@ -115,7 +114,7 @@ def main():
         results_s.rename(columns={f'{band}_sig' : f'sig_{band}'}, inplace=True)
         results_s.drop(columns=[f'{band}_pre', f'{band}_post', f'{band}_pval', 
                                 f'{band}_sign'], inplace=True)
-            
+
     # find channels that are task modulated in all/any frequency bands
     results_s['sig_all'] = results_s[[f'sig_{band}' for band in bands.labels]].all(axis=1)
     results_s['sig_any'] = results_s[[f'sig_{band}' for band in bands.labels]].any(axis=1)
