@@ -1,6 +1,7 @@
 """
-Plot intersection frequency results. Subplot A: grand average power spectra,
-with the 95% confidence interval of the intersection frequency annotated.
+Plot intersection frequency results. 
+
+Subplot A: grand average power spectra.
 Subplot B: histogram of intersection frequency, for each condition.
 """
 
@@ -31,26 +32,19 @@ def main():
         os.makedirs(f"{dir_output}")
 
     # Load data ================================================================
-            
+
+    # load task-modulation results
+    df = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv")
+
     # load rotation analysis results
     intersection = dict()
     for material in MATERIALS:
         fname = f"intersection_results_{material}_hit_knee.npz"
         data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}")
         intersection[material] = data_in['intersection']
-
-    # load task-modulation results
-    df = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv")
-
-    # combine data for materials
-    f_rot_all = np.concatenate([intersection['words'], intersection['faces']])
-    f_rot_sig = np.concatenate([intersection['words'][df['sig_all']], 
-                                intersection['faces'][df['sig_all']]])
+    f_intersection = np.concatenate([intersection['words'][df['sig_all']], 
+                                     intersection['faces'][df['sig_all']]])
     
-    # compute confidence interval for intersection frequency
-    scale = np.nanstd(f_rot_sig)/np.sqrt(len(f_rot_sig))
-    ci = norm.interval(0.95, loc=np.nanmean(f_rot_sig), scale=scale)
-
     # load spectal results
     psd = dict()
     for material in MATERIALS:
@@ -70,30 +64,22 @@ def main():
     fig, (ax1, ax2) = plt.subplots(1,2, figsize=[8, 4])
 
     # plot spectra
-    ax1.set_title('Grand average PSD')
     plot_spectra_2conditions(spectra_pre, spectra_post, freq, ax=ax1,
                                 color=[COLORS['light_brown'], COLORS['brown']])
+    ax1.set_title('Grand average PSD')
     ax1.set_xlim([4, 100]) # SpecParam fitting range
-
-    # annotate 95% confidence interval
-    ax1.axvspan(ci[0], ci[1], color='grey', alpha=0.3)
 
     # subplot 2: histogram of intersection frequency ===========================
     
     # plot histogram
     bin_edges = np.linspace(0, 100, 11)
-    ax2.hist(intersection['words'][df['sig_all']], bins=bin_edges, alpha=0.8, 
-             label='word block', color=COLORS['brown'])
-    ax2.hist(intersection['faces'][df['sig_all']], bins=bin_edges, 
-             alpha=0.8, label='face block', color=COLORS['blue'], zorder=0)
-    ax2.axvline(np.nanmedian(f_rot_sig), linestyle='--', color='k', 
-                label='median', zorder=2)
+    ax2.hist(f_intersection, bins=bin_edges, color=COLORS['brown'], zorder=0)
+    ax2.axvline(np.nanmean(f_intersection), linestyle='--', color='k', zorder=1)
 
     # label plot
     ax2.set_title('Intersection frequency')
     ax2.set_xlabel('intersection frequency (Hz)')
     ax2.set_ylabel('electrode count')
-    ax2.legend()
 
     # save fig
     fig.savefig(f"{dir_output}/intersection_freq_histograms.png")
