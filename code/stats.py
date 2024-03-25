@@ -28,6 +28,10 @@ def run_resampling_analysis(data_a, data_b , n_iter):
                         0   :   no difference (a=b)).
     """
 
+    # check for all nan
+    if np.all(np.isnan(data_a)) or np.all(np.isnan(data_b)):
+        return np.nan
+
     # shuffle conditions
     order = gen_random_order(n_iter, len(data_a)*2)
     surrogate_0, surrogate_1 = shuffle_arrays(data_a, data_b, order)
