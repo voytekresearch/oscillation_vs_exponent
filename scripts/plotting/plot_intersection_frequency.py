@@ -31,8 +31,6 @@ def main():
     if not os.path.exists(dir_output): 
         os.makedirs(f"{dir_output}")
 
-    # Load data ================================================================
-
     # load task-modulation results
     df = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv")
 
@@ -58,28 +56,24 @@ def main():
     spectra_pre = np.concatenate([psd[material, 'pre'] for material in MATERIALS])
     spectra_post = np.concatenate([psd[material, 'post'] for material in MATERIALS])
 
-    # subplot 1: grand average power spectra ===================================
-
     # create figure
     fig, (ax1, ax2) = plt.subplots(1,2, figsize=[8, 4])
 
     # plot spectra
     plot_spectra_2conditions(spectra_pre, spectra_post, freq, ax=ax1,
                                 color=[COLORS['light_brown'], COLORS['brown']])
-    ax1.set_title('Grand average PSD')
+    ax1.set_title('Grand average power spectra')
     ax1.set_xlim([4, 100]) # SpecParam fitting range
 
-    # subplot 2: histogram of intersection frequency ===========================
-    
     # plot histogram
+    ax2.set_title('Baseline-encoding intersection')
     bin_edges = np.linspace(0, 100, 11)
-    ax2.hist(f_intersection, bins=bin_edges, color=COLORS['brown'], zorder=0)
-    ax2.axvline(np.nanmean(f_intersection), linestyle='--', color='k', zorder=1)
-
-    # label plot
-    ax2.set_title('Intersection frequency')
+    ax2.hist(f_intersection, bins=bin_edges, color=COLORS['brown'])
     ax2.set_xlabel('intersection frequency (Hz)')
     ax2.set_ylabel('electrode count')
+    ax2.axvline(np.nanmedian(f_intersection), color='k', linestyle='--')
+    ax2.text(0.7, 0.9, f"median = {int(np.nanmedian(f_intersection))} Hz", 
+            transform=ax2.transAxes, ha='center', va='center')
 
     # save fig
     fig.savefig(f"{dir_output}/intersection_freq_histograms.png")
