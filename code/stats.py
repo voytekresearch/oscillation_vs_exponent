@@ -129,6 +129,10 @@ def comp_resampling_pval(distribution, value):
         P-value for resampling analysis.
     """
 
+    # check for all nan
+    if np.all(np.isnan(distribution)) or np.isnan(value):
+        return np.nan
+
     # calc 2-sided p value
     n_iterations = np.size(distribution)
     n_more = np.sum(np.abs(distribution) > np.abs(value))
