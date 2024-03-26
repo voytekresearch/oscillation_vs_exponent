@@ -8,3 +8,4 @@ FS = 512 # iEEG sampling frequency
 TMIN = -1.5 # epoch start time
 MATERIALS = ['words', 'faces'] # experimental blocks (stimulus type) 
 MEMORY = ['hit', 'miss'] # behavior (memory performance)
+FELLNER_BANDS = {'theta' : [2, 5], 'alpha' : [8, 20], 'gamma' : [50, 90]} # oscillation bands used in Fellner et al. 2016
