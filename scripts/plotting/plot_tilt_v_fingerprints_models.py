@@ -38,7 +38,7 @@ ANNOTATE_ROATATION = True # whether to annotate the rotation frequency
 
 def main():
     # set paths
-    path_out = f"{PROJECT_PATH}/figures/model_sketch"
+    path_out = f"{PROJECT_PATH}/figures/main_figures"
     if not os.path.exists(path_out): os.makedirs(path_out)
 
     # sim baseline spectra
