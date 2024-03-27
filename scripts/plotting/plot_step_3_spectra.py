@@ -16,10 +16,11 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from info import MATERIALS, MEMORY
 from plots import plot_spectra_2conditions
+from settings import COLORS
 
 # settings
-COLORS = [np.array([1,133,113]) / 255, np.array([166,97,26]) / 255]
 plt.style.use('mplstyle/default.mplstyle')
+FIGSIZE = [3, 2]
 
 
 def main():
@@ -49,12 +50,19 @@ def plot_group_spectra(stats, material, memory, feature, dir):
     freq = data_pre['freq']
 
     # plot
-    title = f"{material} - {memory} - {feature}"
+    if material=='words':
+        colors = [COLORS['light_brown'], COLORS['brown']]
+    elif material=='faces':
+        colors = [COLORS['light_blue'], COLORS['blue']]
+
+    # title = f"{material} - {memory} - {feature}"
+    title = f"{material[0].upper()}{material[1:]}-encoding"
     fname = f"{material}_{memory}_{feature}.png"
     f_mask = np.logical_and(freq>1, freq<100)
+    _, ax = plt.subplots(figsize=FIGSIZE)
     plot_spectra_2conditions(psd_pre[:, f_mask], psd_post[:, f_mask], 
-                             freq[f_mask], shade_sem=True, color=COLORS,
-                             title=title, fname=f"{dir}/{fname}")
+                             freq[f_mask], shade_sem=True, color=colors,
+                             title=title, fname=f"{dir}/{fname}", ax=ax)
 
         
 if __name__ == "__main__":
