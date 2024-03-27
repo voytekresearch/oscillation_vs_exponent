@@ -533,7 +533,7 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
     
     # return
     if fname is not None:
-        fig.savefig(fname)
+        plt.savefig(fname)
 
 
 def plot_psd_diff(freq, psd_diff, title=None, fname_out=None,
