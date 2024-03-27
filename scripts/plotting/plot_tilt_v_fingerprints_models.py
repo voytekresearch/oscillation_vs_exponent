@@ -20,6 +20,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from info import FELLNER_BANDS as BANDS
+from settings import COLORS
 
 # plotting setting
 plt.style.use('mplstyle/default.mplstyle')
@@ -65,9 +66,9 @@ def main():
     labels = ['baseline', 'encoding']
     _, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=FIG_SIZE)
     plot_2_spectra(psd_pre, psd_post_0, freqs, ax=ax0, labels=labels,
-                    title='Oscillatory Amplitude Change')
+                    title='Periodic Effect')
     plot_2_spectra(psd_pre, psd_post_1, freqs, ax=ax1, labels=labels,
-                   title='Aperiodic Exponent Shift')
+                   title='Aperiodic Effect')
     plot_2_spectra(psd_pre, psd_post_2, freqs, ax=ax2, labels=labels,
                    title='Combined Effect')
     
@@ -82,14 +83,14 @@ def main():
         for ax in [ax1, ax2]:
             idx_rotation = np.argmin(np.abs(freqs - ROTATION_FREQ))
             ax.scatter(freqs[idx_rotation], psd_post_1[idx_rotation], 
-                       color='grey', s=15, zorder=10)
+                       color='k', s=15, zorder=10)
             
     # remove crowded y-labels
     for ax in [ax1, ax2]:
         ax.set(ylabel='')
             
     # save figure
-    plt.savefig(f"{path_out}/tilt_v_fingerprints_models.png", dpi=300)
+    plt.savefig(f"{path_out}/tilt_v_fingerprints_models.png")
 
 
 def plot_2_spectra(spectrum_0, spectrum_1, freqs, labels=['0', '1'], 
@@ -100,8 +101,8 @@ def plot_2_spectra(spectrum_0, spectrum_1, freqs, labels=['0', '1'],
         _, ax = plt.subplots()
     
     # plot spectra
-    ax.loglog(freqs, spectrum_0, label=labels[0], color='k')
-    ax.loglog(freqs, spectrum_1, label=labels[1], color='k', linestyle='--')
+    ax.loglog(freqs, spectrum_0, label=labels[0], color=COLORS['light_brown'])
+    ax.loglog(freqs, spectrum_1, label=labels[1], color=COLORS['brown'])
     
     # label
     ax.set(xlabel='Frequency (Hz)', ylabel='Power (\u03BCV\u00b2/Hz)')
