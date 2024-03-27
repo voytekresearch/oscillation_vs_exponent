@@ -7,6 +7,7 @@ identifies channels wth significant modulation of alpha and/or gamma power.
 # Imports - standard
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Imports - custom
 import sys
