@@ -15,7 +15,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from info import MATERIALS
-from utils import get_start_time, print_time_elapsed
+from utils import get_start_time, print_time_elapsed, confidence_interval
 from tfr_utils import trim_tfr, subtract_baseline
 from tfr_utils import zscore_tfr as zscore
 from plots import plot_evoked_tfr
@@ -168,14 +168,14 @@ def main():
     # plot power
     for pow, ax in zip([power, power_adj], [axes[1,1], axes[1,2]]):
         for band in BANDS.keys():
-            ci = compute_ci(pow[band])
+            ci = confidence_interval(pow[band])
             ax.plot(time, np.nanmean(pow[band], axis=0), label=band)
             ax.fill_between(time, ci[0], ci[1], alpha=0.2)
 
     # plot exponent (after z-scoreing and subtracting baseline)
     exponent = subtract_baseline(zscore(np.array(exp_list)), time, 
                                  t_baseline=[X_LIMITS[0], 0])
-    ci = compute_ci(exponent)
+    ci = confidence_interval(exponent)
     axes[1,2].plot(time, np.nanmean(exponent, axis=0), label='exponent')
     axes[1,2].fill_between(time, ci[0], ci[1], alpha=0.2)
 
@@ -211,14 +211,6 @@ def main():
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
-
-
-def compute_ci(data):
-    mean = np.nanmean(data, axis=0)
-    std = np.nanstd(data, axis=0)
-    ci = stats.norm.interval(0.95, loc=mean, scale=std/np.sqrt(data.shape[0]))
-
-    return ci
 
 
 if __name__ == "__main__":

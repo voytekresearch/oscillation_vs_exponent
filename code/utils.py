@@ -7,6 +7,34 @@ Utility functions
 import numpy as np
 
 
+def confidence_interval(data, confidence=0.95, axis=0):
+    """ 
+    Compute confidence interval for data.
+
+    Parameters
+    ----------
+    data : array
+        Data to compute confidence interval for.
+    confidence : float
+        Confidence level for confidence interval.
+    axis : int
+        Axis to compute confidence interval over.
+
+    Returns
+    -------
+    ci : array
+        Confidence interval.
+    """
+
+    from scipy.stats import norm
+
+    mean = np.nanmean(data, axis=axis)
+    std = np.nanstd(data, axis=axis)
+    ci = norm.interval(confidence, loc=mean, scale=std/np.sqrt(data.shape[axis]))
+
+    return ci
+
+
 def get_start_time():
     from time import time
 
