@@ -24,6 +24,7 @@ from info import MATERIALS
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
+FIGSIZE = [7.5, 2]
 
 # settings - example data to visualize
 PATIENT = 'pat11'
@@ -83,7 +84,7 @@ def main():
     # plot data =================================================================
 
     # create gridspec and nested gridspec for subplots
-    fig = plt.figure(figsize=[10, 4])
+    fig = plt.figure(figsize=FIGSIZE)
     gs = gridspec.GridSpec(1,2, figure=fig, width_ratios=[2,1])
     gs2a = gridspec.GridSpecFromSubplotSpec(5,1, subplot_spec=gs[0], hspace=0)
     gs2b = gridspec.GridSpecFromSubplotSpec(1,1, subplot_spec=gs[1])

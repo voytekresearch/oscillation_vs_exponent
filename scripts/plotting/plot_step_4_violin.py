@@ -26,6 +26,7 @@ from specparam_utils import knee_freq
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
+FIGSIZE = [4, 6]
 ALPHA = 0.05 # significance level
 FEATURES = ['offset', 'knee', 'exponent', 'alpha', 'alpha_adj', 'gamma',
             'gamma_adj']
@@ -120,7 +121,7 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
         y_label = y_var.lower()
 
     # create figure
-    fig = plt.figure(figsize=[4, 6])
+    fig = plt.figure(figsize=FIGSIZE)
     gs = fig.add_gridspec(2,2, height_ratios=[2,1])
     ax1 = fig.add_subplot(gs[0,:])
     ax2l = fig.add_subplot(gs[1,0])

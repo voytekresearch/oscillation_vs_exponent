@@ -32,6 +32,7 @@ LOG_POWER = True # log-transform power
 METHOD = 'sum' # method for computing band power
 
 # settings - figure
+FIGSIZE = (16, 8)
 X_LIMITS = [-0.25, 1.0] # for time-series plots
 Y_LIMITS = [[-3, 3], [-2, 2]] # [[electrode], [group]]
 
@@ -47,7 +48,7 @@ def main():
         os.makedirs(f"{dir_output}")
 
     # create figure
-    fig, axes = plt.subplots(2, 4, figsize=(16, 8), constrained_layout=True)
+    fig, axes = plt.subplots(2, 4, figsize=FIGSIZE, constrained_layout=True)
 
     # Plot single-electrode TFR ================================================
     fname = f'{PATIENT}_{MATERIAL}_hit_chan{CHANNEL}_tfr.npz'

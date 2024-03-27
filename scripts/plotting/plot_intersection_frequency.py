@@ -21,6 +21,9 @@ from info import MATERIALS
 from settings import COLORS
 from plots import plot_spectra_2conditions
 
+# settings
+FIGSIZE = [5, 2]
+
 
 def main():
     # display progress
@@ -57,22 +60,23 @@ def main():
     spectra_post = np.concatenate([psd[material, 'post'] for material in MATERIALS])
 
     # create figure
-    fig, (ax1, ax2) = plt.subplots(1,2, figsize=[8, 4])
+    fig, (ax1, ax2) = plt.subplots(1,2, figsize=FIGSIZE, 
+                                   constrained_layout=True)
 
     # plot spectra
     plot_spectra_2conditions(spectra_pre, spectra_post, freq, ax=ax1,
                                 color=[COLORS['light_brown'], COLORS['brown']])
-    ax1.set_title('Grand average power spectra')
+    ax1.set_title('Grand average')
     ax1.set_xlim([4, 100]) # SpecParam fitting range
 
     # plot histogram
-    ax2.set_title('Baseline-encoding intersection')
+    ax2.set_title('Baseline v. encoding')
     bin_edges = np.linspace(0, 100, 11)
     ax2.hist(f_intersection, bins=bin_edges, color=COLORS['brown'])
     ax2.set_xlabel('intersection frequency (Hz)')
     ax2.set_ylabel('electrode count')
     ax2.axvline(np.nanmedian(f_intersection), color='k', linestyle='--')
-    ax2.text(0.7, 0.9, f"median = {int(np.nanmedian(f_intersection))} Hz", 
+    ax2.text(0.7, 0.9, f"median={int(np.nanmedian(f_intersection))} Hz", 
             transform=ax2.transAxes, ha='center', va='center')
 
     # save fig

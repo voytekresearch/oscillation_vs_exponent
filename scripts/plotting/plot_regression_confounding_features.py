@@ -20,6 +20,7 @@ from settings import COLORS
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
+FIGSIZE = [7.5, 4]
 
 
 def main():
@@ -54,7 +55,7 @@ def main():
     df_ols = pd.concat(df_ols_list, axis=0).reset_index(drop=True)
 
     # create figure
-    fig, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=[12, 8],
+    fig, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=FIGSIZE,
                                             constrained_layout=True)
     ax1.set_title('Total power v. exponent')
     ax2.set_title('Adjusted power v. exponent')
