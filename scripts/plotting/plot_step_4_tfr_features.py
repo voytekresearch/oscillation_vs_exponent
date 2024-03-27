@@ -32,7 +32,7 @@ LOG_POWER = True # log-transform power
 METHOD = 'sum' # method for computing band power
 
 # settings - figure
-FIGSIZE = (16, 8)
+FIGSIZE = (10, 4)
 X_LIMITS = [-0.25, 1.0] # for time-series plots
 Y_LIMITS = [[-3, 3], [-2, 2]] # [[electrode], [group]]
 
@@ -80,12 +80,6 @@ def main():
                                                       sm, f_range, 
                                                       method=METHOD, 
                                                       log_power=LOG_POWER)
-        
-    # plot exponent (after z-scoreing and subtracting baseline)
-    exponent = stats.zscore(exponent, nan_policy='omit')
-    exponent = np.squeeze(subtract_baseline(exponent[np.newaxis,:], time, 
-                                            t_baseline=[X_LIMITS[0], 0]))
-    axes[0,3].plot(time, exponent)
 
     # plot power (after z-scoring and subtracting baseline)
     for pow, ax in zip([power, power_adj], [axes[0,1], axes[0,2]]):
@@ -94,6 +88,12 @@ def main():
             ts = np.squeeze(subtract_baseline(ts[np.newaxis, :], time, 
                                               t_baseline=[X_LIMITS[0], 0]))
             ax.plot(time, ts, label=band)
+
+    # plot exponent (after z-scoreing and subtracting baseline)
+    exponent = stats.zscore(exponent, nan_policy='omit')
+    exponent = np.squeeze(subtract_baseline(exponent[np.newaxis,:], time, 
+                                            t_baseline=[X_LIMITS[0], 0]))
+    axes[0,2].plot(time, exponent, label='exponent')
 
     # # Plot group TFR ===========================================================
     # load stats
@@ -176,34 +176,34 @@ def main():
     exponent = subtract_baseline(zscore(np.array(exp_list)), time, 
                                  t_baseline=[X_LIMITS[0], 0])
     ci = compute_ci(exponent)
-    axes[1,3].plot(time, np.nanmean(exponent, axis=0), label='exponent')
-    axes[1,3].fill_between(time, ci[0], ci[1], alpha=0.2)
+    axes[1,2].plot(time, np.nanmean(exponent, axis=0), label='exponent')
+    axes[1,2].fill_between(time, ci[0], ci[1], alpha=0.2)
 
     # label and adjust plots ===================================================
     for row in [0, 1]:
         # set title
         axes[row, 1].set_title('Total power')
         axes[row, 2].set_title('Adjusted power')
-        axes[row, 3].set_title('Aperiodic exponent')
 
         # set y labels
-        axes[row, 3].set_ylabel('exponent (z-score)')
         for ax in axes[row, 1:3]:
             ax.set_ylabel('power (z-score)')
-
-        # add legend
-        for ax in axes[row, 1:3]:
-            ax.legend()
             
         # set x labels and limits
-        for ax in axes[row, 1:]:
+        for ax in axes[row, 1:3]:
             ax.axhline(0, color='k', linestyle='--')
             ax.axvline(0, color='k', linestyle='--')
             ax.set_xlim(X_LIMITS)
 
         # adjust y limits
-        for ax in axes[row, 1:]:
+        for ax in axes[row, 1:3]:
             ax.set_ylim(Y_LIMITS[row])
+
+    # add legend
+    handles, labels = axes[1,2].get_legend_handles_labels()
+    axes[0,3].axis('off')
+    axes[1,3].axis('off')
+    axes[0,3].legend(handles, labels, loc='center')
 
     # save figure
     fig.savefig(f"{dir_output}/tfr_features.png", dpi=300)
