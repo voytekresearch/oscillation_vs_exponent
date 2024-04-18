@@ -12,14 +12,15 @@ from time import time as timer
 from time import ctime as time_now
 from specparam.utils import trim_spectrum
 from specparam.bands import Bands
+from scipy.stats import permutation_test
 
 # Imports - custom
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from settings import BANDS
-from stats import run_resampling_analysis
 from utils import hour_min_sec
+from stats import mean_difference
 
 # ignore mean of empty slice warnings
 import warnings
@@ -84,7 +85,12 @@ def main():
                                                   f_range)[1], axis=1)
 
                 # determine whether bandpower was task modulation
-                p_val = run_resampling_analysis(power_pre, power_post, N_ITER)
+                stats = permutation_test([power_pre, power_post], 
+                                         statistic=mean_difference, 
+                                         permutation_type='samples',
+                                         n_resamples=N_ITER,
+                                         alternative='two-sided',
+                                         random_state=0)
 
                 # determine sign of effect
                 sign = np.sign(np.nanmean(power_post) - np.nanmean(power_pre))
@@ -92,7 +98,7 @@ def main():
                 # save results
                 df.loc[i_chan, f'{band}_pre'] = np.nanmean(power_pre)
                 df.loc[i_chan, f'{band}_post'] = np.nanmean(power_post)
-                df.loc[i_chan, f'{band}_pval'] = p_val
+                df.loc[i_chan, f'{band}_pval'] = stats.pvalue
                 df.loc[i_chan, f'{band}_sign'] = sign
 
         # aggreate results

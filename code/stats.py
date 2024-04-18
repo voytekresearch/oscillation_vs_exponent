@@ -7,6 +7,31 @@ Stistical utility functions
 import numpy as np
 
 
+def mean_difference(data_a, data_b):
+    """
+    Compute difference between means of two datasets.
+
+    Parameters
+    ----------
+    data_a, data_b : numpy.ndarray
+        Data to compare.
+
+    Returns
+    -------
+    difference : float
+        Difference between means of data_a and data_b.
+    """
+
+    # check for all nan
+    if np.all(np.isnan(data_a)) or np.all(np.isnan(data_b)):
+        return np.nan
+
+    # compute difference
+    difference = np.nanmean(data_b) - np.nanmean(data_a)
+
+    return difference
+
+
 def run_resampling_analysis(data_a, data_b , n_iter):
     """
     Run resampling analysis.
