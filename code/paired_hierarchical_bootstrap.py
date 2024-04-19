@@ -230,7 +230,10 @@ def _print_results(p_value, sign, true_mean, n_iterations, conditions):
     if p_value==0:
         print(f"p-value: <{1/n_iterations}")
     else:
-        print(f"p-value: {p_value:.2e}")
+        if p_value < 0.001:
+            print(f"p-value: {p_value:.2e}")
+        else:
+            print(f"p-value: {p_value:.3f}")
 
     # print mean difference
     print(f"True mean difference: {true_mean:.2f}")
