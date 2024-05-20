@@ -150,13 +150,10 @@ def _hierarchical_bootstrap(df, variable, condition, level_1, level_2,
             # get data for each instance within cluster and average
             for i_instance, instance_i in enumerate(instances_resampled):
                 values_ii = df.loc[(df[level_1]==cluster_i) & 
-                                  (df[level_2]==instance_i), variable]
-                for i_condtion in range(2):
-                    values_ic = values_ii.loc[df[condition]==conditions[i_condtion]]
-                    if not np.isnan(values_ic).all():
-                        values[i_cluster, i_instance, i_condtion] = np.nanmean(values_ic)
-                    else:
-                        values[i_cluster, i_instance, i_condtion] = np.nan
+                                  (df[level_2]==instance_i)]
+                for i_condtion, condition_i in enumerate(conditions):
+                    value = values_ii.loc[df[condition]==condition_i, variable].values
+                    values[i_cluster, i_instance, i_condtion] = value
                 
         # compute average for iteration
         distribution[i_iteration] = mean_difference(values[...,0], values[...,1])
