@@ -58,7 +58,7 @@ def main():
             
             # run bootstrap
             for feature in FEATURES:
-                stats = hb(df_cond, feature, 'epoch', 'chan_idx', 'patient', 
+                stats = hb(df_cond, feature, 'epoch', 'patient', 'chan_idx', 
                            n_iterations=N_ITERATIONS, verbose=False, plot=False)
                 data = np.array([[material, memory, feature, stats[0]]])
                 results_i = pd.DataFrame(data, index=[0], columns=columns)

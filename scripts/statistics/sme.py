@@ -62,7 +62,7 @@ def main():
             df_f[feature] = df_f['post'] - df_f['pre']
 
             # run bootstrap
-            stats = hb(df_f, feature, 'memory', 'chan_idx', 'patient', 
+            stats = hb(df_f, feature, 'memory', 'patient', 'chan_idx',
                         n_iterations=N_ITERATIONS, verbose=False, plot=False)
             data = np.array([[material, feature, stats[0]]])
             results_i = pd.DataFrame(data, index=[0], columns=columns)
