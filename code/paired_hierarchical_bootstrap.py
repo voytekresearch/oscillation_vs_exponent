@@ -121,6 +121,9 @@ def _hierarchical_bootstrap(df, variable, condition, level_1, level_2,
 
     """
 
+    # check input data
+    df = check_input(df, variable, condition, level_1, level_2)
+
     # get cluster and condition info
     clusters = df[level_1].unique()
     n_clusters = len(clusters)
@@ -152,13 +155,53 @@ def _hierarchical_bootstrap(df, variable, condition, level_1, level_2,
                 values_ii = df.loc[(df[level_1]==cluster_i) & 
                                   (df[level_2]==instance_i)]
                 for i_condtion, condition_i in enumerate(conditions):
-                    value = values_ii.loc[df[condition]==condition_i, variable].values
+                    value = values_ii.loc[values_ii[condition]==condition_i, variable].values
                     values[i_cluster, i_instance, i_condtion] = value
                 
         # compute average for iteration
         distribution[i_iteration] = mean_difference(values[...,0], values[...,1])
 
     return distribution
+
+
+def check_input(df, variable, condition, level_1, level_2):
+    """
+    Check input data for paired hierarchical bootstrap. This function checks 
+    that each instance has both conditions present, and that the data is
+    structured as a nested, hierarchical dataset.
+
+    """
+    
+    # check that 'variable', 'condition', 'level_1', and 'level_2' are in df
+    if variable not in df.columns:
+        raise ValueError(f"Variable '{variable}' not found in dataframe.")
+    if condition not in df.columns:
+        raise ValueError(f"Condition '{condition}' not found in dataframe.")
+    if level_1 not in df.columns:
+        raise ValueError(f"Level 1 '{level_1}' not found in dataframe.")
+    if level_2 not in df.columns:
+        raise ValueError(f"Level 2 '{level_2}' not found in dataframe.")
+
+    # check that each level_1-level_2 pair has data for both conditions
+    # and drop cases of missing data
+    n_dropped = 0
+    n_instances = 0
+    clusters = df[level_1].unique()
+    for cluster in clusters:
+        instances = df.loc[df[level_1]==cluster, level_2].unique()
+        for instance in instances:
+            df_i = df.loc[(df[level_1]==cluster) & (df[level_2]==instance)]
+            if (len(df_i) != 2) or (len(df_i[condition].unique()) != 2) or \
+                (df_i[variable].isnull().any()):
+                df = df.drop(df_i.index)
+                n_dropped += 1
+            else:
+                n_instances += 1
+
+    if n_dropped > 0:
+        print(f"Warning: {n_dropped}/{n_dropped+n_instances} instances dropped due to missing data.")
+
+    return df
 
 
 def _compute_p_value(distribution):    
