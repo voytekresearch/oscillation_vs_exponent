@@ -69,6 +69,12 @@ def main():
     ax1.set_title('Grand average')
     ax1.set_xlim([4, 100]) # SpecParam fitting range
 
+    # annotate intersection frequency
+    median_f = np.nanmedian(f_intersection)
+    median_idx = np.argmin(np.abs(freq - median_f))
+    ax1.scatter(freq[median_idx], np.nanmean(spectra_pre[:, median_idx]),
+                color='k', s=20, zorder=10)
+
     # plot histogram
     ax2.set_title('Baseline v. encoding')
     bin_edges = np.linspace(0, 100, 11)
