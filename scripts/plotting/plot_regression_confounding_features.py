@@ -54,6 +54,17 @@ def main():
                                             index=[0]))
     df_ols = pd.concat(df_ols_list, axis=0).reset_index(drop=True)
 
+    # print results
+    for feature in ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']:
+        print(f"\n\n{feature} results:")
+        print(f"\tR-squared: {results[feature].rsquared:.3f}")
+        print(f"\tF-statistic: {results[feature].fvalue:.3f}")
+        if results[feature].f_pvalue < .001:
+            print(f"\tp-value: {results[feature].f_pvalue:.3e}")
+        else:
+            print(f"\tp-value: {results[feature].f_pvalue:.3f}")
+        print(results[feature].summary())
+
     # create figure
     fig, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=FIGSIZE,
                                             constrained_layout=True)
