@@ -5,6 +5,7 @@ Utility functions for working with specparam results/objects
 
 # Imports
 import numpy as np
+from specparam import SpectralModel, SpectralGroupModel
 
 
 def compute_band_power(freq, spectra, band, method='mean', log_power=False):
@@ -20,29 +21,46 @@ def compute_band_power(freq, spectra, band, method='mean', log_power=False):
 
     # compute band power
     if method == 'mean':
-        power = np.nanmean(band, axis=1)
+        power = np.nanmean(band, axis=-1)
     elif method == 'max':
-        power = np.nanmax(band, axis=1)
+        power = np.nanmax(band, axis=-1)
     elif method == 'sum':
-        power = np.nansum(band, axis=1)
+        power = np.nansum(band, axis=-1)
 
     return power
 
 
-def compute_adjusted_band_power(freq, spectra, params, band, **kwargs):
-    # account for freq[0] = 0 Hz
-    if freq[0] == 0:
-        freq = freq[1:]
-        spectra = spectra[:, 1:]
+def compute_adjusted_band_power(params, band, method='mean', log_power=False):
+    """
+    Compute band power for a given band, adjusting for aperiodic component.
 
+    Parameters
+    ----------
+    params : SpectralGroupModel object
+        SpectralGroupModel object. Must contain data (freqs, power_spectra).
+    band : list of [float, float]
+        Frequency band of interest.
+    method : {'mean', 'max', 'sum'}, optional, default: 'mean'
+        Method to compute band power.
+    log_power : bool, optional, default: False
+        Whether to compute band power on log-transformed power spectra.
+    """
     # compute aperiodic component and subtract from spectra
-    spectra_ap = params_to_spectra(params, component='aperiodic')
-    freq_mask = np.logical_and(freq >= params.freqs[0], freq <= params.freqs[-1])
-    spectra_adjusted = spectra[:, freq_mask] - spectra_ap
+    if type(params) == SpectralModel:
+        spec_ap = params_to_spectrum(params, component='aperiodic')
+        if log_power:
+            spec_adjusted = params.power_spectrum - np.log10(spec_ap)
+        else:
+            spec_adjusted = 10**params.power_spectrum - spec_ap
+    elif type(params) == SpectralGroupModel:
+        spec_ap = params_to_spectra(params, component='aperiodic')
+        if log_power:
+            spec_adjusted = params.power_spectra - np.log10(spec_ap)
+        else:
+            spec_adjusted = 10**params.power_spectra - spec_ap
 
     # compute band power
-    power = compute_band_power(freq[freq_mask], spectra_adjusted, band, 
-                               **kwargs) 
+    power = compute_band_power(params.freqs, spec_adjusted, band, method=method)
 
     return power
 
@@ -216,65 +234,6 @@ def params_to_spectrum(params, component='both'):
     return spectrum
 
 
-def params_to_df(params, max_peaks):
-    """
-    Convert SpectralGroupModel object to pandas dataframe.
-
-    Parameters
-    ----------
-    params : SpectralGroupModel object
-        SpectralGroupModel object.
-    max_peaks : int
-        'max_n_peaks' parameter used to fit SpectralGroupModel object.
-
-    Returns
-    -------
-    df : pandas dataframe
-        Pandas dataframe containing aperiodic parameters and gaussian parameters 
-        for each peak.
-    """
-    
-    # imports
-    import pandas as pd
-
-    # get per params
-    df_per = pd.DataFrame(params.get_params('peak'),
-        columns=['cf','pw','bw','idx'])
-
-    # get ap parmas
-    if params.aperiodic_mode == 'knee':
-        df_ap = pd.DataFrame(params.get_params('aperiodic'),  
-            columns=['offset', 'knee', 'exponent'])
-    elif params.aperiodic_mode == 'fixed':
-        df_ap = pd.DataFrame(params.get_params('aperiodic'),  
-            columns=['offset', 'exponent'])
-
-    # get quality metrics
-    df_ap['r_squared'] = params.get_params('r_squared')
-
-    # initiate combined df
-    df = df_ap.copy()
-    columns = []
-    for ii in range(max_peaks):
-        columns.append([f'cf_{ii}',f'pw_{ii}',f'bw_{ii}'])
-    df_init = pd.DataFrame(columns=np.ravel(columns))
-    df = df.join(df_init)
-
-    # app gaussian params for each peak fouond
-    for i_row in range(len(df)):
-        # check if row had peaks
-        if df.index[ii] in df_per['idx']:
-            # get peak info for row
-            df_ii = df_per.loc[df_per['idx']==i_row].reset_index()
-            # loop through peaks
-            for i_peak in range(len(df_ii)):
-                # add peak info to df
-                for var_str in ['cf','pw','bw']:
-                    df.at[i_row, f'{var_str}_{i_peak}'] = df_ii.at[i_peak, var_str]
-    
-    return df
-
-
 def compute_adj_r2(params):
     """Calculate the adjusted r-squared for an existing SpectralModel.
     
@@ -336,10 +295,7 @@ def compute_intersection(params_0, params_1, return_spectra=False):
     elif len(idx)==1: 
         intersection = params_0.freqs[np.squeeze(idx)]
         intersection_idx = np.squeeze(idx)
-    elif len(idx)==2: 
-        intersection = params_0.freqs[np.max(idx)]
-        intersection_idx = np.max(idx)
-    elif len(idx)==len(params_0.freqs):
+    else: 
         intersection = np.nan
         intersection_idx = np.nan
 
@@ -355,8 +311,8 @@ def compute_intersections(params_0, params_1, return_spectra=False):
 
     Parameters
     ----------
-    params_0, params_1 : SpectralGroupModel
-        SpectralGroupModel objects containing power spectra.
+    params_0, params_1 : SpectralModel or SpectralGroupModel
+        SpectralModel or SpectralGroupModel objects. Must have data.
     return_spectra : bool, optional, default: False
         Whether to return the power spectra.    
 
@@ -370,16 +326,9 @@ def compute_intersections(params_0, params_1, return_spectra=False):
         Power spectra from each model, if requested.
 
     """
-    # imports
-    from specparam import SpectralModel
-
-    # Check inputs
-    if not isinstance(params_0, SpectralModel) or not isinstance(params_1, SpectralModel):
-        raise ValueError('Input must be SpectralModel of SpectralGroupModel objects.')
-    n_chans = len(params_0)
     
     # Run analysis for SpectralModel input
-    if n_chans == 1:
+    if (type(params_0) == SpectralModel) and (type(params_1) == SpectralModel):
         results = compute_intersection(params_0, params_1, return_spectra)
         intersection, intersection_idx = results[:2]
         if return_spectra:
@@ -387,7 +336,7 @@ def compute_intersections(params_0, params_1, return_spectra=False):
             spectra_1 = results[3]
 
     # Run analysis for SpectralGroupModel input
-    elif n_chans > 1:
+    elif (type(params_0) == SpectralGroupModel) and (type(params_1) == SpectralGroupModel):
 
         # check if input is same size
         if len(params_0) != len(params_1):
@@ -421,7 +370,7 @@ def compute_intersections(params_0, params_1, return_spectra=False):
                     spectra_1[i_chan] = [np.nan] * len(params_0.freqs)
                 continue
     else:
-        raise ValueError('Check size of input.')
+        raise ValueError('Input must both be SpectralModel or SpectralGroupModel.')
 
     # return results
     if return_spectra:
@@ -504,43 +453,3 @@ def save_report_sm(sm, file_name, file_path=None, plot_peaks=None, plot_aperiodi
     else:
         plt.close()
 
-
-def print_report_from_group(params, i_model, fname_out, show_fig=False):
-    """
-    Generate and save out a PDF report for a power spectrum model fit within a
-    SpectralGroupModel object.
-
-    Parameters
-    ----------
-    params : SpectralGroupModel
-        Object with results from fitting a group of power spectra.
-    i_model : int
-        Index of the model for which to generate a report.
-    fname_out : str
-        Name to give the saved out file.
-    show_fig : bool, optional, default: False
-        Whether to show the plot. If False, the plot is closed after saving.
-    
-    """
-    # imports
-    from specparam import SpectralGroupModel
-    from specparam.sim.gen import gen_aperiodic, gen_periodic
-
-    # create specparam object and add settings
-    sm = SpectralGroupModel()
-    sm.add_settings(params.get_settings())
-
-    # Copy results for model of interest and additional data needed for plotting
-    sm.add_results(params[i_model])
-    sm.power_spectrum = params.power_spectra[i_model]
-    sm.freq_range = params.freq_range
-    sm.freq_res = params.freq_res
-    sm.freqs = params.freqs
-
-    # generate and perioidc/aperiodic fits from parameters
-    sm._ap_fit = gen_aperiodic(params.freqs, params[i_model].aperiodic_params)
-    sm._peak_fit = gen_periodic(params.freqs, np.ndarray.flatten(params[i_model].gaussian_params))
-    sm.modeled_spectrum_ = sm._ap_fit + sm._peak_fit
-
-    # save report
-    save_report_sm(sm, fname_out, plt_log=True, show_fig=show_fig)
