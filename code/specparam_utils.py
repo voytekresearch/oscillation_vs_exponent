@@ -216,65 +216,6 @@ def params_to_spectrum(params, component='both'):
     return spectrum
 
 
-def params_to_df(params, max_peaks):
-    """
-    Convert SpectralGroupModel object to pandas dataframe.
-
-    Parameters
-    ----------
-    params : SpectralGroupModel object
-        SpectralGroupModel object.
-    max_peaks : int
-        'max_n_peaks' parameter used to fit SpectralGroupModel object.
-
-    Returns
-    -------
-    df : pandas dataframe
-        Pandas dataframe containing aperiodic parameters and gaussian parameters 
-        for each peak.
-    """
-    
-    # imports
-    import pandas as pd
-
-    # get per params
-    df_per = pd.DataFrame(params.get_params('peak'),
-        columns=['cf','pw','bw','idx'])
-
-    # get ap parmas
-    if params.aperiodic_mode == 'knee':
-        df_ap = pd.DataFrame(params.get_params('aperiodic'),  
-            columns=['offset', 'knee', 'exponent'])
-    elif params.aperiodic_mode == 'fixed':
-        df_ap = pd.DataFrame(params.get_params('aperiodic'),  
-            columns=['offset', 'exponent'])
-
-    # get quality metrics
-    df_ap['r_squared'] = params.get_params('r_squared')
-
-    # initiate combined df
-    df = df_ap.copy()
-    columns = []
-    for ii in range(max_peaks):
-        columns.append([f'cf_{ii}',f'pw_{ii}',f'bw_{ii}'])
-    df_init = pd.DataFrame(columns=np.ravel(columns))
-    df = df.join(df_init)
-
-    # app gaussian params for each peak fouond
-    for i_row in range(len(df)):
-        # check if row had peaks
-        if df.index[ii] in df_per['idx']:
-            # get peak info for row
-            df_ii = df_per.loc[df_per['idx']==i_row].reset_index()
-            # loop through peaks
-            for i_peak in range(len(df_ii)):
-                # add peak info to df
-                for var_str in ['cf','pw','bw']:
-                    df.at[i_row, f'{var_str}_{i_peak}'] = df_ii.at[i_peak, var_str]
-    
-    return df
-
-
 def compute_adj_r2(params):
     """Calculate the adjusted r-squared for an existing SpectralModel.
     
