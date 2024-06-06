@@ -289,10 +289,7 @@ def compute_intersection(params_0, params_1, return_spectra=False):
     elif len(idx)==1: 
         intersection = params_0.freqs[np.squeeze(idx)]
         intersection_idx = np.squeeze(idx)
-    elif len(idx)==2: 
-        intersection = params_0.freqs[np.max(idx)]
-        intersection_idx = np.max(idx)
-    elif len(idx)==len(params_0.freqs):
+    else: 
         intersection = np.nan
         intersection_idx = np.nan
 
