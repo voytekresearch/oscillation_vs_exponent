@@ -40,9 +40,10 @@ def compute_adjusted_band_power(params, band, method='mean', log_power=False):
         SpectralGroupModel object. Must contain data (freqs, power_spectra).
     band : list of [float, float]
         Frequency band of interest.
-    **kwargs
-        Additional keyword arguments to pass to compute_band_power, 
-        including "method" and "log_power".
+    method : {'mean', 'max', 'sum'}, optional, default: 'mean'
+        Method to compute band power.
+    log_power : bool, optional, default: False
+        Whether to compute band power on log-transformed power spectra.
     """
     # compute aperiodic component and subtract from spectra
     if type(params) == SpectralModel:
