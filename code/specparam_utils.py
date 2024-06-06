@@ -305,8 +305,8 @@ def compute_intersections(params_0, params_1, return_spectra=False):
 
     Parameters
     ----------
-    params_0, params_1 : SpectralGroupModel
-        SpectralGroupModel objects containing power spectra.
+    params_0, params_1 : SpectralModel or SpectralGroupModel
+        SpectralModel or SpectralGroupModel objects. Must have data.
     return_spectra : bool, optional, default: False
         Whether to return the power spectra.    
 
@@ -320,16 +320,9 @@ def compute_intersections(params_0, params_1, return_spectra=False):
         Power spectra from each model, if requested.
 
     """
-    # imports
-    from specparam import SpectralModel
-
-    # Check inputs
-    if not isinstance(params_0, SpectralModel) or not isinstance(params_1, SpectralModel):
-        raise ValueError('Input must be SpectralModel of SpectralGroupModel objects.')
-    n_chans = len(params_0)
     
     # Run analysis for SpectralModel input
-    if n_chans == 1:
+    if (type(params_0) == SpectralModel) and (type(params_1) == SpectralModel):
         results = compute_intersection(params_0, params_1, return_spectra)
         intersection, intersection_idx = results[:2]
         if return_spectra:
@@ -337,7 +330,7 @@ def compute_intersections(params_0, params_1, return_spectra=False):
             spectra_1 = results[3]
 
     # Run analysis for SpectralGroupModel input
-    elif n_chans > 1:
+    elif (type(params_0) == SpectralGroupModel) and (type(params_1) == SpectralGroupModel):
 
         # check if input is same size
         if len(params_0) != len(params_1):
@@ -371,7 +364,7 @@ def compute_intersections(params_0, params_1, return_spectra=False):
                     spectra_1[i_chan] = [np.nan] * len(params_0.freqs)
                 continue
     else:
-        raise ValueError('Check size of input.')
+        raise ValueError('Input must both be SpectralModel or SpectralGroupModel.')
 
     # return results
     if return_spectra:
