@@ -20,11 +20,11 @@ def compute_band_power(freq, spectra, band, method='mean', log_power=False):
 
     # compute band power
     if method == 'mean':
-        power = np.nanmean(band, axis=1)
+        power = np.nanmean(band, axis=-1)
     elif method == 'max':
-        power = np.nanmax(band, axis=1)
+        power = np.nanmax(band, axis=-1)
     elif method == 'sum':
-        power = np.nansum(band, axis=1)
+        power = np.nansum(band, axis=-1)
 
     return power
 
