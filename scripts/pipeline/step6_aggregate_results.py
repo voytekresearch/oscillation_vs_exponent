@@ -85,8 +85,7 @@ def aggregate_results(chan_info, material, memory, epoch):
         df[band] = power
 
         # add adjusted band power
-        power = compute_adjusted_band_power(data_in['freq'], data_in['spectra'], 
-                                            sp, BANDS[band], 
+        power = compute_adjusted_band_power(sp, BANDS[band], 
                                             method=BAND_POWER_METHOD,
                                             log_power=LOG_POWER)
         df[f"{band}_adj"] = power
