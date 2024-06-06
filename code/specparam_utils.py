@@ -30,7 +30,7 @@ def compute_band_power(freq, spectra, band, method='mean', log_power=False):
     return power
 
 
-def compute_adjusted_band_power(params, band, **kwargs):
+def compute_adjusted_band_power(params, band, method='mean', log_power=False):
     """
     Compute band power for a given band, adjusting for aperiodic component.
 
@@ -47,14 +47,19 @@ def compute_adjusted_band_power(params, band, **kwargs):
     # compute aperiodic component and subtract from spectra
     if type(params) == SpectralModel:
         spec_ap = params_to_spectrum(params, component='aperiodic')
-        spec_adjusted = params.power_spectrum - spec_ap
+        if log_power:
+            spec_adjusted = params.power_spectrum - np.log10(spec_ap)
+        else:
+            spec_adjusted = 10**params.power_spectrum - spec_ap
     elif type(params) == SpectralGroupModel:
         spec_ap = params_to_spectra(params, component='aperiodic')
-        spec_adjusted = params.power_spectra - spec_ap
+        if log_power:
+            spec_adjusted = params.power_spectra - np.log10(spec_ap)
+        else:
+            spec_adjusted = 10**params.power_spectra - spec_ap
 
     # compute band power
-    power = compute_band_power(params.freqs, spec_adjusted, band, 
-                               **kwargs)
+    power = compute_band_power(params.freqs, spec_adjusted, band, method=method)
 
     return power
 
