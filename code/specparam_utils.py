@@ -5,6 +5,7 @@ Utility functions for working with specparam results/objects
 
 # Imports
 import numpy as np
+from specparam import SpectralModel, SpectralGroupModel
 
 
 def compute_band_power(freq, spectra, band, method='mean', log_power=False):
@@ -29,20 +30,31 @@ def compute_band_power(freq, spectra, band, method='mean', log_power=False):
     return power
 
 
-def compute_adjusted_band_power(freq, spectra, params, band, **kwargs):
-    # account for freq[0] = 0 Hz
-    if freq[0] == 0:
-        freq = freq[1:]
-        spectra = spectra[:, 1:]
+def compute_adjusted_band_power(params, band, **kwargs):
+    """
+    Compute band power for a given band, adjusting for aperiodic component.
 
+    Parameters
+    ----------
+    params : SpectralGroupModel object
+        SpectralGroupModel object. Must contain data (freqs, power_spectra).
+    band : list of [float, float]
+        Frequency band of interest.
+    **kwargs
+        Additional keyword arguments to pass to compute_band_power, 
+        including "method" and "log_power".
+    """
     # compute aperiodic component and subtract from spectra
-    spectra_ap = params_to_spectra(params, component='aperiodic')
-    freq_mask = np.logical_and(freq >= params.freqs[0], freq <= params.freqs[-1])
-    spectra_adjusted = spectra[:, freq_mask] - spectra_ap
+    if type(params) == SpectralModel:
+        spec_ap = params_to_spectrum(params, component='aperiodic')
+        spec_adjusted = params.power_spectrum - spec_ap
+    elif type(params) == SpectralGroupModel:
+        spec_ap = params_to_spectra(params, component='aperiodic')
+        spec_adjusted = params.power_spectra - spec_ap
 
     # compute band power
-    power = compute_band_power(freq[freq_mask], spectra_adjusted, band, 
-                               **kwargs) 
+    power = compute_band_power(params.freqs, spec_adjusted, band, 
+                               **kwargs)
 
     return power
 
