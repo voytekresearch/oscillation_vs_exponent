@@ -76,9 +76,9 @@ def hierarchical_bootstrap(df, variable, condition, level_1, level_2,
     df_pivot['difference'] = df_pivot[conditions[1]] - df_pivot[conditions[0]]
     true_mean = np.nanmean(df_pivot['difference'])
 
-    # print results    
+    # print results
     if verbose:
-        _print_results(p_value, sign, true_mean, n_iterations, conditions)
+        _print_results(p_value, true_mean, n_iterations, conditions)
 
     # plot results
     if plot:
@@ -264,8 +264,7 @@ def _plot_results(df, variable, condition, level_1, level_2, distribution):
     ax1.legend()
 
 
-def _print_results(p_value, sign, true_mean, n_iterations, conditions):
-
+def _print_results(p_value, true_mean, n_iterations, conditions):
     # print p-value
     if p_value==0:
         print(f"p-value: <{1/n_iterations}")
@@ -279,7 +278,9 @@ def _print_results(p_value, sign, true_mean, n_iterations, conditions):
     print(f"True mean difference: {true_mean:.2f}")
     
     # print condition comparison statement
-    if sign == 1:
+    if true_mean > 0:
         print(f"Condition '{conditions[1]}' > '{conditions[0]}'")
+    elif true_mean < 0:
+        print(f"Condition '{conditions[0]}' > '{conditions[1]}'")
     else:
-        print(f"Condition '{conditions[0]}' < '{conditions[1]}'")
+        print(f"Conditions '{conditions[0]}' and '{conditions[1]}' are equal")
