@@ -58,11 +58,17 @@ def main():
             
             # run bootstrap
             for feature in FEATURES:
+                print(f'\nFeature: {feature}')
+                start_time_f = get_start_time()
+
                 stats = hb(df_cond, feature, 'epoch', 'patient', 'chan_idx', 
                            n_iterations=N_ITERATIONS, verbose=False, plot=False)
                 data = np.array([[material, memory, feature, stats[0]]])
                 results_i = pd.DataFrame(data, index=[0], columns=columns)
                 results = pd.concat([results, results_i], ignore_index=True)
+
+                # display progress
+                print_time_elapsed(start_time_f)             
 
             # display progress
             print_time_elapsed(start_time_c)

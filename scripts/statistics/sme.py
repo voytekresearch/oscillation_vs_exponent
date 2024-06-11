@@ -55,6 +55,9 @@ def main():
         
         # run bootstrap for each feature
         for feature in FEATURES:
+            # display progress
+            print(f'\nFeature: {feature}')
+            start_time_f = get_start_time()
 
             # compute difference between baseline and encoding
             df_f = df_cond.pivot_table(index=['patient','chan_idx','memory'], 
@@ -67,7 +70,10 @@ def main():
             data = np.array([[material, feature, stats[0]]])
             results_i = pd.DataFrame(data, index=[0], columns=columns)
             results = pd.concat([results, results_i], ignore_index=True)
-            print(results_i)
+
+            # display progress
+            print(f"p-value: {stats[0]}")
+            print_time_elapsed(start_time_f)  
 
         # display progress
         print_time_elapsed(start_time_c)
