@@ -18,13 +18,10 @@ from specparam.bands import Bands
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from settings import AP_MODE, BANDS
+from settings import AP_MODE, BANDS, BAND_POWER_METHOD, LOG_POWER
 from specparam_utils import (compute_adj_r2, compute_band_power, 
                              compute_adjusted_band_power)
 
-# settings
-BAND_POWER_METHOD = 'mean'
-LOG_POWER = True
 
 def main():
     # id directories

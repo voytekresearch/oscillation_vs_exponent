@@ -38,3 +38,7 @@ COLORS = {
     "blue"          :   np.array([1,133,113]) / 255,
     "light_blue"    :   np.array([128,205,193]) / 255,
 }
+
+# band power settings
+BAND_POWER_METHOD = 'mean'
+LOG_POWER = True
