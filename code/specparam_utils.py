@@ -9,11 +9,37 @@ from specparam import SpectralModel, SpectralGroupModel
 
 
 def compute_band_power(freq, spectra, band, method='mean', log_power=False):
+    """
+    Compute band power for a given band.
+
+    Parameters
+    ----------
+    freq : 1d array
+        Frequency values.
+    spectra : 1d or 2d array
+        Power spectra.
+    band : list of [float, float]
+        Frequency band of interest. [f_low, f_high]
+    method : {'mean', 'max', 'sum'}, optional, default: 'mean'
+        Method to compute band power.
+    log_power : bool, optional, default: False
+        Whether to compute band power on log-transformed power spectra.
+
+    Returns
+    -------
+    power : 1d array
+        Band power values.    
+    """
+
     # imports
     from specparam.utils import trim_spectrum
 
     # get band of interest
     _, band = trim_spectrum(freq, spectra, band)
+
+    # check if band is all nan or empty
+    if np.all(np.isnan(band)) or not band.any():
+        return np.nan
 
     # log-transform power
     if log_power:
