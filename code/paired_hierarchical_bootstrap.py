@@ -258,7 +258,7 @@ def _plot_results(df, variable, condition, level_1, level_2, distribution):
     ax1.hist(distribution, color='k', alpha=0.5)
     ax1.axvline(np.nanmean(distribution), color='r', label='mean')
     ax1.axvline(0, color='k', linestyle='--', label='null')
-    ax1.set_xlabel(variable)
+    ax1.set_xlabel(f"\u0394 {variable}")
     ax1.set_ylabel('count')
     ax1.set_title('Resampled distribution')
     ax1.legend()
