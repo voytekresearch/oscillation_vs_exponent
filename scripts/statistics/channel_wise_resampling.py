@@ -1,4 +1,6 @@
 """
+This script has been depricated ebcause of computational inefficiency.
+
 The script applies permutation testing to evaluate the significance of the 
 spectral parameterization results from 4_spectral_parameterization.py.
 
