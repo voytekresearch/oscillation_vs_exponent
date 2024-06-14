@@ -24,7 +24,7 @@ from settings import COLORS
 
 # plotting setting
 plt.style.use('mplstyle/default.mplstyle')
-FIG_SIZE = (7.5, 2)
+FIG_SIZE = (6.5, 2)
 
 # Set PSD simulation parameters
 FREQ_RANGE = [1, 100] # frequency range for simulated power spectra
@@ -101,8 +101,8 @@ def plot_2_spectra(spectrum_0, spectrum_1, freqs, labels=['0', '1'],
         _, ax = plt.subplots()
     
     # plot spectra
-    ax.loglog(freqs, spectrum_0, label=labels[0], color=COLORS['light_brown'])
-    ax.loglog(freqs, spectrum_1, label=labels[1], color=COLORS['brown'])
+    ax.loglog(freqs, spectrum_0, label=labels[0], color=COLORS['light_blue'])
+    ax.loglog(freqs, spectrum_1, label=labels[1], color=COLORS['blue'])
     
     # label
     ax.set(xlabel='Frequency (Hz)', ylabel='Power (\u03BCV\u00b2/Hz)')
