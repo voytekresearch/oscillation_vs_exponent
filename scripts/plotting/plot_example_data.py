@@ -24,7 +24,8 @@ from info import MATERIALS
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
-FIGSIZE = [7.5, 2]
+FIGSIZE = [6.5, 2]
+color = 'blue'
 
 # settings - example data to visualize
 PATIENT = 'pat11'
@@ -109,8 +110,8 @@ def main():
     for trial, ax in zip(trials, axes):
         # plot
         ax.plot(time[mask_b], signal[trial, mask_b], 
-                color=COLORS['light_brown'], linewidth=1)
-        ax.plot(time[mask_e], signal[trial, mask_e],  color=COLORS['brown'], 
+                color=COLORS[f'light_{color}'], linewidth=1)
+        ax.plot(time[mask_e], signal[trial, mask_e], color=COLORS[color], 
                 linewidth=1)
 
     # remove cluttered axes, ticks, and spines
@@ -129,20 +130,20 @@ def main():
     ax2b = fig.add_subplot(gs2b[0,0])
 
     # Plot spectra
-    ax2b.loglog(freq, np.nanmean(psd_pre_all, 0), color=COLORS['light_brown'], 
+    ax2b.loglog(freq, np.nanmean(psd_pre_all, 0), color=COLORS[f'light_{color}'], 
                 label='Baseline')
-    ax2b.loglog(freq, np.nanmean(psd_post_all, 0), color=COLORS['brown'], 
+    ax2b.loglog(freq, np.nanmean(psd_post_all, 0), color=COLORS[color], 
                 label='Encoding')
     ax2b.set_xlim(FREQ_RANGE)
 
     # plot 95% confidence intrval
     ax2b.fill_between(freq, conf_pre[0], conf_pre[1], 
-                      color=COLORS['light_brown'], alpha=0.5)
-    ax2b.fill_between(freq, conf_post[0], conf_post[1], color=COLORS['brown'], 
+                      color=COLORS[f'light_{color}'], alpha=0.5)
+    ax2b.fill_between(freq, conf_post[0], conf_post[1], color=COLORS[color], 
                       alpha=0.5)
 
     # plot intersection frequnency
-    ax2b.scatter(f_rotation, np.nanmean(psd_pre_all, 0)[idx_rotation], s=64, 
+    ax2b.scatter(f_rotation, np.nanmean(psd_pre_all, 0)[idx_rotation], s=32, 
                  color='k', zorder=5, label='Intersection')
 
     # subplot 2 - label
