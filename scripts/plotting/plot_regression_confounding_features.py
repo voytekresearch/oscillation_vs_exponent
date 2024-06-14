@@ -9,6 +9,7 @@ import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import ttest_rel
 
 # Imports - custom
 import sys
@@ -20,7 +21,7 @@ from settings import COLORS
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
-FIGSIZE = [7.5, 4]
+FIGSIZE = [6.5, 4]
 
 
 def main():
@@ -29,9 +30,11 @@ def main():
     t_start = get_start_time()
 
     # identify / create directories
-    dir_output = f"{PROJECT_PATH}/figures/main_figures"
-    if not os.path.exists(dir_output): 
-        os.makedirs(f"{dir_output}")
+    dir_figure = f"{PROJECT_PATH}/figures/main_figures"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_stats"
+    for path in [dir_figure, dir_output]:
+        if not os.path.exists(path): 
+            os.makedirs(path)
 
     # load speactral results
     df = load_params()
@@ -44,7 +47,7 @@ def main():
         results_i = run_ols(df, feature)
         results[feature] = results_i
 
-        # bootstrap OLS
+        # cross-validate OLS
         for patient in PATIENTS:
             results_i = run_ols(df.loc[df['patient']!=patient], feature)
             df_ols_list.append(pd.DataFrame({
@@ -53,6 +56,21 @@ def main():
                                             'rsquared'  :   results_i.rsquared},
                                             index=[0]))
     df_ols = pd.concat(df_ols_list, axis=0).reset_index(drop=True)
+    df_ols.to_csv(f"{dir_output}/confounding_features_ols.csv")
+
+    # run t-test on cross-validation R-squared values and print results
+    sig = {}
+    for feature in ['alpha', 'gamma']:
+        r2_total = df_ols.loc[df_ols['feature']==feature, 'rsquared'].values
+        r2_adj = df_ols.loc[df_ols['feature']==f"{feature}_adj", 'rsquared'].values
+        t, p = ttest_rel(r2_total, r2_adj)
+        sig[feature] = p < .05
+        print(f"\n{feature} cross-validation t-test results:")
+        print(f"\tT-statistic: {t:.3f}")
+        if p < .001:
+            print(f"\tp-value: {p:.1e}")
+        else:
+            print(f"\tp-value: {p:.3f}")
 
     # print results
     for feature in ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']:
@@ -68,8 +86,8 @@ def main():
     # create figure
     fig, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=FIGSIZE,
                                             constrained_layout=True)
-    ax1.set_title('Total power v. exponent')
-    ax2.set_title('Adjusted power v. exponent')
+    ax1.set_title('Total power v. exp.')
+    ax2.set_title('Adjusted power v. exp.')
     ax3.set_title('R-squared')
 
     # plot scatter and regression results
@@ -84,15 +102,15 @@ def main():
         ax.axhline(0, color='grey', linestyle='--', linewidth=1)
 
     # label axes 
-    ax1.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ total alpha')
-    ax2.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ adjusted alpha')
+    ax1.set(xlabel='', ylabel='$\Delta$ total alpha')
+    ax2.set(xlabel='', ylabel='$\Delta$ adjusted alpha')
     ax4.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ total gamma')
     ax5.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ adjusted gamma')
 
     # plot R-squared
     for feature, ax, color in zip(['alpha', 'gamma'], 
-                                  [ax3, ax6], 
-                                  ['brown', 'blue']):
+                                       [ax3, ax6], 
+                                       ['brown', 'blue']):
         plotting_params = {
             'data':    df_ols.loc[((df_ols['feature']==feature) |
                                     (df_ols['feature']==f"{feature}_adj"))],
@@ -103,36 +121,42 @@ def main():
                    f"{feature}_adj": COLORS[f'light_{color}']}
         sns.violinplot(**plotting_params, ax=ax, palette=palette)
         sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=3)
-        ax.set(xlabel='regressor', ylabel='R-squared')
-        ax.set_xticklabels(['total power','adjusted power'])
+        ax.set_ylabel('R-squared')
+        ax.set_xticklabels(['total\npower','adjusted\npower'])
+        if sig[feature]:
+            ax.text(0.5, 0.9, '*', transform=ax.transAxes, fontsize=12, 
+                    verticalalignment='center', horizontalalignment='center')
+    ax3.set_xlabel('')
+    ax6.set_xlabel('regressor')
 
     # save figure
-    plt.savefig(f"{dir_output}/regress_confounding_features.png")
+    plt.savefig(f"{dir_figure}/regress_confounding_features.png")
 
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
 
 
-def draw_regression_results(ax, x_data, results):
+def draw_regression_results(ax, x_data, results, add_text=False):
     # regression results
     x = np.array([np.nanmin(x_data), np.nanmax(x_data)])
     y = x * results.params[1] + results.params[0]
     
-    # design text based on values
-    if results.f_pvalue < .001:
-        str_p = f"{results.f_pvalue:.1e}"
-    else:
-        str_p = f"{results.f_pvalue:.3f}"
-    if results.rsquared < .001:
-        str_r2 = "<0.001" #"$<e^{-3}$"
-    else:
-        str_r2 = f"{results.rsquared:.3f}"            
-    s = "$\it{R^{2}}$: " + f"{str_r2}" + "\n$\it{p}$:   " + f"{str_p}"
-        
     # plot
     ax.plot(x, y, color='k')
-    ax.text(0.8,0.1, s, transform=ax.transAxes, bbox=dict(facecolor='w'), fontsize=10)
+
+    # add text
+    if add_text:
+        if results.f_pvalue < .001:
+            str_p = f"{results.f_pvalue:.1e}"
+        else:
+            str_p = f"{results.f_pvalue:.3f}"
+        if results.rsquared < .001:
+            str_r2 = "<0.001" #"$<e^{-3}$"
+        else:
+            str_r2 = f"{results.rsquared:.3f}"            
+        s = "$\it{R^{2}}$: " + f"{str_r2}" + "\n$\it{p}$:   " + f"{str_p}"
+        ax.text(0.8,0.1, s, transform=ax.transAxes, bbox=dict(facecolor='w'), fontsize=10)
 
     return ax
 
