@@ -39,7 +39,10 @@ def compute_band_power(freq, spectra, band, method='mean', log_power=False):
 
     # check if band is all nan or empty
     if np.all(np.isnan(band)) or not band.any():
-        return np.nan
+        if spectra.ndim == 1:
+            return np.nan
+        else:
+            return np.full(spectra.shape[0], np.nan)
 
     # log-transform power
     if log_power:
