@@ -14,13 +14,13 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from info import MATERIALS, MEMORY
+from info import MATERIALS
 from plots import plot_spectra_2conditions
 from settings import COLORS, FREQ_RANGE
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
-FIGSIZE = [5, 2]
+FIGSIZE = [4, 2]
 
 
 def main():
@@ -31,11 +31,17 @@ def main():
 
     # make directory for output figures
     dir_fig = f"{PROJECT_PATH}/figures/group_spectra"
-    if not os.path.exists(f"{dir_fig}"): 
-        os.makedirs(f"{dir_fig}")
+    dir_fig_ = f"{PROJECT_PATH}/figures/main_figures"
+    for path in [dir_fig, dir_fig_]:
+        if not os.path.exists(path): 
+            os.makedirs(path)
 
+    # plot for each feature
     for feature in ['alpha', 'gamma', 'all', 'any']:
         plot_group_spectra(stats, feature, dir_fig)
+
+    # plot main figure
+    plot_group_spectra(stats, 'all', dir_fig_)
 
 
 def plot_group_spectra(stats, feature, dir):
