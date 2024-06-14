@@ -33,7 +33,7 @@ def main():
         print(f"Plotting {feature} modulated channels...")
 
         # set/make directory for output figures
-        dir_fig = f"{PROJECT_PATH}/figures/sig_chans_overlap/{feature}"
+        dir_fig = f"{PROJECT_PATH}/figures/sig_chans_spatial/sig_chans_overlap/{feature}"
         if not os.path.exists(f"{dir_fig}"): 
             os.makedirs(f"{dir_fig}")
 
@@ -68,7 +68,7 @@ def main():
 
         # combine hemispheres and views into a single figure and save
         print("Combining hemispheres and views ")
-        fname_out = f"{PROJECT_PATH}/figures/sig_chans_overlap/sig_chan_overlap_{feature}.png"
+        fname_out = f"{PROJECT_PATH}/figures/sig_chans_spatial/sig_chans_overlap/sig_chan_overlap_{feature}.png"
         combine_images(dir_fig, fname_out)
 
         # print results
