@@ -65,7 +65,7 @@ def main():
 
     # plot spectra
     plot_spectra_2conditions(spectra_pre, spectra_post, freq, ax=ax1,
-                                color=[COLORS['light_blue'], COLORS['blue']],
+                                color=['grey', 'k'],
                                 shade_sem=False)
     ax1.set_title('Grand average')
     ax1.set_xlim(FREQ_RANGE)
