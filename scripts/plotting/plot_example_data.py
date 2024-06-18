@@ -110,9 +110,8 @@ def main():
     for trial, ax in zip(trials, axes):
         # plot
         ax.plot(time[mask_b], signal[trial, mask_b], 
-                color=COLORS[f'light_{color}'], linewidth=1)
-        ax.plot(time[mask_e], signal[trial, mask_e], color=COLORS[color], 
-                linewidth=1)
+                color='k', linewidth=1)
+        ax.plot(time[mask_e], signal[trial, mask_e], 'k', linewidth=1)
 
     # remove cluttered axes, ticks, and spines
     ax4.axes.yaxis.set_ticks([])

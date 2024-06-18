@@ -84,7 +84,7 @@ def main():
     ax2.set_title('Intersection')
     # bin_edges = np.linspace(0, 100, 11)
     # ax2.hist(f_intersection, bins=bin_edges, color=COLORS['brown'])
-    ax2.hist(f_intersection, color=COLORS['blue'])
+    ax2.hist(f_intersection, color='grey')
     ax2.set_xlabel('frequency (Hz)')
     ax2.set_ylabel('electrode count')
     ax2.axvline(np.nanmedian(f_intersection), color='k', linestyle='--')

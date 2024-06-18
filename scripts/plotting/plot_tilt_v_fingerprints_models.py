@@ -20,7 +20,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from info import FELLNER_BANDS as BANDS
-from settings import COLORS
+from settings import BCOLORS
 
 # plotting setting
 plt.style.use('mplstyle/default.mplstyle')
@@ -75,7 +75,7 @@ def main():
     # shade oscillation bands
     for band in ['alpha', 'gamma']:
         for ax in [ax0, ax1, ax2]:
-            ax.axvspan(BANDS[band][0], BANDS[band][1], facecolor='grey', 
+            ax.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band], 
                        alpha=0.4)
             
     # annotate rotation frequency
@@ -101,8 +101,8 @@ def plot_2_spectra(spectrum_0, spectrum_1, freqs, labels=['0', '1'],
         _, ax = plt.subplots()
     
     # plot spectra
-    ax.loglog(freqs, spectrum_0, label=labels[0], color=COLORS['light_blue'])
-    ax.loglog(freqs, spectrum_1, label=labels[1], color=COLORS['blue'])
+    ax.loglog(freqs, spectrum_0, label=labels[0], color='grey')
+    ax.loglog(freqs, spectrum_1, label=labels[1], color='k')
     
     # label
     ax.set(xlabel='Frequency (Hz)', ylabel='Power (\u03BCV\u00b2/Hz)')
