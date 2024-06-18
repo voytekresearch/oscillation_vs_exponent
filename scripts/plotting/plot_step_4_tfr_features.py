@@ -34,9 +34,10 @@ LOG_POWER = True # log-transform power
 METHOD = 'mean' # method for computing band power
 
 # settings - figure
+plt.style.use('mplstyle/default.mplstyle')
 FIGSIZE = (6.5, 4)
-X_LIMITS = [-0.25, 1.0] # for time-series plots
-Y_LIMITS = [[-3, 3], [-2, 2]] # [[electrode], [group]]
+X_LIMITS = [-0.5, 1.0] # for time-series plots
+Y_LIMITS = [[-4, 4], [-2.5, 2.5]] # [[electrode], [group]]
 
 
 def main():
@@ -50,7 +51,7 @@ def main():
         os.makedirs(f"{dir_output}")
 
     # create figure
-    fig, axes = plt.subplots(2, 4, figsize=FIGSIZE, constrained_layout=True)
+    fig, axes = plt.subplots(2, 3, figsize=FIGSIZE, constrained_layout=True)
 
     # Plot single-electrode TFR ================================================
     fname = f'{PATIENT}_{MATERIAL}_hit_chan{CHANNEL}_tfr.npz'
@@ -59,7 +60,7 @@ def main():
     tfr, freq, time = trim_tfr(tfr_mean, data_in['freq'], data_in['time'], 
                                 freq_range=FREQ_RANGE, time_range=X_LIMITS)
     plot_evoked_tfr(tfr, freq, time, fig=fig, ax=axes[0,0], annotate_zero=True, 
-                    cbar_label='power (z-score)', title='Single electrode')
+                    cbar_label='power (au)', title='Single electrode')
     
     # Plot single-electrode time-series ========================================
     # load SpecParam results
@@ -187,28 +188,20 @@ def main():
     # label and adjust plots ===================================================
     for row in [0, 1]:
         # set title
-        axes[row, 1].set_title('Total power')
-        axes[row, 2].set_title('Adjusted power')
+        axes[row, 1].set_ylabel('total power (au)')
+        axes[row, 2].set_ylabel('adjusted power (au)')
 
-        # set y labels
         for ax in axes[row, 1:3]:
-            ax.set_ylabel('power (z-score)')
+            # set y labels and limits
+            ax.set_ylim(Y_LIMITS[row])
             
-        # set x labels and limits
-        for ax in axes[row, 1:3]:
+            # set x labels and limits
             ax.axhline(0, color='k', linestyle='--')
             ax.axvline(0, color='k', linestyle='--')
             ax.set_xlim(X_LIMITS)
 
-        # adjust y limits
-        for ax in axes[row, 1:3]:
-            ax.set_ylim(Y_LIMITS[row])
-
-    # add legend
-    handles, labels = axes[1,2].get_legend_handles_labels()
-    axes[0,3].axis('off')
-    axes[1,3].axis('off')
-    axes[0,3].legend(handles, labels, loc='center')
+            # add legend
+            ax.legend(loc='upper left')
 
     # save figure
     fig.savefig(f"{dir_output}/tfr_features.png")
