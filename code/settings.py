@@ -41,8 +41,8 @@ COLORS = {
 
 BCOLORS = {
     "alpha"     :   np.array([117,112,179]) / 255,
-    "gamma"    :   np.array([231,41,138]) / 255,
-    "exponent"    :   np.array([102,166,30]) / 255,
+    "gamma"     :   np.array([102,166,30]) / 255,
+    "exponent"  :   np.array([231,41,138]) / 255,
 }
 
 # band power settings
