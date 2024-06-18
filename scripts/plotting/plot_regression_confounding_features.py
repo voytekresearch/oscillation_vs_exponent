@@ -17,7 +17,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
 from info import PATIENTS
-from settings import COLORS
+from settings import BCOLORS
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
@@ -86,46 +86,47 @@ def main():
     # create figure
     fig, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=FIGSIZE,
                                             constrained_layout=True)
-    ax1.set_title('Total power v. exp.')
-    ax2.set_title('Adjusted power v. exp.')
+    ax2.sharey(ax1)
+    ax5.sharey(ax4)
+    ax4.sharex(ax1)
+    ax5.sharex(ax2)
+    
+    # set titles
+    ax1.set_title('Total power')
+    ax2.set_title('Adjusted power')
     ax3.set_title('R-squared')
 
     # plot scatter and regression results
     features = ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']
-    colors = ['brown', 'light_brown', 'blue', 'light_blue']
-    for ax, feature, color in zip([ax1, ax2, ax4, ax5], features, colors):
+    for ax, feature in zip([ax1, ax2, ax4, ax5], features):
         df.plot.scatter(y=f"{feature}_diff", x='exponent_diff', ax=ax, 
-                        color=COLORS[color], s=2)
+                        color=BCOLORS[feature.split('_')[0]], s=2)
         draw_regression_results(ax, df['exponent_diff'].values, 
                                 results[f'{feature}'])
         ax.axvline(0, color='grey', linestyle='--', linewidth=1)
         ax.axhline(0, color='grey', linestyle='--', linewidth=1)
 
     # label axes 
-    ax1.set(xlabel='', ylabel='$\Delta$ total alpha')
-    ax2.set(xlabel='', ylabel='$\Delta$ adjusted alpha')
-    ax4.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ total gamma')
-    ax5.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ adjusted gamma')
-
+    ax1.set(ylabel='$\Delta$ alpha')
+    ax4.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ gamma')
+    ax5.set(xlabel='$\Delta$ exponent')
+    
     # plot R-squared
-    for feature, ax, color in zip(['alpha', 'gamma'], 
-                                       [ax3, ax6], 
-                                       ['brown', 'blue']):
+    for feature, ax in zip(['alpha', 'gamma'], 
+                                       [ax3, ax6]):
         plotting_params = {
             'data':    df_ols.loc[((df_ols['feature']==feature) |
                                     (df_ols['feature']==f"{feature}_adj"))],
             'x':       'feature',
             'y':       'rsquared',
         }
-        palette = {feature: COLORS[color], 
-                   f"{feature}_adj": COLORS[f'light_{color}']}
-        sns.violinplot(**plotting_params, ax=ax, palette=palette)
+        sns.boxplot(**plotting_params, ax=ax, color=BCOLORS[feature])
         sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=3)
         ax.set_ylabel('R-squared')
         ax.set_xticklabels(['total\npower','adjusted\npower'])
-        if sig[feature]:
-            ax.text(0.5, 0.9, '*', transform=ax.transAxes, fontsize=12, 
-                    verticalalignment='center', horizontalalignment='center')
+        # if sig[feature]:
+        #     ax.text(0.5, 0.5, '*', transform=ax.transAxes, fontsize=12, 
+        #             verticalalignment='center', horizontalalignment='center')
     ax3.set_xlabel('')
     ax6.set_xlabel('regressor')
 
@@ -137,7 +138,7 @@ def main():
     print_time_elapsed(t_start)
 
 
-def draw_regression_results(ax, x_data, results, add_text=False):
+def draw_regression_results(ax, x_data, results, add_text=True):
     # regression results
     x = np.array([np.nanmin(x_data), np.nanmax(x_data)])
     y = x * results.params[1] + results.params[0]
@@ -156,7 +157,8 @@ def draw_regression_results(ax, x_data, results, add_text=False):
         else:
             str_r2 = f"{results.rsquared:.3f}"            
         s = "$\it{R^{2}}$: " + f"{str_r2}" + "\n$\it{p}$:   " + f"{str_p}"
-        ax.text(0.8,0.1, s, transform=ax.transAxes, bbox=dict(facecolor='w'), fontsize=10)
+        ax.text(0.02, 0.78, f"r = {str_r2}\np = {str_p}",
+                transform=ax.transAxes)
 
     return ax
 
