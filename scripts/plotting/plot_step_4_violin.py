@@ -26,7 +26,7 @@ from specparam_utils import knee_freq
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
-FIGSIZE = [4, 6]
+FIGSIZE = [3.25, 4]
 ALPHA = 0.05 # significance level
 FEATURES = ['offset', 'knee', 'exponent', 'alpha', 'alpha_adj', 'gamma',
             'gamma_adj']
@@ -92,7 +92,7 @@ def plot_contrasts_violin(params, stats, y_var, title='', y_label=None, fname_ou
     image = np.concatenate([img_0[:, :idx_mid], img_1[:, idx_mid:]], axis=1)
 
     # plot combined image
-    fig, ax = plt.subplots(1,1)
+    fig, ax = plt.subplots(figsize=FIGSIZE)
     ax.imshow(image)
     ax.axis('off')
 
@@ -176,7 +176,7 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
         ax.hist(diff, bins=bins, color='grey', label=material)
         ax.set(xlim=[-max_val, max_val])
         ax.set_xlabel(f"$\Delta$ {y_label}")
-        ax.set_ylabel('channel count')
+        # ax.set_ylabel('channel count')
         ax.axvline(0, color='k')
         ax.axvline(np.nanmean(diff), color='r', linestyle='--')
 
@@ -184,17 +184,20 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
         pval = stats.loc[((stats['material']==material) & 
                     (stats['feature']==y_var)), 'p'].values
         if len(pval) == 1:
-            if pval < ALPHA:
-                ax.text(0.05, 0.9, f"*p={pval[0]:.3f}", transform=ax.transAxes)
+            if pval < 0.001:
+                ax.text(0.55, 0.85, f"*p<0.001", transform=ax.transAxes)
+            elif pval < ALPHA:
+                ax.text(0.55, 0.85, f"*p={pval[0]:.3f}", transform=ax.transAxes)
             else:
-                ax.text(0.05, 0.9, f"p={pval[0]:.3f}", transform=ax.transAxes)
+                ax.text(0.55, 0.85, f"p={pval[0]:.3f}", transform=ax.transAxes)
         else:
             print(f"Warning: missing or multiple p-values for '{y_var}' in {material} block")
 
     # adjust axis labels
-    ax2l.set_ylim([0, ax2l.get_ylim()[1]+1])
+    # ax2l.set_ylim([0, ax2l.get_ylim()[1]+1])
+    ax2l.set_ylabel('channel count')
     ax2r.sharey(ax2l)
-    for ax in [ax1, ax2l, ax2r]:
+    for ax in [ax1, ax2l]:
         ax.yaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
 
     # save figure
