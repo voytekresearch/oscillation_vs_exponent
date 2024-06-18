@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from specparam import SpectralGroupModel
+from specparam.utils import trim_spectrum
 from scipy import stats
 
 # Imports - custom
@@ -19,8 +20,9 @@ from utils import get_start_time, print_time_elapsed, confidence_interval
 from tfr_utils import trim_tfr, subtract_baseline
 from tfr_utils import zscore_tfr as zscore
 from plots import plot_evoked_tfr
-from settings import BANDS, AP_MODE, FREQ_RANGE
-from specparam_utils import compute_band_power, compute_adjusted_band_power
+from settings import BANDS, AP_MODE, FREQ_RANGE, BCOLORS
+from specparam_utils import compute_band_power
+from specparam_utils import _compute_adjusted_band_power as compute_adjusted_band_power
 
 # settings - example data to plot
 PATIENT = 'pat11'
@@ -29,10 +31,10 @@ CHANNEL = 34
 
 # settings - analysis
 LOG_POWER = True # log-transform power
-METHOD = 'sum' # method for computing band power
+METHOD = 'mean' # method for computing band power
 
 # settings - figure
-FIGSIZE = (10, 4)
+FIGSIZE = (6.5, 4)
 X_LIMITS = [-0.25, 1.0] # for time-series plots
 Y_LIMITS = [[-3, 3], [-2, 2]] # [[electrode], [group]]
 
@@ -76,7 +78,8 @@ def main():
     for band, f_range in BANDS.items():
         power[band] = compute_band_power(data_in['freq'], tfr.T, f_range, 
                                          method=METHOD, log_power=LOG_POWER)
-        power_adj[band] = compute_adjusted_band_power(data_in['freq'], tfr.T, 
+        freq, spectra = trim_spectrum(data_in['freq'], tfr.T, FREQ_RANGE)
+        power_adj[band] = compute_adjusted_band_power(freq, spectra, 
                                                       sm, f_range, 
                                                       method=METHOD, 
                                                       log_power=LOG_POWER)
@@ -87,13 +90,13 @@ def main():
             ts = stats.zscore(pow[band], nan_policy='omit')
             ts = np.squeeze(subtract_baseline(ts[np.newaxis, :], time, 
                                               t_baseline=[X_LIMITS[0], 0]))
-            ax.plot(time, ts, label=band)
+            ax.plot(time, ts, label=band, color=BCOLORS[band])
 
     # plot exponent (after z-scoreing and subtracting baseline)
     exponent = stats.zscore(exponent, nan_policy='omit')
     exponent = np.squeeze(subtract_baseline(exponent[np.newaxis,:], time, 
                                             t_baseline=[X_LIMITS[0], 0]))
-    axes[0,2].plot(time, exponent, label='exponent')
+    axes[0,2].plot(time, exponent, label='exponent', color=BCOLORS['exponent'])
 
     # # Plot group TFR ===========================================================
     # load stats
@@ -143,7 +146,9 @@ def main():
                 temp = compute_band_power(data_in['freq'], tfr.T, f_range, 
                                           method=METHOD, log_power=LOG_POWER)
                 power[band].append(temp)
-                temp = compute_adjusted_band_power(data_in['freq'], tfr.T, sm, 
+                
+                freq, spectra = trim_spectrum(data_in['freq'], tfr.T, FREQ_RANGE)
+                temp = compute_adjusted_band_power(freq, spectra, sm, 
                                                    f_range, method=METHOD, 
                                                    log_power=LOG_POWER)
                 power_adj[band].append(temp)
@@ -169,15 +174,15 @@ def main():
     for pow, ax in zip([power, power_adj], [axes[1,1], axes[1,2]]):
         for band in BANDS.keys():
             ci = confidence_interval(pow[band])
-            ax.plot(time, np.nanmean(pow[band], axis=0), label=band)
-            ax.fill_between(time, ci[0], ci[1], alpha=0.2)
+            ax.plot(time, np.nanmean(pow[band], axis=0), label=band, color=BCOLORS[band])
+            ax.fill_between(time, ci[0], ci[1], alpha=0.2, color=BCOLORS[band])
 
     # plot exponent (after z-scoreing and subtracting baseline)
     exponent = subtract_baseline(zscore(np.array(exp_list)), time, 
                                  t_baseline=[X_LIMITS[0], 0])
     ci = confidence_interval(exponent)
-    axes[1,2].plot(time, np.nanmean(exponent, axis=0), label='exponent')
-    axes[1,2].fill_between(time, ci[0], ci[1], alpha=0.2)
+    axes[1,2].plot(time, np.nanmean(exponent, axis=0), label='exponent', color=BCOLORS['exponent'])
+    axes[1,2].fill_between(time, ci[0], ci[1], alpha=0.2, color=BCOLORS['exponent'])
 
     # label and adjust plots ===================================================
     for row in [0, 1]:
@@ -206,7 +211,7 @@ def main():
     axes[0,3].legend(handles, labels, loc='center')
 
     # save figure
-    fig.savefig(f"{dir_output}/tfr_features.png", dpi=300)
+    fig.savefig(f"{dir_output}/tfr_features.png")
 
     # display progress
     print(f"\n\nTotal analysis time:")
