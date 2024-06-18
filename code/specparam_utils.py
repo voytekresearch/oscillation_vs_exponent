@@ -94,6 +94,49 @@ def compute_adjusted_band_power(params, band, method='mean', log_power=False):
     return power
 
 
+def _compute_adjusted_band_power(freq, spectra, params, band, method='mean', 
+                                 log_power=False):
+    """
+    Compute band power for a given band, adjusting for aperiodic component.
+
+    NOTE: This is hidden because it has been updated to work with 
+    SpectralGroupModel objects and the updated version is now the main function; 
+    however, some analyses still rely on this version as the data was not saved 
+    in the SpectralGroupModels.
+
+    Parameters
+    ----------
+    params : SpectralGroupModel object
+        SpectralGroupModel object. Must contain data (freqs, power_spectra).
+    band : list of [float, float]
+        Frequency band of interest.
+    method : {'mean', 'max', 'sum'}, optional, default: 'mean'
+        Method to compute band power.
+    log_power : bool, optional, default: False
+        Whether to compute band power on log-transformed power spectra.
+    """
+    # compute aperiodic component and subtract from spectra
+    if np.ndim(spectra) == 1:
+        spec_ap = params_to_spectrum(params, component='aperiodic')
+        if log_power:
+            spec_adjusted = np.log10(spectra) - np.log10(spec_ap)
+        else:
+            spec_adjusted = spectra - spec_ap
+    elif np.ndim(spectra) == 2:
+        spec_ap = params_to_spectra(params, component='aperiodic')
+        if log_power:
+            spec_adjusted = np.log10(spectra) - np.log10(spec_ap)
+        else:
+            spec_adjusted = spectra - spec_ap
+    else:
+        raise ValueError('Spectra must be 1d or 2d.')
+
+    # compute band power
+    power = compute_band_power(freq, spec_adjusted, band, method=method)
+
+    return power
+
+
 def knee_freq(knee, exponent):
     """
     Convert specparam knee parameter to Hz.
