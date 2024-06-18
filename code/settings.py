@@ -39,6 +39,12 @@ COLORS = {
     "light_blue"    :   np.array([128,205,193]) / 255,
 }
 
+BCOLORS = {
+    "alpha"     :   np.array([27,158,119]) / 255,
+    "gamma"    :   np.array([217,95,2]) / 255,
+    "exponent"    :   np.array([117,112,179]) / 255,
+}
+
 # band power settings
 BAND_POWER_METHOD = 'mean'
 LOG_POWER = True
