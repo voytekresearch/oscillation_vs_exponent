@@ -19,13 +19,12 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from settings import AP_MODE, COLORS, FREQ_RANGE
+from settings import AP_MODE, FREQ_RANGE
 from info import MATERIALS
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
 FIGSIZE = [6.5, 2]
-color = 'blue'
 
 # settings - example data to visualize
 PATIENT = 'pat11'
@@ -129,17 +128,17 @@ def main():
     ax2b = fig.add_subplot(gs2b[0,0])
 
     # Plot spectra
-    ax2b.loglog(freq, np.nanmean(psd_pre_all, 0), color=COLORS[f'light_{color}'], 
+    ax2b.loglog(freq, np.nanmean(psd_pre_all, 0), color='grey',
                 label='Baseline')
-    ax2b.loglog(freq, np.nanmean(psd_post_all, 0), color=COLORS[color], 
+    ax2b.loglog(freq, np.nanmean(psd_post_all, 0), color='k', 
                 label='Encoding')
     ax2b.set_xlim(FREQ_RANGE)
 
     # plot 95% confidence intrval
     ax2b.fill_between(freq, conf_pre[0], conf_pre[1], 
-                      color=COLORS[f'light_{color}'], alpha=0.5)
-    ax2b.fill_between(freq, conf_post[0], conf_post[1], color=COLORS[color], 
-                      alpha=0.5)
+                      color='grey', alpha=0.5, edgecolor=None)
+    ax2b.fill_between(freq, conf_post[0], conf_post[1], color='k', 
+                      alpha=0.5, edgecolor=None)
 
     # plot intersection frequnency
     ax2b.scatter(f_rotation, np.nanmean(psd_pre_all, 0)[idx_rotation], s=32, 
