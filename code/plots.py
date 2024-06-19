@@ -25,22 +25,22 @@ def set_custom_colors(keyword=None):
     
     elif keyword == 'browns':
         mpl.rcParams['axes.prop_cycle'] = cycler(color=[
-            np.array([166,97,26]) / 255, # brown
             np.array([223,194,125]) / 255, # light brown
+            np.array([166,97,26]) / 255, # brown
         ])
 
     elif keyword == 'blues':
         mpl.rcParams['axes.prop_cycle'] = cycler(color=[
-            np.array([1,133,113]) / 255, # blue
             np.array([128,205,193]) / 255, # light blue
+            np.array([1,133,113]) / 255, # blue
         ])
                 
     elif keyword == 'all':
         mpl.rcParams['axes.prop_cycle'] = cycler(color=[
-            np.array([166,97,26]) / 255, # brown
             np.array([223,194,125]) / 255, # light brown
-            np.array([1,133,113]) / 255, # blue
+            np.array([166,97,26]) / 255, # brown
             np.array([128,205,193]) / 255, # light blue
+            np.array([1,133,113]) / 255, # blue
         ])
 
     elif keyword == 'default':
