@@ -45,6 +45,10 @@ BCOLORS = {
     "exponent"  :   np.array([231,41,138]) / 255,
 }
 
+RGB = (np.array([228,26,28]) / 255,
+       np.array([77,175,74]) / 255,
+       np.array([55,126,184]) / 255)
+
 # band power settings
 BAND_POWER_METHOD = 'mean'
 LOG_POWER = True
