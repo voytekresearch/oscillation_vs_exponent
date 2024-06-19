@@ -508,10 +508,10 @@ def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
     if shade_sem:
         ax.fill_between(freq, np.mean(psd_pre, axis=0) - (np.std(psd_pre, axis=0)/np.sqrt(psd_pre.shape[0])),
                         np.mean(psd_pre, axis=0) + (np.std(psd_pre, axis=0)/np.sqrt(psd_pre.shape[0])), 
-                        color=color[0], alpha=0.5)
+                        color=color[0], alpha=0.5, edgecolor=None)
         ax.fill_between(freq, np.mean(psd_post, axis=0) - (np.std(psd_post, axis=0)/np.sqrt(psd_post.shape[0])),
                         np.mean(psd_post, axis=0) + (np.std(psd_post, axis=0)/np.sqrt(psd_post.shape[0])),
-                        color=color[1], alpha=0.5)
+                        color=color[1], alpha=0.5, edgecolor=None)
 
     # set axes ticks and labels
     ax.set_ylabel(f'power ({y_units})')
