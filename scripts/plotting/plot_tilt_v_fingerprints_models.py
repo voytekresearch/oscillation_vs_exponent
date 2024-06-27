@@ -91,6 +91,7 @@ def main():
             
     # save figure
     plt.savefig(f"{path_out}/tilt_v_fingerprints_models")
+    plt.savefig(f"{path_out}/tilt_v_fingerprints_models.png")
 
 
 def plot_2_spectra(spectrum_0, spectrum_1, freqs, labels=['0', '1'], 

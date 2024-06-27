@@ -152,6 +152,7 @@ def main():
     ax2b.axvline(1, color='gray', linestyle='--', linewidth=1)
 
     # save figure
+    fig.savefig(f"{dir_output}/example_data")
     fig.savefig(f"{dir_output}/example_data.png")
 
     # display progress
