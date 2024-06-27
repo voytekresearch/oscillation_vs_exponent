@@ -20,11 +20,10 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from info import FELLNER_BANDS as BANDS
-from settings import BCOLORS
+from settings import BCOLORS, WIDTH
 
 # plotting setting
 plt.style.use('mplstyle/default.mplstyle')
-FIG_SIZE = (6.5, 2)
 
 # Set PSD simulation parameters
 FREQ_RANGE = [1, 100] # frequency range for simulated power spectra
@@ -64,7 +63,8 @@ def main():
 
     # plot each model
     labels = ['baseline', 'encoding']
-    _, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=FIG_SIZE)
+    _, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(WIDTH['2col'], 
+                                                     WIDTH['2col']/3))
     plot_2_spectra(psd_pre, psd_post_0, freqs, ax=ax0, labels=labels,
                     title='Periodic Effect')
     plot_2_spectra(psd_pre, psd_post_1, freqs, ax=ax1, labels=labels,
@@ -90,7 +90,7 @@ def main():
         ax.set(ylabel='')
             
     # save figure
-    plt.savefig(f"{path_out}/tilt_v_fingerprints_models.png")
+    plt.savefig(f"{path_out}/tilt_v_fingerprints_models")
 
 
 def plot_2_spectra(spectrum_0, spectrum_1, freqs, labels=['0', '1'], 
