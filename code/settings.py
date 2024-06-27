@@ -49,6 +49,11 @@ RGB = (np.array([228,26,28]) / 255,
        np.array([77,175,74]) / 255,
        np.array([55,126,184]) / 255)
 
+WIDTH = {
+    "1col"    :    3.46457, # 88mm
+    "2col"    :    7.08661, # 180mm
+}
+
 # band power settings
 BAND_POWER_METHOD = 'mean'
 LOG_POWER = True
