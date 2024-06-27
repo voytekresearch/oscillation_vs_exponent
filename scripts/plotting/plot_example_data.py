@@ -19,12 +19,11 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from settings import AP_MODE, FREQ_RANGE
+from settings import AP_MODE, FREQ_RANGE, RGB, WIDTH
 from info import MATERIALS
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
-FIGSIZE = [6.5, 2]
 
 # settings - example data to visualize
 PATIENT = 'pat11'
@@ -58,7 +57,7 @@ def main():
     # load iEEG time-series results
     fname_in = f"{PATIENT}_{MATERIAL}_hit_epo.fif"
     epochs = read_epochs(f"{PROJECT_PATH}/data/ieeg_epochs/{fname_in}")
-    signals = epochs.get_data()
+    signals = epochs.get_data(copy=True)
     signal = signals[:, CHAN_IDX]
     time = epochs.times
 
@@ -84,7 +83,7 @@ def main():
     # plot data =================================================================
 
     # create gridspec and nested gridspec for subplots
-    fig = plt.figure(figsize=FIGSIZE)
+    fig = plt.figure(figsize=[WIDTH['2col'], WIDTH['2col']/3])
     gs = gridspec.GridSpec(1,2, figure=fig, width_ratios=[2,1])
     gs2a = gridspec.GridSpecFromSubplotSpec(5,1, subplot_spec=gs[0], hspace=0)
     gs2b = gridspec.GridSpecFromSubplotSpec(1,1, subplot_spec=gs[1])
@@ -112,6 +111,9 @@ def main():
                 color='k', linewidth=1)
         ax.plot(time[mask_e], signal[trial, mask_e], 'k', linewidth=1)
 
+    # add ylabel across these 5 subplots, 'trials'. rotate it.
+    fig.text(0.0, 0.5, 'trials', va='center', rotation='vertical', fontsize=6)
+
     # remove cluttered axes, ticks, and spines
     ax4.axes.yaxis.set_ticks([])
     for ax in axes[:4]:
@@ -120,7 +122,7 @@ def main():
         ax4.spines[loc].set_visible(False)
 
     # label
-    ax0.set_title('iEEG Time-series')
+    ax0.set_title('iEEG time-series')
     ax4.set_xlabel('time relative to stimulus onset (s)')
 
     # ==================== Fig 2b ====================
@@ -129,9 +131,9 @@ def main():
 
     # Plot spectra
     ax2b.loglog(freq, np.nanmean(psd_pre_all, 0), color='grey',
-                label='Baseline')
+                label='baseline')
     ax2b.loglog(freq, np.nanmean(psd_post_all, 0), color='k', 
-                label='Encoding')
+                label='encoding')
     ax2b.set_xlim(FREQ_RANGE)
 
     # plot 95% confidence intrval
@@ -142,10 +144,10 @@ def main():
 
     # plot intersection frequnency
     ax2b.scatter(f_rotation, np.nanmean(psd_pre_all, 0)[idx_rotation], s=32, 
-                 color='k', zorder=5, label='Intersection')
+                 color=RGB[2], zorder=5, label='intersection')
 
     # subplot 2 - label
-    ax2b.set_title('Power Spectra') #('Single-electrode Spectra', fontsize=20)
+    ax2b.set_title('Power spectra') #('Single-electrode Spectra', fontsize=20)
     ax2b.set_xlabel('frequency (Hz)')
     ax2b.set_ylabel('power ($\u03bcV^2/Hz$)')
     ax2b.legend(markerscale=0.4)
