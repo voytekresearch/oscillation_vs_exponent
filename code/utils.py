@@ -41,11 +41,11 @@ def get_start_time():
     return time()
 
 
-def print_time_elapsed(t_start):
+def print_time_elapsed(t_start, prefix=''):
     from time import time
 
     hour, min, sec = hour_min_sec(time() - t_start)
-    print(f"Time elapsed: {hour} hour, {min} min, and {sec :0.1f} s")
+    print(f"{prefix}{hour} hour, {min} min, and {sec :0.1f} s")
 
 
 def hour_min_sec(duration):
