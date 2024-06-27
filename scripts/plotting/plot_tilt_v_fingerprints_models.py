@@ -66,11 +66,11 @@ def main():
     _, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(WIDTH['2col'], 
                                                      WIDTH['2col']/3))
     plot_2_spectra(psd_pre, psd_post_0, freqs, ax=ax0, labels=labels,
-                    title='Periodic Effect')
+                    title='Periodic model')
     plot_2_spectra(psd_pre, psd_post_1, freqs, ax=ax1, labels=labels,
-                   title='Aperiodic Effect')
+                   title='Aperiodic model')
     plot_2_spectra(psd_pre, psd_post_2, freqs, ax=ax2, labels=labels,
-                   title='Combined Effect')
+                   title='Combined model')
     
     # shade oscillation bands
     for band in ['alpha', 'gamma']:
