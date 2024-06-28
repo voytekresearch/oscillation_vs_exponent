@@ -13,5 +13,5 @@ legend.fontsize : 5
 
 ### Saving
 figure.constrained_layout.use : True
-savefig.dpi : 300	
+savefig.dpi : 600
 savefig.format : pdf
