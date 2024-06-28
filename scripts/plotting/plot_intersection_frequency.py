@@ -10,7 +10,6 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.stats import norm
 
 # Imports - custom
 import sys
@@ -18,12 +17,11 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
 from info import MATERIALS
-from settings import COLORS, FREQ_RANGE
-from plots import plot_spectra_2conditions
+from settings import FREQ_RANGE, RGB, WIDTH
+from plots import plot_spectra_2conditions, beautify_ax
 
 # settings
-FIGSIZE = [4, 2]
-
+plt.style.use('mplstyle/default.mplstyle')
 
 def main():
     # display progress
@@ -60,7 +58,7 @@ def main():
     spectra_post = np.concatenate([psd[material, 'post'] for material in MATERIALS])
 
     # create figure
-    fig, (ax1, ax2) = plt.subplots(1,2, figsize=FIGSIZE, 
+    fig, (ax1, ax2) = plt.subplots(1,2, figsize=[WIDTH['1col'], WIDTH['1col']/2], 
                                    constrained_layout=True)
 
     # plot spectra
@@ -69,29 +67,28 @@ def main():
                                 shade_sem=False)
     ax1.set_title('Grand average')
     ax1.set_xlim(FREQ_RANGE)
-
-    # shrink legend textfontsize
-    for t in ax1.get_legend().get_texts():
-        t.set_fontsize(8)
+    ax1.grid(False)
 
     # annotate intersection frequency
     median_f = np.nanmedian(f_intersection)
     median_idx = np.argmin(np.abs(freq - median_f))
     ax1.scatter(freq[median_idx], np.nanmean(spectra_pre[:, median_idx]),
-                color='k', s=20, zorder=10)
+                color=RGB[2], s=20, zorder=10)
+    ax1.legend(['baseline', 'encoding', 'intersection'], loc='lower left')
 
     # plot histogram
-    ax2.set_title('Intersection')
-    # bin_edges = np.linspace(0, 100, 11)
-    # ax2.hist(f_intersection, bins=bin_edges, color=COLORS['brown'])
-    ax2.hist(f_intersection, color='grey')
+    ax2.set_title('Intersection frequency')
+    bins = np.linspace(0, 100, 11)
+    ax2.hist(f_intersection, bins, color=RGB[2])
     ax2.set_xlabel('frequency (Hz)')
     ax2.set_ylabel('electrode count')
-    ax2.axvline(np.nanmedian(f_intersection), color='k', linestyle='--')
-    # ax2.text(0.7, 0.9, f"median={int(np.nanmedian(f_intersection))} Hz", 
-    #         transform=ax2.transAxes, ha='center', va='center')
+
+    # remove top and right spines
+    for ax in [ax1, ax2]:
+        beautify_ax(ax)
 
     # save fig
+    fig.savefig(f"{dir_output}/intersection_frequency")
     fig.savefig(f"{dir_output}/intersection_frequency.png")
 
     # display progress
