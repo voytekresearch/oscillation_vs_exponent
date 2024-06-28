@@ -9,6 +9,16 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, LogNorm, CenteredNorm, TwoSlopeNorm
 
 
+def beautify_ax(ax):
+    """
+    Beautify axis by removing top and right spines, and setting linewidths.
+    """
+    
+    # remove top and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+
 def set_custom_colors(keyword=None):
     """
     Add custom colors to matplotlib.
@@ -450,7 +460,6 @@ def plot_ap_params(params, time, single_plot=True):
 
         # label
         plt.ylabel('z-score')
-
 
 
 def plot_spectra_2conditions(psd_pre, psd_post, freq, ax=None, shade_sem=True,
