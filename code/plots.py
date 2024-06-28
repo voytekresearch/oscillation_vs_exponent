@@ -164,8 +164,8 @@ def plot_tfr(time, freqs, tfr, fname_out=None, title=None,
         ax.set_title(title)
 
     # label axes
-    ax.set_xlabel('Time (s)')
-    ax.set_ylabel('Frequency (Hz)')
+    ax.set_xlabel('time (s)')
+    ax.set_ylabel('frequency (Hz)')
 
     # add colorbar
     if cax is None:
