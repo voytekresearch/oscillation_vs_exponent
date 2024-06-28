@@ -17,11 +17,11 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
 from info import PATIENTS
-from settings import BCOLORS
+from settings import BCOLORS, WIDTH
+from plots import beautify_ax
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
-FIGSIZE = [6.5, 4]
 
 
 def main():
@@ -84,8 +84,9 @@ def main():
         print(results[feature].summary())
 
     # create figure
-    fig, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=FIGSIZE,
-                                            constrained_layout=True)
+    figsize = [WIDTH['2col'], WIDTH['2col']/2]
+    _, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=figsize,
+                                                    constrained_layout=True)
     ax2.sharey(ax1)
     ax5.sharey(ax4)
     ax4.sharex(ax1)
@@ -94,7 +95,7 @@ def main():
     # set titles
     ax1.set_title('Total power')
     ax2.set_title('Adjusted power')
-    ax3.set_title('R-squared')
+    ax3.set_title('Linear model: power v. exponent')
 
     # plot scatter and regression results
     features = ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']
@@ -122,16 +123,19 @@ def main():
         }
         sns.boxplot(**plotting_params, ax=ax, color=BCOLORS[feature])
         sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=3)
-        ax.set_ylabel('R-squared')
+        ax.set_ylabel('$R^{2}$')
         ax.set_xticklabels(['total\npower','adjusted\npower'])
-        # if sig[feature]:
-        #     ax.text(0.5, 0.5, '*', transform=ax.transAxes, fontsize=12, 
-        #             verticalalignment='center', horizontalalignment='center')
     ax3.set_xlabel('')
     ax6.set_xlabel('regressor')
 
+    # beautify axes
+    for ax in [ax1, ax2, ax3, ax4, ax5, ax6]:
+        beautify_ax(ax)
+
     # save figure
-    plt.savefig(f"{dir_figure}/regress_confounding_features.png")
+    fname = "regress_confounding_features"
+    plt.savefig(f"{dir_figure}/{fname}.png")
+    plt.savefig(f"{dir_figure}/{fname}")
 
     # display progress
     print(f"\n\nTotal analysis time:")
@@ -190,7 +194,8 @@ def load_params():
         df[f"{feature}_diff"] = df[(feature, 'post')] - df[(feature, 'pre')]
 
     # drop original columns
-    df = df.drop(columns=[(feature, epoch) for feature in features for epoch in ['pre', 'post']])
+    df = df.drop(columns=[(feature, epoch) for feature in features for epoch in 
+                          ['pre', 'post']])
     df.columns = df.columns.droplevel(1)
 
     return df
