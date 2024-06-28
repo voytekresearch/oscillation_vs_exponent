@@ -18,20 +18,19 @@ from info import MATERIALS
 from utils import get_start_time, print_time_elapsed, confidence_interval
 from tfr_utils import trim_tfr, subtract_baseline
 from tfr_utils import zscore_tfr as zscore
-from plots import plot_evoked_tfr
-from settings import BANDS, AP_MODE, FREQ_RANGE, BCOLORS
+from plots import plot_evoked_tfr, beautify_ax
+from settings import BANDS, AP_MODE, FREQ_RANGE, BCOLORS, WIDTH
 from specparam_utils import compute_band_power
 from specparam_utils import _compute_adjusted_band_power as compute_adjusted_band_power
 
 # settings - analysis (match to other analyses)
-LOG_POWER = True # log-transform power
+LOG_POWER = True # whether to log-transform power
 METHOD = 'mean' # method for computing band power
 
 # settings - figure
 plt.style.use('mplstyle/default.mplstyle')
-FIGSIZE = (6.5, 2)
-X_LIMITS = [-0.5, 1.0] # for time-series plots
-Y_LIMITS = [-2.2, 2.2]
+X_LIMITS = [-0.5, 1.0]
+Y_LIMITS = [-2.2, 2.2] # for time-series plots
 
 
 def main():
@@ -45,15 +44,17 @@ def main():
         os.makedirs(f"{dir_output}")
 
     # create figure
-    fig, axes = plt.subplots(1, 3, figsize=FIGSIZE, constrained_layout=True)
+    fig, axes = plt.subplots(1, 3, figsize=[WIDTH['2col'], WIDTH['2col']/3], 
+                             constrained_layout=True)
 
-    # # Plot group TFR ===========================================================
+    # Plot normalized spectrogram ==============================================
+
     # load stats
     fname = f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv"
     df_stats = pd.read_csv(fname, index_col=0)
     df_stats = df_stats.loc[df_stats['sig_all']].reset_index(drop=True)
 
-    # load TFR for active channels 
+    # # load TFR for active channels 
     tfr_list = []
     for _, row in df_stats.iterrows():
         for material in MATERIALS:
@@ -68,7 +69,8 @@ def main():
     plot_evoked_tfr(tfr, freq, time, fig=fig, ax=axes[0], annotate_zero=True, 
                     cbar_label='power (au)')
 
-    # Plot group time-series ===================================================
+    # Plot time-series ========================================================
+
     # initialize lists
     exp_list = []
     power = dict()
@@ -120,48 +122,55 @@ def main():
                                             t_baseline=[X_LIMITS[0], 0])
 
     # plot power
-    for pow, ax in zip([power, power_adj], [axes[1], axes[2]]):
+    for pow, ax, tag in zip([power, power_adj], [axes[1], axes[2]], 
+                            ['total', 'adjusted']):
         for band in BANDS.keys():
             ci = confidence_interval(pow[band])
-            ax.plot(time, np.nanmean(pow[band], axis=0), label=band, color=BCOLORS[band])
+            ax.plot(time, np.nanmean(pow[band], axis=0), 
+                    label=f"{tag} {band} power", color=BCOLORS[band])
             ax.fill_between(time, ci[0], ci[1], alpha=0.2, color=BCOLORS[band])
 
     # plot exponent (after z-scoreing and subtracting baseline)
     exponent = subtract_baseline(zscore(np.array(exp_list)), time, 
                                  t_baseline=[X_LIMITS[0], 0])
     ci = confidence_interval(exponent)
-    axes[2].plot(time, np.nanmean(exponent, axis=0), label='exponent', color=BCOLORS['exponent'])
-    axes[2].fill_between(time, ci[0], ci[1], alpha=0.2, color=BCOLORS['exponent'])
+    axes[2].plot(time, np.nanmean(exponent, axis=0), label='aperiodic exponent', 
+                 color=BCOLORS['exponent'])
+    axes[2].fill_between(time, ci[0], ci[1], alpha=0.2, 
+                         color=BCOLORS['exponent'])
 
     # label and adjust plots ===================================================
-    # set title
-    # axes[1].set_title('Total power')
-    # axes[2].set_title('Adjusted power')
 
-    # set x and y labels
-    # for ax in axes[1:3]:
-    axes[1].set_ylabel('total power (au)')
-    axes[2].set_ylabel('adjusted power (au)')
+    # set title
+    axes[0].set_title('Normalized spectrogram')
+    axes[1].set_title('Total band power')
+    axes[2].set_title('Spectral parameters')
+
+    # set x labels
     for ax in axes:
         ax.set_xlabel('time (s)')
-        
-    # set x labels and limits
+
+    # adjust time-series plots
     for ax in axes[1:3]:
+        # label axes
+        ax.set_ylabel('z-score')
+
+        # annotate zero
         ax.axhline(0, color='k', linestyle='--')
         ax.axvline(0, color='k', linestyle='--')
-        ax.set_xlim(X_LIMITS)
 
-    # adjust y limits
-    for ax in axes[1:3]:
+        # set axis limits
+        ax.set_xlim(X_LIMITS)
         ax.set_ylim(Y_LIMITS)
 
-    # add legend
-    for ax in axes[1:3]:
-        ax.legend(loc='upper left', facecolor='white')
-    # axes[1].legend(loc='lower left', facecolor='white')
-    # axes[2].legend(loc='upper left', facecolor='white')
+        # add legend
+        ax.legend(loc='upper left', facecolor='white', framealpha=1)
+
+        # remove right and top spines
+        beautify_ax(ax)
 
     # save figure
+    fig.savefig(f"{dir_output}/tfr_features_group")
     fig.savefig(f"{dir_output}/tfr_features_group.png")
 
     # display progress
