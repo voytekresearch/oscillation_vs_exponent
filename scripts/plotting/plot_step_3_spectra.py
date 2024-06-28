@@ -15,12 +15,11 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from info import MATERIALS
-from plots import plot_spectra_2conditions
-from settings import COLORS, FREQ_RANGE
+from plots import plot_spectra_2conditions, beautify_ax
+from settings import COLORS, FREQ_RANGE, WIDTH
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
-FIGSIZE = [4, 2]
 
 
 def main():
@@ -47,7 +46,7 @@ def main():
 def plot_group_spectra(stats, feature, dir):
 
     # create figure
-    _, axes = plt.subplots(1, 2, figsize=FIGSIZE)
+    _, axes = plt.subplots(1, 2, figsize=[WIDTH['1col'], WIDTH['1col']/2])
 
     for ax, material, color in zip(axes, MATERIALS, ['brown', 'blue']):
         # load data
@@ -59,15 +58,21 @@ def plot_group_spectra(stats, feature, dir):
         freq = data_pre['freq']
 
         # plot
-        title = f"{material[0].upper()}{material[1:-1]}-encoding"
+        title = f"{material[0].upper()}{material[1:-1]} encoding"
         colors = [COLORS[f'light_{color}'], COLORS[color]]
         f_mask = np.logical_and(freq>FREQ_RANGE[0], freq<FREQ_RANGE[1])
         plot_spectra_2conditions(psd_pre[:, f_mask], psd_post[:, f_mask], 
                                 freq[f_mask], shade_sem=True, title=title, 
                                 ax=ax, color=colors)
         
+        # beautify
+        ax.grid(False)
+        beautify_ax(ax)
+        
     # save
-    plt.savefig(f"{dir}/mean_spectra_sig_{feature}.png")
+    fname_out = f"mean_spectra_sig_{feature}"
+    plt.savefig(f"{dir}/{fname_out}")
+    plt.savefig(f"{dir}/{fname_out}.png")
     plt.close()
 
         
