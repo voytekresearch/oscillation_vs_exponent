@@ -26,7 +26,7 @@ from specparam_utils import compute_band_power
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
-figsize = [WIDTH['2col'], WIDTH['2col']/3]
+figsize = [WIDTH['2col'], WIDTH['2col']/4]
 
 
 def main():
@@ -64,53 +64,92 @@ def main():
     spectra_post = np.concatenate([psd[material, 'post'] for material in MATERIALS])
 
     # create figure
-    fig, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=figsize, 
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=figsize, 
                                         constrained_layout=True)
 
     # plot simulation: Effects of spectral rotation on total band power
-    simulation_subplot(ax0)
+    simulation_subplot_0(ax1)
+    simulation_subplot_1(ax2)
 
     # plot empirical spectra
-    plot_spectra_2conditions(spectra_pre, spectra_post, freq, ax=ax1,
+    plot_spectra_2conditions(spectra_pre, spectra_post, freq, ax=ax3,
                                 color=['grey', 'k'],
                                 shade_sem=False)
-    ax1.set_xlim(FREQ_RANGE)
-    ax1.grid(False)
+    ax3.set_xlim(FREQ_RANGE)
+    ax3.grid(False)
 
     # annotate intersection frequency
     median_f = np.nanmedian(f_intersection)
     median_idx = np.argmin(np.abs(freq - median_f))
-    ax1.scatter(freq[median_idx], np.nanmean(spectra_pre[:, median_idx]),
-                color=RGB[2], s=20, zorder=10)
-    ax1.legend(['baseline', 'encoding', 'intersection'], loc='lower left')
+    ax3.scatter(freq[median_idx], np.nanmean(spectra_pre[:, median_idx]),
+                color=BCOLORS['exponent'], s=20, zorder=10)
+    ax3.legend(['baseline', 'encoding', 'intersection'], loc='lower left')
 
     # plot histogram of intersection frequency
     bins = np.linspace(0, 100, 11)
-    ax2.hist(f_intersection, bins, color=RGB[2])
-    ax2.set_xlabel('frequency (Hz)')
-    ax2.set_ylabel('electrode count')
+    ax4.hist(f_intersection, bins, color='grey', edgecolor='k', linewidth=0.5)
+    ax4.set_xlabel('frequency (Hz)')
+    ax4.set_ylabel('electrode count')
 
     # remove top and right spines
-    for ax in [ax1, ax2]:
+    for ax in [ax1, ax2, ax3, ax4]:
         beautify_ax(ax)
 
     # set titles
-    ax0.set_title('Simulation:\neffects of spectral rotation')
-    ax1.set_title('Grand average power spectra')
-    ax2.set_title('Intersection frequency')
+    ax1.set_title('example spectral rotations')
+    ax2.set_title('effects of intersection freq.')
+    ax3.set_title('average power spectra')
+    ax4.set_title('intersection frequency')
 
-    # save fig
-    fig.savefig(f"{dir_output}/intersection_frequency")
-    fig.savefig(f"{dir_output}/intersection_frequency.png")
+    # add text above subplot titles (1 over ax1 and ax2 and another over ax3 and ax4)
+    fig.text(0.25, 1.05, 'Simulation results', ha='center', va='center', fontsize=7)
+    fig.text(0.75, 1.05, 'Empirical results', ha='center', va='center', fontsize=7)
+
+    # save fig - add small margin at top
+    fig.savefig(f"{dir_output}/intersection_frequency", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/intersection_frequency.png", bbox_inches='tight')
 
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
 
 
-def simulation_subplot(ax):
+def simulation_subplot_0(ax):
     """ 
-    Run simulation and plot results.
+    Simulate a power spectrum and rotate it at a high and a low intersection
+    frequency. Plot the original and rotated power spectra.
+    """
+
+    # simulate power spectrum and rotate
+    freqs, psd_pre = sim_power_spectrum(freq_range=[1, 100], 
+                                        aperiodic_params=[10, 2], 
+                                        periodic_params=[])
+    psd_rot_low = rotate_powerlaw(freqs, psd_pre, delta_exponent=1, 
+                                  f_rotation=1)
+    psd_rot_high = rotate_powerlaw(freqs, psd_pre, delta_exponent=1, 
+                                  f_rotation=100)
+    
+    # plot power spectra
+    ax.loglog(freqs, psd_pre, color='k', label='original spectrum')
+    ax.loglog(freqs, psd_rot_low, color=RGB[2], linestyle='--',
+              label='low intersection')
+    ax.loglog(freqs, psd_rot_high, color=RGB[0], linestyle='--',
+              label='high intersection')
+    
+    # plot intersection frequency
+    ax.scatter(1, psd_rot_low[0], color=RGB[2], s=20, zorder=10)
+    ax.scatter(100, psd_rot_high[-1], color=RGB[0], s=20, zorder=10)
+
+    # label plot
+    ax.set(xlabel='frequency (Hz)', ylabel='power (au)')
+    ax.set_xticks([1, 10, 100], labels=['1', '10', '100'])
+    ax.legend()
+
+    
+def simulation_subplot_1(ax):
+    """ 
+    Run simulation and plot results. Effects of spectral rotation on total band 
+    power.
     """
 
     # run simulation with different rotation frequencies
@@ -144,7 +183,7 @@ def simulation_subplot(ax):
 
 
 def run_simulation(f_rotation, delta_exponent=1, aperiodic_params=[10, 2],
-                    f_range=[4, 100]):
+                    f_range=[0, 100]):
     """ 
     Simulate power spectrum and rotate it. Compute band power before and 
     after rotation.
