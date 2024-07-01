@@ -1,7 +1,8 @@
 """
 This script parameterizes the spectral results from 
-2_time_frequency_analysis.py. It differs from the original script in that it
-parameterizes the single-trial PSDs rather than the average PSDs. 
+step2_time_frequency_analysis.py. It differs from the original script 
+(step4_spectral_parameterization) in that it parameterizes the single-trial PSDs 
+rather than the average PSDs. 
 
 
 """
@@ -87,14 +88,13 @@ def main():
                 power_adjusted = []
                 for ii, sm in enumerate(params):
                     # compute total band power 
-                    power = compute_band_power(freq, spectra[ii],
-                                                BANDS[band], method=BAND_POWER_METHOD,
-                                                log_power=LOG_POWER)
+                    power = compute_band_power(freq, spectra[ii], BANDS[band], 
+                                               method=BAND_POWER_METHOD,
+                                               log_power=LOG_POWER)
                     power_total.append(power)
 
                     # compute adjusted band power
-                    power = compute_adjusted_band_power(freq, spectra[ii],
-                                                        sm, BANDS[band], 
+                    power = compute_adjusted_band_power(sm, BANDS[band], 
                                                         method=BAND_POWER_METHOD,
                                                         log_power=LOG_POWER)
                     power_adjusted.append(power)
