@@ -29,44 +29,63 @@ def main():
     if not os.path.exists(dir_output): 
         os.makedirs(f"{dir_output}")
 
-    # load behavioral data and single-trial specparam results
-    metadata = pd.read_csv(f"{PROJECT_PATH}/data/ieeg_metadata/metadata.csv")
-    results = pd.read_csv(f"{PROJECT_PATH}/data/results/psd_trial_params.csv", index_col=0)
-    results['material'] = results['material'] + 's'
-    results = results.merge(metadata, on=['patient', 'material', 'trial'])
-
-    # run logistic regression for all channels in each trial condition
-    features_x = ['exp_diff', 'alpha_diff', 'gamma_diff']
+    # load single trial spectral parameter results (pipeline step 7)
+    results = load_params(f"{PROJECT_PATH}/data/results/psd_trial_params.csv")
+    results['memory'] = results['memory'].map({'hit': 1, 'miss': 0})
 
     # create dataframe to store results (one row for each channel-material pair)
-    df = results.groupby(['patient','channel','material']).mean().reset_index()
-    df = df[['patient', 'channel', 'material']]
+    df = results.groupby(['patient', 'chan_idx', 'material']).count().reset_index()
+    df = df[['patient', 'chan_idx', 'material']]
     df['score'] = np.nan 
 
-    # run logistic regression 
-    for patient in PATIENTS:
-        channels = results.loc[results['patient']==patient, 'channel'].unique()
+    # run logistic regression for all channels in each trial condition
+    features_x = ['exponent_diff', 'alpha_diff', 'gamma_diff']
+    feature_y = 'memory'
+    for _, patient in enumerate(PATIENTS):
+        print(f"patient {patient}")
+        channels = results.loc[results['patient']==patient, 'chan_idx'].unique()
         for channel in channels:
             for material in ['words', 'faces']:
                 try: # some patients/channels don't have data
                     res_i = results.loc[(results['patient']==patient) & \
-                                        (results['channel']==channel) & \
+                                        (results['chan_idx']==channel) & \
                                         (results['material']==material)]
                     _, score = run_logistic_regression_cv(res_i, features_x, 
-                                                          'behavior')
+                                                            feature_y)
                     df_index = (df['patient']==patient) & \
-                                (df['channel']==channel) & \
+                                (df['chan_idx']==channel) & \
                                 (df['material']==material)
                     df.loc[df_index, 'score'] = score
                 except:
                     pass
 
     # save results
-    df.to_csv(f"{dir_output}/logistic_regression_scores_cv_.csv")
+    df.to_csv(f"{dir_output}/logistic_regression_scores_cv.csv")
 
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
+
+
+def load_params(fname):
+    """
+    Load single trial spectral parameter results i.e. pipeline step 7.
+    Compute the difference in spectral parameters between baseline and
+    encoding.    
+    """
+
+    df = pd.read_csv(fname)
+    features = ["exponent", "alpha", "alpha_adj", "gamma", "gamma_adj"]
+    pivot_index = ["patient", "material", "memory", "chan_idx", "trial", 
+                   "ap_mode"] 
+    df = df.pivot_table(index=pivot_index, columns="epoch", values=features)
+    for feature in features:
+        df[(feature, "diff")] = df[(feature, 'post')] - df[(feature, 'pre')]
+        df.drop(columns=[(feature, 'pre'), (feature, 'post')], inplace=True)
+    df.columns = [f"{feature}_{epoch}" for feature, epoch in df.columns]
+    df.reset_index(inplace=True)
+    
+    return df
 
 
 def run_logistic_regression_cv(results, features_x, feature_y):
