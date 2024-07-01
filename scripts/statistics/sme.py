@@ -37,6 +37,8 @@ def main():
     if ACTIVE_ONLY:
         df = df_params.merge(df_sig, on=['patient', 'chan_idx'])
         df = df.loc[df['sig_all']].reset_index(drop=True)
+    else:
+        df = df_params
         
     # init
     columns = ['material', 'feature', 'pvalue']
