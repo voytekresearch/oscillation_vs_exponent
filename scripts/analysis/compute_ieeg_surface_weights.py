@@ -1,9 +1,9 @@
 """
-THis script computes the distance between each electrode ih the dataset and
-a template brain surface map.
+This script computes the distance between each electrode in the dataset and
+a template brain surface map, and then computes a weight matrix based on the
+distances.
 
 """
-
 
 import os
 import numpy as np
@@ -28,9 +28,10 @@ def main():
     t_start = get_start_time()
 
     # identify / create directories
-    dir_output = f"{PROJECT_PATH}/data/neuromaps/mni_surface_weights"
-    if not os.path.exists(dir_output): 
-        os.makedirs(f"{dir_output}")
+    dir_output = f"{PROJECT_PATH}/data/neuromaps"
+    for folder in ['mni_surface_distances', 'mni_surface_weights']:
+        if not os.path.exists(f"{dir_output}/{folder}"): 
+            os.makedirs(f"{dir_output}/{folder}")
 
     # load template MNI brain
     mni152_atlas = fetch_atlas('MNI152', '1mm')
@@ -53,17 +54,18 @@ def main():
         
         # compute distance between iEEG locations and template brain surface
         distance = compute_distances(input_grid, output_grid)
+        np.save(f"{dir_output}/mni_surface_distances/{patient}.npy", distance)
         
         # compute weight matrix and save to file
         weights = compute_weights(distance, spread=SPREAD)
-        np.save(f"{dir_output}/{patient}.npy", weights)
+        np.save(f"{dir_output}/mni_surface_weights/{patient}.npy", weights)
 
         # display progress
-        print_time_elapsed(t_start_p)
+        print_time_elapsed(t_start_p, "\tAnalysis time: ")
 
     # display progress
     print(f"\n\nTotal analysis time:")
-    print_time_elapsed(t_start)
+    print_time_elapsed(t_start, "\nTotal analysis time: ")
 
 
 if __name__ == "__main__":
