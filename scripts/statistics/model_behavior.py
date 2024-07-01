@@ -47,20 +47,32 @@ def main():
         for channel in channels:
             for material in ['words', 'faces']:
                 try: # some patients/channels don't have data
+
+                    # get data for this patient/channel/material
                     res_i = results.loc[(results['patient']==patient) & \
                                         (results['chan_idx']==channel) & \
                                         (results['material']==material)]
+                    
+                    # match number of hits and misses
+                    n_trials = res_i['memory'].groupby(res_i['memory']).count().min()
+                    res_i = res_i.loc[res_i['memory'].isin([0, 1])].groupby('memory').head(n_trials)
+
+                    # run logistic regression
                     _, score = run_logistic_regression_cv(res_i, features_x, 
                                                             feature_y)
+                    
+                    # store results
                     df_index = (df['patient']==patient) & \
                                 (df['chan_idx']==channel) & \
                                 (df['material']==material)
                     df.loc[df_index, 'score'] = score
+
                 except:
                     pass
 
     # save results
-    df.to_csv(f"{dir_output}/logistic_regression_scores_cv.csv")
+    df.to_csv(f"{dir_output}/logistic_regression_scores_cv.csv",
+              index=False)
 
     # display progress
     print(f"\n\nTotal analysis time:")
