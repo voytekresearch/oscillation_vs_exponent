@@ -14,7 +14,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from info import PATIENTS
 from utils import get_start_time, print_time_elapsed
-from model_behavior import run_logistic_regression_cv
+from model_behavior import load_params, run_logistic_regression_cv
 
 
 def main():
@@ -78,21 +78,6 @@ def main():
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
-
-
-def load_params(fname):
-    # load single trial spectral parameter results (pipeline step 7)
-    df = pd.read_csv(fname)
-    df = df.pivot_table(index=["patient", "material", "memory", "chan_idx", "trial", "ap_mode"], columns="epoch", values=["exponent", "alpha", "alpha_adj", "gamma", "gamma_adj"])
-    for feature in ["exponent", "alpha", "alpha_adj", "gamma", "gamma_adj"]:
-        df[(feature, "diff")] = df[(feature, 'post')] - df[(feature, 'pre')]
-        df.drop(columns=[(feature, 'pre'), (feature, 'post')], inplace=True)
-    df.columns = [f"{feature}_{epoch}" for feature, epoch in df.columns]
-    df.reset_index(inplace=True)
-    df.rename(columns={"chan_idx": "channel"}, inplace=True)
-    results = df.copy()
-    
-    return results
 
 
 if __name__ == "__main__":
