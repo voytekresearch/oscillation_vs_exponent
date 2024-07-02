@@ -109,6 +109,12 @@ def main():
     fig.savefig(f"{dir_output}/intersection_frequency", bbox_inches='tight')
     fig.savefig(f"{dir_output}/intersection_frequency.png", bbox_inches='tight')
 
+    # print average intersection frequency and standard deviation
+    print(f"\n\nIntersection frequency:")
+    print(f"    Mean:\t{np.nanmean(f_intersection):.3f} Hz")
+    print(f"    Median:\t{np.nanmedian(f_intersection):.3f} Hz")
+    print(f"    STD:\t{np.nanstd(f_intersection):.3f} Hz")
+
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
