@@ -38,6 +38,7 @@ def main():
 
     # load speactral results
     df = load_params()
+    df = df.loc[df['material']=='faces']
 
     # run OLS
     results = {}
@@ -49,7 +50,7 @@ def main():
 
         # cross-validate OLS
         for patient in PATIENTS:
-            results_i = run_ols(df.loc[df['patient']!=patient], feature)
+            results_i = run_ols(df.loc[df['patient']==patient], feature)
             df_ols_list.append(pd.DataFrame({
                                             'patient'   :   patient, 
                                             'feature'   :   feature,
@@ -101,9 +102,9 @@ def main():
     features = ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']
     for ax, feature in zip([ax1, ax2, ax4, ax5], features):
         df.plot.scatter(y=f"{feature}_diff", x='exponent_diff', ax=ax, 
-                        color=BCOLORS[feature.split('_')[0]], s=2)
+                        color=BCOLORS[feature.split('_')[0]], s=2, alpha=0.5)
         draw_regression_results(ax, df['exponent_diff'].values, 
-                                results[f'{feature}'])
+                                results[f'{feature}'], add_text=False)
         ax.axvline(0, color='grey', linestyle='--', linewidth=1)
         ax.axhline(0, color='grey', linestyle='--', linewidth=1)
 
@@ -124,7 +125,7 @@ def main():
         sns.boxplot(**plotting_params, ax=ax, color=BCOLORS[feature])
         sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=3)
         ax.set_ylabel('$R^{2}$')
-        ax.set_xticklabels(['total\npower','adjusted\npower'])
+        ax.set_xticks([0, 1], labels=['total\npower','adjusted\npower'])
     ax3.set_xlabel('')
     ax6.set_xlabel('regressor')
 
