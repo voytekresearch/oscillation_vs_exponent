@@ -163,4 +163,5 @@ cython_debug/
 .vscode
 data/
 figures/
-notebooks/untracked
+notebooks/temp
+scripts/temp
