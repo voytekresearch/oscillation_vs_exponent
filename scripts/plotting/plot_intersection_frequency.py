@@ -1,9 +1,10 @@
 """
 Plot intersection frequency results. 
 
-Subplot A: simulation of the effects of spectral rotation on total band power.
-Subplot B: grand average power spectra.
-Subplot C: histogram of intersection frequency.
+Subplot 0: simulation of 2 spectral rotations (high and low intersection freq.)
+Subplot 1: simulation of the effects of spectral rotation on total band power.
+Subplot 2: grand average power spectra.
+Subplot 3: histogram of intersection frequency.
 """
 
 # Imports - standard
@@ -68,7 +69,7 @@ def main():
                                         constrained_layout=True)
 
     # plot simulation: Effects of spectral rotation on total band power
-    simulation_subplot_0(ax1)
+    simulation_subplot_0(fig, ax1)
     simulation_subplot_1(ax2)
 
     # plot empirical spectra
@@ -96,10 +97,10 @@ def main():
         beautify_ax(ax)
 
     # set titles
-    ax1.set_title('example spectral rotations')
-    ax2.set_title('effects of intersection freq.')
-    ax3.set_title('average power spectra')
-    ax4.set_title('intersection frequency')
+    ax1.set_title('Rotations at high and low\nintersection frequency (IF)')
+    ax2.set_title('Effect of intersection frequency\non total band power')
+    ax3.set_title('Average power spectra')
+    ax4.set_title('Intersection frequency')
 
     # add text above subplot titles (1 over ax1 and ax2 and another over ax3 and ax4)
     fig.text(0.25, 1.05, 'Simulation results', ha='center', va='center', fontsize=7)
@@ -120,7 +121,7 @@ def main():
     print_time_elapsed(t_start)
 
 
-def simulation_subplot_0(ax):
+def simulation_subplot_0(fig, ax):
     """ 
     Simulate a power spectrum and rotate it at a high and a low intersection
     frequency. Plot the original and rotated power spectra.
@@ -136,15 +137,23 @@ def simulation_subplot_0(ax):
                                   f_rotation=100)
     
     # plot power spectra
-    ax.loglog(freqs, psd_pre, color='k', label='original spectrum')
-    ax.loglog(freqs, psd_rot_low, color=RGB[2], linestyle='--',
-              label='low intersection')
+    ax.loglog(freqs, psd_pre, color='k', label='baseline')
     ax.loglog(freqs, psd_rot_high, color=RGB[0], linestyle='--',
-              label='high intersection')
+              label='high IF')
+    ax.loglog(freqs, psd_rot_low, color=RGB[2], linestyle='--',
+              label='low IF')
     
     # plot intersection frequency
-    ax.scatter(1, psd_rot_low[0], color=RGB[2], s=20, zorder=10)
     ax.scatter(100, psd_rot_high[-1], color=RGB[0], s=20, zorder=10)
+    ax.scatter(1, psd_rot_low[0], color=RGB[2], s=20, zorder=10)
+
+    # shade region between original and rotated spectra
+    ax.fill_between(freqs, psd_pre, psd_rot_high, color=RGB[0], alpha=0.3)
+    ax.fill_between(freqs, psd_pre, psd_rot_low, color=RGB[2], alpha=0.3)
+    fig.text(0.19, 0.37, 'broadband decrease', ha='center', va='center', 
+             rotation=-32, fontsize=5)
+    fig.text(0.11, 0.65, 'broadband increase', ha='center', va='center', 
+             rotation=-32, fontsize=5)
 
     # label plot
     ax.set(xlabel='frequency (Hz)', ylabel='power (au)')
