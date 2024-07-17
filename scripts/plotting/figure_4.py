@@ -54,8 +54,8 @@ def main():
     axa.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'grey'],
             edgecolor='black', linewidth=1, width=1)
     axa.set_xticks(x, labels=['alpha', 'gamma', 'both'])
-    axa.set_ylabel('Percentage')
-    axa.set_xlabel('Frequency band')
+    axa.set_ylabel('percentage')
+    axa.set_xlabel('frequency band')
     beautify_ax(axa)
     
     # plot glass brain: electrode locations
