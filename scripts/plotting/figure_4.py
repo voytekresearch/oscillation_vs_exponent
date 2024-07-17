@@ -9,6 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from nilearn import plotting
 
 # Imports - custom
@@ -39,17 +40,24 @@ def main():
     temp = pd.read_csv(fname, index_col=0)
     df = df.merge(temp, on=['patient', 'chan_idx'])
 
-    # initialize figure
-    fig, (axb, filler, axa, axc, axd) = plt.subplots(1, 5, constrained_layout=True,
-                                           width_ratios=[2.75, 0.25, 0.75, 1, 1],
-                                           figsize=(WIDTH['2col'], 
-                                                    WIDTH['2col']/4))
-    
-    # filler cuz nilearn is weird with subplots
-    filler.axis('off')
+    # create figure and gridspec
+    fig = plt.figure(figsize=(WIDTH['2col'], WIDTH['2col']/4), 
+                     constrained_layout=True)
+    spec = gridspec.GridSpec(figure=fig, ncols=4, nrows=1,
+                            width_ratios=[0.75, 2.75, 1, 1])
+    axa = fig.add_subplot(spec[0,0])
+    axb = fig.add_subplot(spec[0,1])
+    axc = fig.add_subplot(spec[0,2])
+    axd = fig.add_subplot(spec[0,3])
+
+    # shift subplot spaceing (nilearn plot including inexplicable whitespace)
+    # boxa = axa.get_position()
+    # axa.set_position([boxa.x0 + 0.025, boxa.y0, boxa.width, boxa.height])
+    boxb = axb.get_position()
+    axb.set_position([boxb.x0 - 0.04, boxb.y0, boxb.width, boxb.height])
     
     # plot barchart: number of task-modulated electrodes
-    x = [0, 1 , 2]
+    x = [0, 1, 2]
     y = [df[col].sum() / len(df) * 100 for col in ['sig_alpha', 'sig_gamma', 'sig_all']] 
     axa.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'grey'],
             edgecolor='black', linewidth=1, width=1)
@@ -71,7 +79,7 @@ def main():
 
     # set titles
     axa.set_title("Task-modulated\nelectrode counts")
-    axb.set_title("                                                Task-modulated electrode locations")
+    axb.set_title("Task-modulated electrode locations")
     axc.set_title("\nword block")
     axd.set_title("\nface block")
     fig.text(0.8, 0.97, "             Mean power spectra", ha='center', va='center',
