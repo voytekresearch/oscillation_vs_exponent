@@ -9,5 +9,6 @@ mne
 joblib
 pymatreader
 pyvista
+nilearn
 neurodsp
 specparam
