@@ -70,11 +70,11 @@ def main():
     plot_group_spectra(df, [axc, axd])
 
     # set titles
-    axa.set_title("Task-modulated electrodes\nby frequency band")
-    axb.set_title("                   Task-modulated electrode locations")
+    axa.set_title("Task-modulated\nelectrode counts")
+    axb.set_title("                                                Task-modulated electrode locations")
     axc.set_title("\nword block")
     axd.set_title("\nface block")
-    fig.text(0.8, 0.97, "Mean power spectra", ha='center', va='center',
+    fig.text(0.8, 0.97, "             Mean power spectra", ha='center', va='center',
              fontsize=7)
 
     # save
