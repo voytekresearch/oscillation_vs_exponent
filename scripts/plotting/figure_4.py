@@ -51,8 +51,6 @@ def main():
     axd = fig.add_subplot(spec[0,3])
 
     # shift subplot spaceing (nilearn plot including inexplicable whitespace)
-    # boxa = axa.get_position()
-    # axa.set_position([boxa.x0 + 0.025, boxa.y0, boxa.width, boxa.height])
     boxb = axb.get_position()
     axb.set_position([boxb.x0 - 0.04, boxb.y0, boxb.width, boxb.height])
     
@@ -62,7 +60,7 @@ def main():
     axa.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'grey'],
             edgecolor='black', linewidth=1, width=1)
     axa.set_xticks(x, labels=['alpha', 'gamma', 'both'])
-    axa.set_ylabel('percentage')
+    axa.set_ylabel('percentage (%)')
     axa.set_xlabel('frequency band')
     beautify_ax(axa)
     
