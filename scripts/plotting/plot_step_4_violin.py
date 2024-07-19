@@ -24,10 +24,10 @@ from info import MATERIALS
 from utils import get_start_time, print_time_elapsed
 from plots import set_custom_colors
 from specparam_utils import knee_freq
+from settings import WIDTH
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
-FIGSIZE = [3.25, 4]
 ALPHA = 0.05 # significance level
 FEATURES = ['offset', 'knee', 'exponent', 'alpha', 'alpha_adj', 'gamma',
             'gamma_adj']
@@ -65,6 +65,7 @@ def main():
     stats = pd.read_csv(fname, index_col=0)
     stats = stats.loc[stats['memory'] =='hit'].reset_index(drop=True)
     stats['p'] = stats['pvalue'].apply(lambda x: min(x, 1-x)) # standardize p-values (currently 0.5 represents equal and <0.05 and >0.95 are both significant)
+    # stats['p'].loc[stats['p']==0] == 0.001 # set p=0 to p=0.001
     mt = multipletests(stats['pvalue'], alpha=0.05, method='holm')
     stats['p_corr'] = mt[1]
     
@@ -95,7 +96,7 @@ def plot_contrasts_violin(params, stats, y_var, title='', y_label=None, fname_ou
     image = np.concatenate([img_0[:, :idx_mid], img_1[:, idx_mid:]], axis=1)
 
     # plot combined image
-    fig, ax = plt.subplots(figsize=FIGSIZE)
+    fig, ax = plt.subplots(figsize=[WIDTH['2col']/3, WIDTH['2col']/2])
     ax.imshow(image)
     ax.axis('off')
 
@@ -124,7 +125,8 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
         y_label = y_var.lower()
 
     # create figure
-    fig = plt.figure(figsize=FIGSIZE)
+
+    fig = plt.figure(figsize=[WIDTH['2col']/3, WIDTH['2col']/2])
     gs = fig.add_gridspec(2,2, height_ratios=[2,1])
     ax1 = fig.add_subplot(gs[0,:])
     ax2l = fig.add_subplot(gs[1,0])
@@ -184,15 +186,19 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
         ax.axvline(np.nanmean(diff), color='r', linestyle='--')
 
         # add stats
+        if y_var == 'gamma_adj': # prevent overlap with other annotations - only gamma increases
+            x_pos = 0.05
+        else:
+            x_pos = 0.55
         pval = stats.loc[((stats['material']==material) & 
                     (stats['feature']==y_var)), 'p_corr'].values
         if len(pval) == 1:
             if pval < 0.001:
-                ax.text(0.55, 0.85, f"*p<0.001", transform=ax.transAxes)
+                ax.text(x_pos, 0.85, f"*p<0.001", transform=ax.transAxes)
             elif pval < ALPHA:
-                ax.text(0.55, 0.85, f"*p={pval[0]:.3f}", transform=ax.transAxes)
+                ax.text(x_pos, 0.85, f"*p={pval[0]:.3f}", transform=ax.transAxes)
             else:
-                ax.text(0.55, 0.85, f"p={pval[0]:.3f}", transform=ax.transAxes)
+                ax.text(x_pos, 0.85, f"p={pval[0]:.3f}", transform=ax.transAxes)
         else:
             print(f"Warning: missing or multiple p-values for '{y_var}' in {material} block")
 
