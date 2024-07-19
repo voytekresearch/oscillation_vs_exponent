@@ -175,7 +175,7 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
                               columns='epoch', values=y_var).reset_index()
     df_p['diff'] = df_p['post'] - df_p['pre']
     max_val = np.nanmax(np.abs(df_p['diff']))
-    bins = np.linspace(-max_val, max_val, 20)
+    bins = np.linspace(-max_val, max_val, 21)
     for ax, material in zip([ax2l, ax2r], MATERIALS):
         diff = df_p.loc[df_p['material']==material, 'diff']
         ax.hist(diff, bins=bins, color='grey', label=material)
