@@ -14,6 +14,7 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
+from statsmodels.stats.multitest import multipletests
 
 # Imports - custom
 import sys
@@ -64,6 +65,8 @@ def main():
     stats = pd.read_csv(fname, index_col=0)
     stats = stats.loc[stats['memory'] =='hit'].reset_index(drop=True)
     stats['p'] = stats['pvalue'].apply(lambda x: min(x, 1-x)) # standardize p-values (currently 0.5 represents equal and <0.05 and >0.95 are both significant)
+    mt = multipletests(stats['pvalue'], alpha=0.05, method='holm')
+    stats['p_corr'] = mt[1]
     
     # plot
     for feature, title, label in zip(FEATURES, TITLES, LABELS):
@@ -182,7 +185,7 @@ def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None,
 
         # add stats
         pval = stats.loc[((stats['material']==material) & 
-                    (stats['feature']==y_var)), 'p'].values
+                    (stats['feature']==y_var)), 'p_corr'].values
         if len(pval) == 1:
             if pval < 0.001:
                 ax.text(0.55, 0.85, f"*p<0.001", transform=ax.transAxes)
