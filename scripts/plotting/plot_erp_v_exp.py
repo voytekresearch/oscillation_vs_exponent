@@ -26,9 +26,9 @@ CHAN_IDX = [66, 48]
 MATERIAL = ['faces', 'faces']
 MEMORY = ['miss', 'hit']
 
-# settings - plot
+# settings
 T_PLOT = [-0.5, 1.] # time window to plot
-
+LOAD_DATA = True # whether to load data or compute
 
 def main():
 
@@ -74,29 +74,43 @@ def main():
     for ii in range(2):
         print(f"\nCondition {ii+1} of 2")
         
-        # load tfr
-        fname = f"{PATIENT[ii]}_{MATERIAL[ii]}_{MEMORY[ii]}_chan{CHAN_IDX[ii]}_tfr.npz"
-        data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}", 
-                        allow_pickle=True)
-        tfr = np.swapaxes(data_in['tfr'], 1, 2) # swap axes for model fitting
-        tfr = tfr[~np.isnan(tfr).all(axis=(1,2))] # remove all nan trials
-        time = data_in['time']
+        if LOAD_DATA:
+            # load pre-computed exp time-series
+            exp_list.append(np.load(f"{dir_output}/exp_ts_{ii}.npy"))
+            
+            # load time vector
+            if ii == 0:
+                fname = f"{PATIENT[ii]}_{MATERIAL[ii]}_{MEMORY[ii]}_chan{CHAN_IDX[ii]}_tfr.npz"
+                data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}", 
+                                allow_pickle=True)
+                exp_time = data_in['time']
 
-        # parameterize
-        sgm = SpectralGroupModel(**SPEC_PARAM_SETTINGS)
-        sgms = fit_models_3d(sgm, data_in['freq'], tfr, freq_range=FREQ_RANGE, 
-                            n_jobs=N_JOBS)
-        
-        # extract exponent and subtract baseline
-        exp_list_i = []
-        for sgm in sgms:
-            exp_j = sgm.get_params('aperiodic', 'exponent')
-            exp_j = subtract_baseline(exp_j, time, [TMIN, 0])
-            exp_list_i.append(exp_j)
-        exp_list.append(np.array(exp_list_i))
+        else:
+            # load tfr
+            fname = f"{PATIENT[ii]}_{MATERIAL[ii]}_{MEMORY[ii]}_chan{CHAN_IDX[ii]}_tfr.npz"
+            data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}", 
+                            allow_pickle=True)
+            tfr = np.swapaxes(data_in['tfr'], 1, 2) # swap axes for model fitting
+            tfr = tfr[~np.isnan(tfr).all(axis=(1,2))] # remove all nan trials
+            exp_time = data_in['time']
+
+            # parameterize
+            sgm = SpectralGroupModel(**SPEC_PARAM_SETTINGS)
+            sgms = fit_models_3d(sgm, data_in['freq'], tfr, freq_range=FREQ_RANGE, 
+                                n_jobs=N_JOBS)
+            
+            # extract exponent and subtract baseline
+            exp_list_i = []
+            for sgm in sgms:
+                exp_j = sgm.get_params('aperiodic', 'exponent')
+                exp_j = subtract_baseline(exp_j, exp_time, [TMIN, 0])
+                exp_list_i.append(exp_j)
+            exp_list.append(np.array(exp_list_i))
+            np.save(f"{dir_output}/exp_ts_{ii}.npy", exp_list[ii])
+
 
     # plot =====================================================================
-    figsize = [WIDTH['2col'], WIDTH['2col']/2]
+    figsize = [WIDTH['2col'], WIDTH['2col']/2.5]
     fig, (ax0, ax1) = plt.subplots(1, 2, figsize=figsize, sharex=True,
                                     constrained_layout=True)
 
@@ -104,7 +118,7 @@ def main():
     for ii, (label, color) in enumerate(zip(['channel 1', 'channel 2'],
                                           [RGB[1], RGB[2]])):
         for var_list, time, ax in zip([erp_list, exp_list], 
-                                        [erp_time, time], 
+                                        [erp_time, exp_time], 
                                         [ax0, ax1]):
             ci = confidence_interval(var_list[ii])
             ax.plot(time, np.nanmean(var_list[ii], axis=0), color=color,
