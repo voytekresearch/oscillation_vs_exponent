@@ -87,6 +87,7 @@ def main():
     # create figure
     figsize = [WIDTH['2col'], WIDTH['2col']/2]
     _, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=figsize,
+                                                    width_ratios=[1,1,0.6],
                                                     constrained_layout=True)
     ax2.sharey(ax1)
     ax5.sharey(ax4)
