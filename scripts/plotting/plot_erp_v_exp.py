@@ -15,9 +15,9 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed, confidence_interval
-from erp_utils import compute_erp, subtract_baseline
+from erp_utils import subtract_baseline
 from tfr_utils import crop_tfr
-from settings import SPEC_PARAM_SETTINGS, FREQ_RANGE, N_JOBS, COLORS
+from settings import SPEC_PARAM_SETTINGS, FREQ_RANGE, N_JOBS, RGB, WIDTH
 from info import TMIN
 
 # settings - example data
@@ -27,9 +27,7 @@ MATERIAL = ['faces', 'faces']
 MEMORY = ['miss', 'hit']
 
 # settings - plot
-FIGSIZE = [4, 4]
 T_PLOT = [-0.5, 1.] # time window to plot
-colors = [COLORS['brown'], COLORS['blue']] # colors for 2 channels
 
 
 def main():
@@ -98,17 +96,20 @@ def main():
         exp_list.append(np.array(exp_list_i))
 
     # plot =====================================================================
-    fig, (ax0, ax1) = plt.subplots(2, 1, figsize=FIGSIZE, sharex=True,
+    figsize = [WIDTH['2col'], WIDTH['2col']/2]
+    fig, (ax0, ax1) = plt.subplots(1, 2, figsize=figsize, sharex=True,
                                     constrained_layout=True)
 
     # plot data
-    for ii in range(2):
+    for ii, (label, color) in enumerate(zip(['channel 1', 'channel 2'],
+                                          [RGB[1], RGB[2]])):
         for var_list, time, ax in zip([erp_list, exp_list], 
-                                      [erp_time, time], 
-                                      [ax0, ax1]):
+                                        [erp_time, time], 
+                                        [ax0, ax1]):
             ci = confidence_interval(var_list[ii])
-            ax.plot(time, np.nanmean(var_list[ii], axis=0), color=colors[ii])
-            ax.fill_between(time, ci[0], ci[1], color=colors[ii], alpha=0.2)
+            ax.plot(time, np.nanmean(var_list[ii], axis=0), color=color,
+                    label=label)
+            ax.fill_between(time, ci[0], ci[1], color=color, alpha=0.2)
 
     # label / format 
     ax0.set(xlabel=f'time (s)', ylabel=f'voltage (\u03BCV)')
@@ -121,6 +122,7 @@ def main():
         ax.axvline(0, color='k', linestyle='--')
         ax.axhline(0, color='k', linestyle='--')
         ax.set_xlim(T_PLOT)
+        ax.legend(loc='lower left')
 
     # save fig
     fig.savefig(f"{dir_fig}/erp_v_exp.png")
