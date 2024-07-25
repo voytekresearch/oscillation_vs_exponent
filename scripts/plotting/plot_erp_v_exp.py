@@ -127,7 +127,7 @@ def main():
 
     # label / format 
     ax0.set(xlabel=f'time (s)', ylabel=f'voltage (\u03BCV)')
-    ax0.set_title('Evoked response')
+    ax0.set_title('Event-related potential')
 
     ax1.set(xlabel=f'time (s)', ylabel=f'exponent')
     ax1.set_title('Aperiodic exponent')
