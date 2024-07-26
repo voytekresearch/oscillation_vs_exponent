@@ -9,6 +9,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from specparam import SpectralGroupModel
 from specparam.utils import trim_spectrum
+from scipy import stats
+from statsmodels.stats.multitest import multipletests
 
 # Imports - custom
 import sys
@@ -127,23 +129,45 @@ def main():
         for band in BANDS.keys():
             ci = confidence_interval(pow[band])
             ax.plot(time, np.nanmean(pow[band], axis=0), 
-                    label=f"{tag} {band} power", color=BCOLORS[band])
+                    label=f"{tag} {band}", color=BCOLORS[band])
             ax.fill_between(time, ci[0], ci[1], alpha=0.2, color=BCOLORS[band])
 
     # plot exponent (after z-scoreing and subtracting baseline)
     exponent = subtract_baseline(zscore(np.array(exp_list)), time, 
                                  t_baseline=[X_LIMITS[0], 0])
     ci = confidence_interval(exponent)
-    axes[2].plot(time, np.nanmean(exponent, axis=0), label='aperiodic exponent', 
+    axes[2].plot(time, np.nanmean(exponent, axis=0), label='exponent', 
                  color=BCOLORS['exponent'])
     axes[2].fill_between(time, ci[0], ci[1], alpha=0.2, 
                          color=BCOLORS['exponent'])
+
+    # add statistical annotations ==============================================
+    for ii, (feature, values) in enumerate(zip(['alpha', 'gamma'],
+                                             [power['alpha'], power['gamma']])):
+        sig = compute_significance(values)
+        for jj, s in enumerate(sig):
+            if s and (time[jj] < X_LIMITS[1]) and (time[jj] > X_LIMITS[0]):
+                axes[1].text(time[jj], Y_LIMITS[1]-0.2-(0.1*ii), '*', fontsize=12, 
+                            color=BCOLORS[feature], horizontalalignment='center', 
+                            verticalalignment='center')
+
+    for ii, (feature, values) in enumerate(zip(['exponent', 'alpha', 'gamma'],
+                                             [exponent, power_adj['alpha'], 
+                                              power_adj['gamma']])):
+        sig = compute_significance(values)
+        for jj, s in enumerate(sig):
+            if s and (time[jj] < X_LIMITS[1]) and (time[jj] > X_LIMITS[0]):
+                axes[2].text(time[jj], Y_LIMITS[1]-0.2-(0.1*ii), '*', fontsize=12, 
+                            color=BCOLORS[feature], 
+                            horizontalalignment='center', 
+                            verticalalignment='center')
+
 
     # label and adjust plots ===================================================
 
     # set title
     axes[0].set_title('Normalized spectrogram')
-    axes[1].set_title('Total band power')
+    axes[1].set_title('Total power')
     axes[2].set_title('Spectral parameters')
 
     # set x labels
@@ -164,7 +188,8 @@ def main():
         ax.set_ylim(Y_LIMITS)
 
         # add legend
-        ax.legend(loc='upper left', facecolor='white', framealpha=1)
+        ax.legend(facecolor='white', framealpha=1,
+                  bbox_to_anchor=(0.001, 0.001), loc='lower left')
 
         # remove right and top spines
         beautify_ax(ax)
@@ -176,6 +201,18 @@ def main():
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
+
+
+def compute_significance(values):
+    pvalues = []
+    for ii in range(values.shape[1]):
+        res_i = stats.ttest_1samp(values[:, ii], 0, nan_policy='omit')
+        pvalues.append(res_i.pvalue)
+    pvalues = np.array(pvalues)
+    mt = multipletests(pvalues, alpha=0.05, method='holm')
+    sig = mt[0]
+
+    return sig
 
 
 if __name__ == "__main__":
