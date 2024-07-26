@@ -65,8 +65,8 @@ def main():
     stats = pd.read_csv(fname, index_col=0)
     stats = stats.loc[stats['memory'] =='hit'].reset_index(drop=True)
     stats['p'] = stats['pvalue'].apply(lambda x: min(x, 1-x)) # standardize p-values (currently 0.5 represents equal and <0.05 and >0.95 are both significant)
-    # stats['p'].loc[stats['p']==0] == 0.001 # set p=0 to p=0.001
-    mt = multipletests(stats['pvalue'], alpha=0.05, method='holm')
+    # stats['p'].loc[stats['p']==0] = 0.001 # set p=0 to p=0.001
+    mt = multipletests(stats['p'], alpha=0.05, method='holm')
     stats['p_corr'] = mt[1]
     
     # plot
