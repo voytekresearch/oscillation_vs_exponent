@@ -10,7 +10,8 @@ pipeline:
 figures:
 	python scripts/figures/figure_1.py
 	python scripts/figures/figure_2.py
-	python scripts/figures/figure_3.py
+	python scripts/figures/figure_3ab.py
+	python scripts/figures/figure_3cdef.py
 	python scripts/figures/figure_4.py
 	python scripts/figures/figure_5.py
 	python scripts/figures/figure_6.py
