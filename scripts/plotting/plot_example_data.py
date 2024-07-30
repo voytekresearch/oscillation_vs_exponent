@@ -19,8 +19,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from settings import AP_MODE, FREQ_RANGE, RGB, WIDTH, BANDS, BCOLORS
-from info import MATERIALS
+from settings import AP_MODE, FREQ_RANGE, WIDTH, BANDS, BCOLORS
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
