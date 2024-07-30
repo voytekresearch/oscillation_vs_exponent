@@ -19,7 +19,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from settings import AP_MODE, FREQ_RANGE, RGB, WIDTH
+from settings import AP_MODE, FREQ_RANGE, RGB, WIDTH, BANDS, BCOLORS
 from info import MATERIALS
 
 # settings
@@ -27,8 +27,8 @@ plt.style.use('mplstyle/default.mplstyle')
 
 # settings - example data to visualize
 PATIENT = 'pat11'
-CHAN_IDX = 34
-MATERIAL = 'words'
+CHAN_IDX = 35
+MATERIAL = 'faces'
 
 def main():
 
@@ -46,13 +46,9 @@ def main():
     chan_info = pd.read_csv(f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv")
 
     # load rotation analysis results
-    intersection = dict()
-    intersection_idx = dict()
-    for material in MATERIALS:
-        fname = f"intersection_results_{material}_hit_{AP_MODE}.npz"
-        data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}", allow_pickle=True)
-        intersection[material] = data_in['intersection']
-        intersection_idx[material] = data_in['intersection_idx']
+    fname = f"intersection_results_{MATERIAL}_hit_{AP_MODE}.npz"
+    data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}", allow_pickle=True)
+    intersection = data_in['intersection']
 
     # load iEEG time-series results
     fname_in = f"{PATIENT}_{MATERIAL}_hit_epo.fif"
@@ -75,15 +71,15 @@ def main():
     conf_post = stats.norm.interval(0.95, loc=np.mean(psd_post_all, 0),
                                 scale=np.std(psd_post_all, 0)/np.sqrt(len(psd_post_all)))
 
-    # get rotation frequency and index
+    # get rotation frequency index
     mask = (chan_info['patient']==PATIENT) & (chan_info['chan_idx']==CHAN_IDX)
-    f_rotation = intersection['words'][mask][0]
+    f_rotation = intersection[mask][0]
     idx_rotation = np.argmin(np.abs(freq - f_rotation))
 
     # plot data =================================================================
 
     # create gridspec and nested gridspec for subplots
-    fig = plt.figure(figsize=[WIDTH['2col'], WIDTH['2col']/3])
+    fig = plt.figure(figsize=[WIDTH['2col'], WIDTH['2col']/4])
     gs = gridspec.GridSpec(1,2, figure=fig, width_ratios=[2,1])
     gs2a = gridspec.GridSpecFromSubplotSpec(5,1, subplot_spec=gs[0], hspace=0)
     gs2b = gridspec.GridSpecFromSubplotSpec(1,1, subplot_spec=gs[1])
@@ -122,7 +118,7 @@ def main():
         ax4.spines[loc].set_visible(False)
 
     # label
-    ax0.set_title('iEEG time-series')
+    ax0.set_title('Example electrode: raw iEEG time-series')
     ax4.set_xlabel('time relative to stimulus onset (s)')
 
     # ==================== Fig 2b ====================
@@ -144,10 +140,15 @@ def main():
 
     # plot intersection frequnency
     ax2b.scatter(f_rotation, np.nanmean(psd_pre_all, 0)[idx_rotation], s=32, 
-                 color=RGB[2], zorder=5, label='intersection')
+                 color=BCOLORS['exponent'], zorder=5, label='intersection')
+
+    # shade oscillation bands
+    for band in ['alpha', 'gamma']:
+        ax2b.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band],
+                     alpha=0.4)
 
     # subplot 2 - label
-    ax2b.set_title('Power spectra') #('Single-electrode Spectra', fontsize=20)
+    ax2b.set_title('Example electrode: power spectra') #('Single-electrode Spectra', fontsize=20)
     ax2b.set_xlabel('frequency (Hz)')
     ax2b.set_ylabel('power ($\u03bcV^2/Hz$)')
     ax2b.legend(markerscale=0.4)
