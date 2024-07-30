@@ -8,6 +8,12 @@ pipeline:
 	python scripts/pipeline/7_permutation_stats.py
 
 figures:
-
+	python scripts/figures/figure_1.py
+	python scripts/figures/figure_2.py
+	python scripts/figures/figure_3.py
+	python scripts/figures/figure_4.py
+	python scripts/figures/figure_5.py
+	python scripts/figures/figure_6.py
+	python scripts/figures/figure_7.py
 
 all: pipeline figures
