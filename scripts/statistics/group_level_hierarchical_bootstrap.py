@@ -1,6 +1,7 @@
 """
 Perform group-level comparison of spectral parameters between baseline and 
-encoding using the paired hierarchical bootstrap.
+encoding using the paired hierarchical bootstrap. Also compute effect sizes
+using Cohen's d.
 
 """
 
@@ -8,6 +9,7 @@ encoding using the paired hierarchical bootstrap.
 import os
 import numpy as np
 import pandas as pd
+from pingouin import compute_effsize
 
 # Imports - custom
 import sys
@@ -34,7 +36,7 @@ def main():
     df_sig = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv", index_col=0)
 
     # init
-    columns = ['material', 'memory', 'feature', 'pvalue']
+    columns = ['material', 'memory', 'feature', 'pvalue', 'cohens_d']
     results = pd.DataFrame(columns=columns)
 
     # loop through materials
@@ -56,14 +58,23 @@ def main():
                 df_cond = df_cond.merge(df_sig, on=['patient', 'chan_idx'])
                 df_cond = df_cond.loc[df_cond['sig_all']].reset_index(drop=True)
             
-            # run bootstrap
+            # compute stats
             for feature in FEATURES:
+                # display progress
                 print(f'\nFeature: {feature}')
                 start_time_f = get_start_time()
-
+            
+                # run bootstrap
                 stats = hb(df_cond, feature, 'epoch', 'patient', 'chan_idx', 
                            n_iterations=N_ITERATIONS, verbose=False, plot=False)
-                data = np.array([[material, memory, feature, stats[0]]])
+                
+                # compute effect size
+                xx = df_cond.loc[df_cond['epoch']=='pre', feature].values
+                yy = df_cond.loc[df_cond['epoch']=='post', feature].values
+                effsize = compute_effsize(xx, yy, paired=True, eftype='cohen')
+
+                # store results
+                data = np.array([[material, memory, feature, stats[0], effsize]])
                 results_i = pd.DataFrame(data, index=[0], columns=columns)
                 results = pd.concat([results, results_i], ignore_index=True)
 
