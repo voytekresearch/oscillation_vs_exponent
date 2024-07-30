@@ -4,6 +4,7 @@ pandas
 matplotlib
 seaborn
 statsmodels
+pingouin
 scikit-learn
 mne
 joblib
