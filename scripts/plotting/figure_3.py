@@ -1,6 +1,10 @@
 """
-This script plots the average power spectra for channels identified in
-scripts.3_id_modulated_channels.py as being task-modulated.
+This script reproduces figure 3: Task-modulated electrodes. The results of 
+scripts.3_id_modulated_channels.py are plotted.
+A) Bar chart depicting percentage of task-modulated electrodes
+B) Glass brain plot showing locations of task-modulated electrodes
+C) Group mean power spectra for word block
+D) Group mean power spectra for face block
 
 """
 
