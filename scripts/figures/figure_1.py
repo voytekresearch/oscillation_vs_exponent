@@ -19,8 +19,7 @@ from neurodsp.spectral import rotate_powerlaw
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from info import FELLNER_BANDS as BANDS
-from settings import BCOLORS, WIDTH
+from settings import BANDS, BCOLORS, WIDTH
 
 # plotting setting
 plt.style.use('mplstyle/default.mplstyle')
@@ -28,8 +27,8 @@ plt.style.use('mplstyle/default.mplstyle')
 # Set PSD simulation parameters
 FREQ_RANGE = [1, 100] # frequency range for simulated power spectra
 PARAMS_AP = [5, 2] # aperiodic parameters for simulated power spectra (baseline)
-PARAMS_PER = [[12, 1, 2], [70, 0.15, 8]] # periodic parameters (baseline)
-PARAMS_PER_POST = [[12, 0.25, 2], [70, 0.4, 8]] # periodic parameters (encoding)
+PARAMS_PER = [[10, 1, 1.5], [70, 0.15, 8]] # periodic parameters (baseline)
+PARAMS_PER_POST = [[10, 0.25, 1.5], [70, 0.4, 8]] # periodic parameters (encoding)
 ROTATION_FREQ = 40 # frequency at which to rotate the spectra
 ROTATION_DELTA = -0.75 # change in exponent for rotation
 NOISE_LEVEL = 0 # noise level for simulated power spectra
