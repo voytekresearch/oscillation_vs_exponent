@@ -1,5 +1,5 @@
 """
-Plot example data for two channels: one with a clear ERP and no exponent 
+Plot example data for two electrodes: one with a clear ERP and no exponent 
 modulation and another with clear exponent modulation and no ERP.
 """
 
@@ -115,7 +115,7 @@ def main():
                                     constrained_layout=True)
 
     # plot data
-    for ii, (label, color) in enumerate(zip(['channel 1', 'channel 2'],
+    for ii, (label, color) in enumerate(zip(['electrode 1', 'electrode 2'],
                                           [RGB[1], RGB[2]])):
         for var_list, time, ax in zip([erp_list, exp_list], 
                                         [erp_time, exp_time], 
