@@ -61,7 +61,7 @@ def main():
     # plot barchart: number of task-modulated electrodes
     x = [0, 1, 2]
     y = [df[col].sum() / len(df) * 100 for col in ['sig_alpha', 'sig_gamma', 'sig_all']] 
-    axa.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'grey'],
+    axa.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'k'],
             edgecolor='black', linewidth=1, width=1)
     axa.set_xticks(x, labels=['alpha', 'gamma', 'both'])
     axa.set_ylabel('percentage (%)')
@@ -75,6 +75,14 @@ def main():
                         node_cmap='binary', node_vmin=0, node_vmax=1, 
                         display_mode='ortho', axes=axb, annotate=False)
     nfig.annotate(size=7) # must plot with annotate=False, then set size here
+
+    df_alpha = df[(df['sig_alpha']) & (~df['sig_all'])]
+    nfig.add_markers(marker_coords=df_alpha[['pos_x', 'pos_y', 'pos_z']].values, 
+                     marker_size=1, marker_color=BCOLORS['alpha'])
+    
+    df_gamma = df[(df['sig_gamma']) & (~df['sig_all'])]
+    nfig.add_markers(marker_coords=df_gamma[['pos_x', 'pos_y', 'pos_z']].values,
+                        marker_size=1, marker_color=BCOLORS['gamma'])
 
     # plot spectra: group mean for word and face blocks
     plot_group_spectra(df, [axc, axd])
