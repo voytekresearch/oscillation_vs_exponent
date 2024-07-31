@@ -88,7 +88,8 @@ def main():
 
     # plot histogram of intersection frequency
     bins = np.linspace(0, 100, 11)
-    ax4.hist(f_intersection, bins, color='grey', edgecolor='k', linewidth=0.5)
+    ax4.hist(f_intersection, bins, color=BCOLORS['exponent'], edgecolor='k', 
+             linewidth=0.5)
     ax4.set_xlabel('frequency (Hz)')
     ax4.set_ylabel('electrode count')
 
