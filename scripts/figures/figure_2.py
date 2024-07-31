@@ -51,7 +51,7 @@ def main():
 
     # plot bargraph of number of electrodes per patient - match colors to 'tab20' above
     colors = plt.cm.tab20.colors[:len(PATIENTS)]
-    df['patient_idx'] = df['patient'].map({p: i for i, p in enumerate(PATIENTS)})
+    df['patient_idx'] = df['patient'].map({p: i + 1 for i, p in enumerate(PATIENTS)})
     df.groupby('patient_idx').size().plot(kind='bar', ax=ax0, color=colors, width=0.8)
     ax0.set(xlabel="patient index", ylabel="number of electrodes")
     beautify_ax(ax0)
