@@ -22,7 +22,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from info import MATERIALS
 from plots import plot_spectra_2conditions, beautify_ax
-from settings import COLORS, FREQ_RANGE, WIDTH, BCOLORS
+from settings import COLORS, FREQ_RANGE, WIDTH, BCOLORS, BANDS
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
@@ -92,7 +92,7 @@ def main():
     axb.set_title("Task-modulated electrode locations")
     axc.set_title("\nword-encoding block")
     axd.set_title("\nface-encoding block")
-    fig.text(0.8, 0.97, "             Mean power spectra", ha='center', va='center',
+    fig.text(0.8, 0.97, "Mean power spectra", ha='center', va='center',
              fontsize=7)
 
     # save
@@ -119,6 +119,11 @@ def plot_group_spectra(df, axes):
         plot_spectra_2conditions(psd_pre[:, f_mask], psd_post[:, f_mask], 
                                 freq[f_mask], shade_sem=True, ax=ax, 
                                 color=colors)
+        
+        # shade oscillation bands
+        for band in ['alpha', 'gamma']:
+            ax.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band],
+                        alpha=0.4)
         
         # beautify
         ax.grid(False)
