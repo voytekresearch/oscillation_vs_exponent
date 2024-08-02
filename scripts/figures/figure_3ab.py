@@ -19,7 +19,8 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from settings import AP_MODE, FREQ_RANGE, WIDTH, BANDS, BCOLORS
+from settings import AP_MODE, FREQ_RANGE, WIDTH, BANDS, BCOLORS, COLORS
+from plots import beautify_ax
 
 # settings
 plt.style.use('mplstyle/default.mplstyle')
@@ -44,44 +45,20 @@ def main():
     # load channel info
     chan_info = pd.read_csv(f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv")
 
-    # load rotation analysis results
-    fname = f"intersection_results_{MATERIAL}_hit_{AP_MODE}.npz"
-    data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}", allow_pickle=True)
-    intersection = data_in['intersection']
-
     # load iEEG time-series results
     fname_in = f"{PATIENT}_{MATERIAL}_hit_epo.fif"
     epochs = read_epochs(f"{PROJECT_PATH}/data/ieeg_epochs/{fname_in}")
-    signals = epochs.get_data(copy=True)
+    signals = epochs.get_data()#copy=True)
     signal = signals[:, CHAN_IDX]
     time = epochs.times
-
-    # load spectral results
-    fname_in = '%s_%s_hit_XXXstim_psd.npz' %(PATIENT, MATERIAL)
-    psd_pre_in = np.load(f"{PROJECT_PATH}/data/ieeg_psd/{fname_in.replace('XXX','pre')}")
-    psd_post_in = np.load(f"{PROJECT_PATH}/data/ieeg_psd/{fname_in.replace('XXX','post')}")
-    psd_pre_all = psd_pre_in['psd'][:,CHAN_IDX]
-    psd_post_all = psd_post_in['psd'][:,CHAN_IDX]
-    freq = psd_pre_in['freq']
-
-    # calc confidence interval for spectra (across trials)
-    conf_pre = stats.norm.interval(0.95, loc=np.mean(psd_pre_all, 0),
-                                scale=np.std(psd_pre_all, 0)/np.sqrt(len(psd_pre_all)))
-    conf_post = stats.norm.interval(0.95, loc=np.mean(psd_post_all, 0),
-                                scale=np.std(psd_post_all, 0)/np.sqrt(len(psd_post_all)))
-
-    # get rotation frequency index
-    mask = (chan_info['patient']==PATIENT) & (chan_info['chan_idx']==CHAN_IDX)
-    f_rotation = intersection[mask][0]
-    idx_rotation = np.argmin(np.abs(freq - f_rotation))
 
     # plot data =================================================================
 
     # create gridspec and nested gridspec for subplots
     fig = plt.figure(figsize=[WIDTH['2col'], WIDTH['2col']/4])
-    gs = gridspec.GridSpec(1,2, figure=fig, width_ratios=[2,1])
-    gs2a = gridspec.GridSpecFromSubplotSpec(5,1, subplot_spec=gs[0], hspace=0)
-    gs2b = gridspec.GridSpecFromSubplotSpec(1,1, subplot_spec=gs[1])
+    gs = gridspec.GridSpec(1, 2, figure=fig, width_ratios=[2.75, 2])
+    gs2a = gridspec.GridSpecFromSubplotSpec(5,1, subplot_spec=gs[0])
+    gs2bc = gridspec.GridSpecFromSubplotSpec(1,2, subplot_spec=gs[1])
 
     # ==================== Fig 2a ====================
     # plot raw time-series (baseline and encoding)
@@ -120,38 +97,18 @@ def main():
     ax0.set_title('Example electrode: raw iEEG time-series')
     ax4.set_xlabel('time relative to stimulus onset (s)')
 
-    # ==================== Fig 2b ====================
-    # create subplot
-    ax2b = fig.add_subplot(gs2b[0,0])
+    # ==================== Fig 2b and 2d ====================
+    ax2b = fig.add_subplot(gs2bc[0])
+    ax2c = fig.add_subplot(gs2bc[1])
 
-    # Plot spectra
-    ax2b.loglog(freq, np.nanmean(psd_pre_all, 0), color='grey',
-                label='baseline')
-    ax2b.loglog(freq, np.nanmean(psd_post_all, 0), color='k', 
-                label='encoding')
-    ax2b.set_xlim(FREQ_RANGE)
-
-    # plot 95% confidence intrval
-    ax2b.fill_between(freq, conf_pre[0], conf_pre[1], 
-                      color='grey', alpha=0.5, edgecolor=None)
-    ax2b.fill_between(freq, conf_post[0], conf_post[1], color='k', 
-                      alpha=0.5, edgecolor=None)
-
-    # plot intersection frequnency
-    ax2b.scatter(f_rotation, np.nanmean(psd_pre_all, 0)[idx_rotation], s=32, 
-                 color=BCOLORS['exponent'], zorder=5, label='intersection')
-
-    # shade oscillation bands
-    for band in ['alpha', 'gamma']:
-        ax2b.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band],
-                     alpha=0.4)
-
-    # subplot 2 - label
-    ax2b.set_title('Example electrode: power spectra') #('Single-electrode Spectra', fontsize=20)
-    ax2b.set_xlabel('frequency (Hz)')
-    ax2b.set_ylabel('power ($\u03bcV^2/Hz$)')
-    ax2b.legend(markerscale=0.4)
-    ax2b.axvline(1, color='gray', linestyle='--', linewidth=1)
+    for ax, material, color in zip([ax2b, ax2c], 
+                                   ['words', 'faces'], 
+                                   ['brown', 'blue']):
+        plot_spectra(chan_info, ax, material, color)
+    
+    # add joint title centered over to B and C
+    fig.text(0.8, 0.97, 'Example electrode: mean power spectra', ha='center', 
+             va='center', fontsize=7)
 
     # save figure
     fig.savefig(f"{dir_output}/example_data")
@@ -160,6 +117,64 @@ def main():
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
+
+
+def plot_spectra(chan_info, axi, material, color):
+    # load spectral results
+    fname_in = '%s_%s_hit_XXXstim_psd.npz' %(PATIENT, material)
+    psd_pre_in = np.load(f"{PROJECT_PATH}/data/ieeg_psd/{fname_in.replace('XXX','pre')}")
+    psd_post_in = np.load(f"{PROJECT_PATH}/data/ieeg_psd/{fname_in.replace('XXX','post')}")
+    psd_pre_all = psd_pre_in['psd'][:,CHAN_IDX]
+    psd_post_all = psd_post_in['psd'][:,CHAN_IDX]
+    freq = psd_pre_in['freq']
+
+    # calc confidence interval for spectra (across trials)
+    conf_pre = stats.norm.interval(0.95, loc=np.mean(psd_pre_all, 0),
+        scale=np.std(psd_pre_all, 0)/np.sqrt(len(psd_pre_all)))
+    conf_post = stats.norm.interval(0.95, loc=np.mean(psd_post_all, 0),
+        scale=np.std(psd_post_all, 0)/np.sqrt(len(psd_post_all)))
+    
+    # load rotation analysis results
+    fname = f"intersection_results_{material}_hit_{AP_MODE}.npz"
+    data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}", allow_pickle=True)
+    intersection = data_in['intersection']
+    
+    # get rotation frequency index
+    mask = (chan_info['patient']==PATIENT) & (chan_info['chan_idx']==CHAN_IDX)
+    f_rotation = intersection[mask][0]
+    idx_rotation = np.argmin(np.abs(freq - f_rotation))
+
+    # Plot spectra
+    axi.loglog(freq, np.nanmean(psd_pre_all, 0), label='baseline',
+                color=COLORS[f'light_{color}'], linewidth=1)
+    axi.loglog(freq, np.nanmean(psd_post_all, 0), label='encoding',
+                color=COLORS[color], linewidth=1)
+    axi.set_xlim(FREQ_RANGE)
+
+    # plot 95% confidence intrval
+    axi.fill_between(freq, conf_pre[0], conf_pre[1], edgecolor=None,
+                    color=COLORS[f'light_{color}'], alpha=0.5)
+    axi.fill_between(freq, conf_post[0], conf_post[1], edgecolor=None,
+                        color=COLORS[color], alpha=0.5)
+
+    # plot intersection frequnency
+    axi.scatter(f_rotation, np.nanmean(psd_pre_all, 0)[idx_rotation], s=16, 
+                color=BCOLORS['exponent'], zorder=5, label='intersection')
+
+    # shade oscillation bands
+    for band in ['alpha', 'gamma']:
+        axi.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band],
+                    alpha=0.4)
+
+    # subplot 2 - label
+    axi.set_title(f'\n{material[:-1]}-encoding block')
+    axi.set_xlabel('frequency (Hz)')
+    axi.set_ylabel('power ($\u03bcV^2/Hz$)')
+    axi.legend(loc='lower left')#markerscale=0.4)
+    axi.axvline(1, color='gray', linestyle='--', linewidth=1)
+
+    # beautify
+    beautify_ax(axi)
 
 
 if __name__ == "__main__":
