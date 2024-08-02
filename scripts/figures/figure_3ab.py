@@ -19,7 +19,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from settings import AP_MODE, FREQ_RANGE, WIDTH, BANDS, BCOLORS, COLORS
+from settings import FREQ_RANGE, WIDTH, BANDS, BCOLORS, COLORS
 from plots import beautify_ax
 
 # settings
@@ -48,7 +48,7 @@ def main():
     # load iEEG time-series results
     fname_in = f"{PATIENT}_{MATERIAL}_hit_epo.fif"
     epochs = read_epochs(f"{PROJECT_PATH}/data/ieeg_epochs/{fname_in}")
-    signals = epochs.get_data()#copy=True)
+    signals = epochs.get_data()
     signal = signals[:, CHAN_IDX]
     time = epochs.times
 
@@ -133,16 +133,6 @@ def plot_spectra(chan_info, axi, material, color):
         scale=np.std(psd_pre_all, 0)/np.sqrt(len(psd_pre_all)))
     conf_post = stats.norm.interval(0.95, loc=np.mean(psd_post_all, 0),
         scale=np.std(psd_post_all, 0)/np.sqrt(len(psd_post_all)))
-    
-    # load rotation analysis results
-    fname = f"intersection_results_{material}_hit_{AP_MODE}.npz"
-    data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}", allow_pickle=True)
-    intersection = data_in['intersection']
-    
-    # get rotation frequency index
-    mask = (chan_info['patient']==PATIENT) & (chan_info['chan_idx']==CHAN_IDX)
-    f_rotation = intersection[mask][0]
-    idx_rotation = np.argmin(np.abs(freq - f_rotation))
 
     # Plot spectra
     axi.loglog(freq, np.nanmean(psd_pre_all, 0), label='baseline',
@@ -157,10 +147,6 @@ def plot_spectra(chan_info, axi, material, color):
     axi.fill_between(freq, conf_post[0], conf_post[1], edgecolor=None,
                         color=COLORS[color], alpha=0.5)
 
-    # plot intersection frequnency
-    axi.scatter(f_rotation, np.nanmean(psd_pre_all, 0)[idx_rotation], s=16, 
-                color=BCOLORS['exponent'], zorder=5, label='intersection')
-
     # shade oscillation bands
     for band in ['alpha', 'gamma']:
         axi.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band],
@@ -170,7 +156,7 @@ def plot_spectra(chan_info, axi, material, color):
     axi.set_title(f'\n{material[:-1]}-encoding block')
     axi.set_xlabel('frequency (Hz)')
     axi.set_ylabel('power ($\u03bcV^2/Hz$)')
-    axi.legend(loc='lower left')#markerscale=0.4)
+    axi.legend(loc='lower left')
     axi.axvline(1, color='gray', linestyle='--', linewidth=1)
 
     # beautify
