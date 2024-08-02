@@ -161,7 +161,7 @@ cython_debug/
 
 # custom --------------------------------------------------------------------
 .vscode
-data/
-figures/
+./data/
+./figures/
 notebooks/temp
 scripts/temp
