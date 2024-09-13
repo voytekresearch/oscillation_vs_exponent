@@ -135,7 +135,7 @@ def main():
         beautify_ax(ax)
 
     # save figure
-    fname = "regress_confounding_features"
+    fname = "figure_6"
     plt.savefig(f"{dir_figure}/{fname}.png")
     plt.savefig(f"{dir_figure}/{fname}")
 

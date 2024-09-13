@@ -97,8 +97,8 @@ def main():
              fontsize=7)
 
     # save
-    plt.savefig(f"{dir_fig}/figure_4")
-    plt.savefig(f"{dir_fig}/figure_4.png")
+    plt.savefig(f"{dir_fig}/figure_3cde")
+    plt.savefig(f"{dir_fig}/figure_3cde.png")
     plt.close()
 
 

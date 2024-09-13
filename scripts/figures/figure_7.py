@@ -195,8 +195,8 @@ def main():
         beautify_ax(ax)
 
     # save figure
-    fig.savefig(f"{dir_output}/tfr_features_group")
-    fig.savefig(f"{dir_output}/tfr_features_group.png")
+    fig.savefig(f"{dir_output}/figure_7")
+    fig.savefig(f"{dir_output}/figure_7.png")
 
     # display progress
     print(f"\n\nTotal analysis time:")

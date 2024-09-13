@@ -57,8 +57,8 @@ def main():
     beautify_ax(ax0)
 
     # save/show
-    plt.savefig(f"{dir_output}/figure_2B")
-    plt.savefig(f"{dir_output}/figure_2B.png")
+    plt.savefig(f"{dir_output}/figure_2bc")
+    plt.savefig(f"{dir_output}/figure_2bc.png")
 
     # display progress
     print(f"\n\nTotal analysis time:")

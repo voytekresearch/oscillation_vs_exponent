@@ -108,8 +108,8 @@ def main():
     fig.text(0.75, 1.05, 'Empirical results', ha='center', va='center', fontsize=7)
 
     # save fig - add small margin at top
-    fig.savefig(f"{dir_output}/intersection_frequency", bbox_inches='tight')
-    fig.savefig(f"{dir_output}/intersection_frequency.png", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_5", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_5.png", bbox_inches='tight')
 
     # print average intersection frequency and standard deviation
     print(f"\n\nIntersection frequency:")

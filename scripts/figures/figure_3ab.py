@@ -111,8 +111,8 @@ def main():
              va='center', fontsize=7)
 
     # save figure
-    fig.savefig(f"{dir_output}/example_data")
-    fig.savefig(f"{dir_output}/example_data.png")
+    fig.savefig(f"{dir_output}/figure_3ab")
+    fig.savefig(f"{dir_output}/figure_3ab.png")
 
     # display progress
     print(f"\n\nTotal analysis time:")
