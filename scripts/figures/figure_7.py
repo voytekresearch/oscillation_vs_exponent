@@ -142,26 +142,28 @@ def main():
                          color=BCOLORS['exponent'])
 
     # add statistical annotations ==============================================
+    time_ = time[(time < X_LIMITS[1]) & (time > X_LIMITS[0])] 
+    
     for ii, (feature, values) in enumerate(zip(['alpha', 'gamma'],
                                              [power['alpha'], power['gamma']])):
         sig = compute_significance(values)
-        for jj, s in enumerate(sig):
-            if s and (time[jj] < X_LIMITS[1]) and (time[jj] > X_LIMITS[0]):
-                axes[1].text(time[jj], Y_LIMITS[1]-0.2-(0.1*ii), '*', fontsize=12, 
-                            color=BCOLORS[feature], horizontalalignment='center', 
-                            verticalalignment='center')
+        sig = sig[(time < X_LIMITS[1]) & (time > X_LIMITS[0])]
+        for jj in range(len(sig)-1):
+            if sig[jj] and sig[jj+1]:
+                axes[1].plot([time_[jj], time_[jj+1]], 
+                             [Y_LIMITS[1]-0.2-(0.1*ii)]*2, 
+                             color=BCOLORS[feature], linewidth=2)
 
     for ii, (feature, values) in enumerate(zip(['exponent', 'alpha', 'gamma'],
                                              [exponent, power_adj['alpha'], 
                                               power_adj['gamma']])):
         sig = compute_significance(values)
-        for jj, s in enumerate(sig):
-            if s and (time[jj] < X_LIMITS[1]) and (time[jj] > X_LIMITS[0]):
-                axes[2].text(time[jj], Y_LIMITS[1]-0.2-(0.1*ii), '*', fontsize=12, 
-                            color=BCOLORS[feature], 
-                            horizontalalignment='center', 
-                            verticalalignment='center')
-
+        sig = sig[(time < X_LIMITS[1]) & (time > X_LIMITS[0])]
+        for jj in range(len(sig)-1):
+            if sig[jj] and sig[jj+1]:
+                axes[2].plot([time_[jj], time_[jj+1]], 
+                             [Y_LIMITS[1]-0.2-(0.1*ii)]*2, 
+                             color=BCOLORS[feature], linewidth=2)
 
     # label and adjust plots ===================================================
 
