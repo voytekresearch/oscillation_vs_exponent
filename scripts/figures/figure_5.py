@@ -132,29 +132,29 @@ def simulation_subplot_0(fig, ax):
     freqs, psd_pre = sim_power_spectrum(freq_range=[1, 100], 
                                         aperiodic_params=[10, 2], 
                                         periodic_params=[])
-    psd_rot_low = rotate_powerlaw(freqs, psd_pre, delta_exponent=1, 
+    psd_rot_low = rotate_powerlaw(freqs, psd_pre, delta_exponent=-0.5, 
                                   f_rotation=1)
-    psd_rot_high = rotate_powerlaw(freqs, psd_pre, delta_exponent=1, 
+    psd_rot_high = rotate_powerlaw(freqs, psd_pre, delta_exponent=-0.5, 
                                   f_rotation=100)
     
     # plot power spectra
     ax.loglog(freqs, psd_pre, color='k', label='baseline')
-    ax.loglog(freqs, psd_rot_high, color=RGB[0], linestyle='--',
+    ax.loglog(freqs, psd_rot_high, color=RGB[2], linestyle='--',
               label='high IF')
-    ax.loglog(freqs, psd_rot_low, color=RGB[2], linestyle='--',
+    ax.loglog(freqs, psd_rot_low, color=RGB[0], linestyle='--',
               label='low IF')
     
     # plot intersection frequency
-    ax.scatter(100, psd_rot_high[-1], color=RGB[0], s=20, zorder=10)
-    ax.scatter(1, psd_rot_low[0], color=RGB[2], s=20, zorder=10)
+    ax.scatter(100, psd_rot_high[-1], color=RGB[2], s=20, zorder=10)
+    ax.scatter(1, psd_rot_low[0], color=RGB[0], s=20, zorder=10)
 
     # shade region between original and rotated spectra
-    ax.fill_between(freqs, psd_pre, psd_rot_high, color=RGB[0], alpha=0.3)
-    ax.fill_between(freqs, psd_pre, psd_rot_low, color=RGB[2], alpha=0.3)
-    fig.text(0.19, 0.37, 'broadband decrease', ha='center', va='center', 
-             rotation=-32, fontsize=5)
-    fig.text(0.11, 0.65, 'broadband increase', ha='center', va='center', 
-             rotation=-32, fontsize=5)
+    ax.fill_between(freqs, psd_pre, psd_rot_high, color=RGB[2], alpha=0.3)
+    ax.fill_between(freqs, psd_pre, psd_rot_low, color=RGB[0], alpha=0.3)
+    fig.text(0.19, 0.42, 'broadband increase', ha='center', va='center', 
+             rotation=-40, fontsize=5)
+    fig.text(0.11, 0.60, 'broadband decrease', ha='center', va='center', 
+             rotation=-40, fontsize=5)
 
     # label plot
     ax.set(xlabel='frequency (Hz)', ylabel='power (au)')
