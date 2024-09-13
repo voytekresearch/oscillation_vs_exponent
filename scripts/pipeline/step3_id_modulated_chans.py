@@ -84,6 +84,15 @@ def main():
                 power_post = np.mean(trim_spectrum(freq, psd_post[:, i_chan],
                                                   f_range)[1], axis=1)
 
+                # correct for nan
+                if (np.isnan(power_pre).all()) | (np.isnan(power_post).all()):
+                    # save results
+                    df.loc[i_chan, f'{band}_pre'] = np.nan
+                    df.loc[i_chan, f'{band}_post'] = np.nan
+                    df.loc[i_chan, f'{band}_pval'] = np.nan
+                    df.loc[i_chan, f'{band}_sign'] = np.nan
+                    continue
+
                 # determine whether bandpower was task modulation
                 stats = permutation_test([power_pre, power_post], 
                                          statistic=mean_difference, 
@@ -94,7 +103,7 @@ def main():
 
                 # determine sign of effect
                 sign = np.sign(np.nanmean(power_post) - np.nanmean(power_pre))
-                
+
                 # save results
                 df.loc[i_chan, f'{band}_pre'] = np.nanmean(power_pre)
                 df.loc[i_chan, f'{band}_post'] = np.nanmean(power_post)
