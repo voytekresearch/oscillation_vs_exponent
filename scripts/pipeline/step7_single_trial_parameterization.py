@@ -29,9 +29,12 @@ LOG_POWER = True
 def main():
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_psd"
-    dir_output = f"{PROJECT_PATH}/data/results"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_psd_trial_params"
+    dir_results = f"{PROJECT_PATH}/data/results"
     if not os.path.exists(dir_output): 
-        os.makedirs(f"{dir_output}")
+        os.makedirs(f"{dir_output}/reports")
+    if not os.path.exists(dir_results): 
+        os.makedirs(f"{dir_results}")
     
     # display progress
     t_start = get_start_time()
@@ -59,6 +62,13 @@ def main():
             sgm.set_check_modes(check_data=False)
             params = fit_models_3d(sgm, freq, spectra, 
                                    n_jobs=N_JOBS, freq_range=FREQ_RANGE)
+            
+            # save results
+            for i_trial, sgm in enumerate(params):
+                fname_out = fname.replace('.npz', f'_params_{ap_mode}_{i_trial}')
+                sgm.save(f"{dir_output}/{fname_out}", save_results=True, 
+                        save_settings=True, save_data=True)
+                sgm.save_report(f"{dir_output}/reports/{fname_out}")
 
             # convert results to dataframe and store
             df = pd.concat([sm.to_df(0) for sm in params])
@@ -111,7 +121,7 @@ def main():
 
     # combine results and save
     results = pd.concat(df_list)
-    results.to_csv(f"{dir_output}/psd_trial_params.csv", index=False)
+    results.to_csv(f"{dir_results}/psd_trial_params_.csv", index=False)
 
     # display progress
     print("\n\nAnalysis complete!")
