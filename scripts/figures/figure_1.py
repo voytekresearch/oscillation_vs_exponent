@@ -19,13 +19,12 @@ from neurodsp.spectral import rotate_powerlaw
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from settings import BANDS, BCOLORS, WIDTH
+from settings import BANDS, BCOLORS, WIDTH, FREQ_RANGE
 
 # plotting setting
 plt.style.use('mplstyle/default.mplstyle')
 
 # Set PSD simulation parameters
-FREQ_RANGE = [1, 100] # frequency range for simulated power spectra
 PARAMS_AP = [5, 2] # aperiodic parameters for simulated power spectra (baseline)
 PARAMS_PER = [[10, 1, 1.5], [70, 0.15, 8]] # periodic parameters (baseline)
 PARAMS_PER_POST = [[10, 0.25, 1.5], [70, 0.4, 8]] # periodic parameters (encoding)
