@@ -16,6 +16,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from info import PATIENTS
+from settings import AP_MODE
 from utils import get_start_time, print_time_elapsed
 
 
@@ -31,6 +32,7 @@ def main():
 
     # load single trial spectral parameter results (pipeline step 7)
     results = load_params(f"{PROJECT_PATH}/data/results/psd_trial_params.csv")
+    results = results.loc[results['ap_mode'] == AP_MODE]
     results['memory'] = results['memory'].map({'hit': 1, 'miss': 0})
 
     # create dataframe to store results (one row for each channel-material pair)
@@ -39,7 +41,8 @@ def main():
     df['score'] = np.nan 
 
     # run logistic regression for all channels in each trial condition
-    features_x = ['exponent_diff', 'alpha_diff', 'gamma_diff']
+    features_x = ['exponent_diff', 'alpha_adj_diff', 'gamma_adj_diff', 
+                  'alpha_diff', 'gamma_diff']
     feature_y = 'memory'
     for _, patient in enumerate(PATIENTS):
         print(f"patient {patient}")
