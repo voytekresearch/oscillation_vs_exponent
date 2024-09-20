@@ -68,8 +68,9 @@ def main():
 
     # plot each model
     labels = ['baseline', 'encoding']
-    _, ((ax0, ax1), (ax2, ax3)) = plt.subplots(2, 2, figsize=(WIDTH['1col'], 
-                                                     WIDTH['1col']))
+    figsize = (WIDTH['1col'], WIDTH['1col'])
+    _, ((ax0, ax1), (ax2, ax3)) = plt.subplots(2, 2, sharey=True, 
+                                               figsize=figsize)
     plot_2_spectra(psd_pre, psd_post_0, freqs, ax=ax0, labels=labels,
                     title='Periodic model')
     plot_2_spectra(psd_pre, psd_post_1, freqs, ax=ax1, labels=labels,
