@@ -9,7 +9,7 @@ import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import ttest_rel
+from scipy.stats import ttest_rel, gaussian_kde
 
 # Imports - custom
 import sys
@@ -85,7 +85,7 @@ def main():
         print(results[feature].summary())
 
     # create figure
-    figsize = [WIDTH['2col'], WIDTH['2col']/2]
+    figsize = [WIDTH['1col'], WIDTH['1col']*(3/4)]
     _, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=figsize,
                                                     width_ratios=[1,1,1],
                                                     constrained_layout=True)
@@ -97,17 +97,24 @@ def main():
     # set titles
     ax1.set_title('Total power')
     ax2.set_title('Adjusted power')
-    ax3.set_title('Linear model: power v. exponent')
+    ax3.set_title('Linear model fit')
 
     # plot scatter and regression results
     features = ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']
     for ax, feature in zip([ax1, ax2, ax4, ax5], features):
-        df.plot.scatter(y=f"{feature}_diff", x='exponent_diff', ax=ax, 
-                        color=BCOLORS[feature.split('_')[0]], s=2, alpha=0.5)
-        draw_regression_results(ax, df['exponent_diff'].values, 
-                                results[f'{feature}'], add_text=False)
+        # annotate zero
         ax.axvline(0, color='grey', linestyle='--', linewidth=1)
         ax.axhline(0, color='grey', linestyle='--', linewidth=1)
+
+        # scatter plot
+        xy = np.vstack([df['exponent_diff'], df[f"{feature}_diff"]])
+        z = gaussian_kde(xy)(xy)
+        df.plot.scatter(y=f"{feature}_diff", x='exponent_diff', ax=ax, c=[z], 
+                        s=0.5, cmap='hot')
+        
+        # regression line
+        draw_regression_results(ax, df['exponent_diff'].values, 
+                                results[f'{feature}'], add_text=False)
 
     # label axes 
     ax1.set(ylabel='$\Delta$ alpha')
@@ -123,7 +130,8 @@ def main():
             'x':       'feature',
             'y':       'rsquared',
         }
-        sns.boxplot(**plotting_params, ax=ax, color=BCOLORS[feature])
+        sns.boxplot(**plotting_params, ax=ax, color=BCOLORS[feature], 
+                    fliersize=0)
         sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=3)
         ax.set_ylabel('$R^{2}$')
         ax.set_xticks([0, 1], labels=['total\npower','adjusted\npower'])
@@ -147,7 +155,7 @@ def main():
 def draw_regression_results(ax, x_data, results, add_text=True):
     # regression results
     x = np.array([np.nanmin(x_data), np.nanmax(x_data)])
-    y = x * results.params[1] + results.params[0]
+    y = x * results.params.iloc[1] + results.params.iloc[0]
     
     # plot
     ax.plot(x, y, color='k')
