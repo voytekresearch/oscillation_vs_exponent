@@ -11,7 +11,7 @@ from matplotlib.colors import Normalize, LogNorm, CenteredNorm, TwoSlopeNorm
 
 def beautify_ax(ax):
     """
-    Beautify axis by removing top and right spines, and setting linewidths.
+    Beautify axis by removing top and right spines.
     """
     
     # remove top and right spines
