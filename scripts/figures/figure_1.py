@@ -75,7 +75,7 @@ def main():
     plot_2_spectra(psd_pre, psd_post_1, freqs, ax=ax1, labels=labels,
                    title='Aperiodic model')
     plot_2_spectra(psd_pre_np, psd_post_2, freqs, ax=ax2, labels=labels,
-                   title='Aperiodic model\n(no peaks present)')
+                   title='Aperiodic model (no peaks)')
     plot_2_spectra(psd_pre, psd_post_3, freqs, ax=ax3, labels=labels,
                    title='Combined model')
 
