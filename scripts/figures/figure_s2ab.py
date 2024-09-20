@@ -32,6 +32,7 @@ plt.style.use('mplstyle/nature_neuro.mplstyle')
 T_PLOT = [-0.5, 1.] # time window to plot
 LOAD_DATA = True # whether to load data or compute
 
+
 def main():
 
     # display progress
