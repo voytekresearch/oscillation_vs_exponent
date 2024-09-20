@@ -19,6 +19,7 @@ from erp_utils import subtract_baseline
 from tfr_utils import crop_tfr
 from settings import SPEC_PARAM_SETTINGS, FREQ_RANGE, N_JOBS, RGB, WIDTH
 from info import TMIN
+from plots import beautify_ax
 
 # settings - example data
 PATIENT = ['pat19', 'pat05']
@@ -138,6 +139,10 @@ def main():
         ax.axhline(0, color='k', linestyle='--')
         ax.set_xlim(T_PLOT)
         ax.legend(loc='lower left')
+
+    # beautify axes
+    for ax in [ax0, ax1]:
+        beautify_ax(ax)
 
     # save fig
     fig.savefig(f"{dir_fig}/figure_s2ab.png")

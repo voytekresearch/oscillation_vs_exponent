@@ -22,6 +22,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
 from settings import WIDTH
+from plots import beautify_ax
 
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
@@ -91,6 +92,10 @@ def main():
     ax1.set_xticks([10, 100], labels=['10', '100'])
     ax1.set_title('Power spectra')
     ax1.set(xlabel='frequency (Hz)', ylabel='power (au)')
+
+    # beautify axes
+    for ax in [ax0, ax1]:
+        beautify_ax(ax)
 
     # save fig
     fig.savefig(f"{dir_fig}/figure_s2cd.png")
