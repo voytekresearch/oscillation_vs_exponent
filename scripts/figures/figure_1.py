@@ -39,52 +39,61 @@ def main():
     path_out = f"{PROJECT_PATH}/figures/main_figures"
     if not os.path.exists(path_out): os.makedirs(path_out)
 
-    # sim baseline spectra
+    # sim baseline spectra (with and without peaks)
     freqs, psd_pre = sim_power_spectrum(FREQ_RANGE, PARAMS_AP, PARAMS_PER, 
                                         nlv=NOISE_LEVEL)
+    _, psd_pre_np = sim_power_spectrum(FREQ_RANGE, PARAMS_AP, [], 
+                                       nlv=NOISE_LEVEL)
 
-    # simulate oscillatory change
+    # simulate oscillatory model
     _, psd_post_0 = sim_power_spectrum(FREQ_RANGE, PARAMS_AP, PARAMS_PER_POST, 
                                        nlv=NOISE_LEVEL)
         
-    # sim aperiodic shift
+    # simulate aperiodic model - peaks present
     _, psd_post_1 = sim_power_spectrum(FREQ_RANGE, PARAMS_AP, PARAMS_PER, 
                                        nlv=NOISE_LEVEL)
     psd_post_1 = rotate_powerlaw(freqs, psd_post_1, 
                                  delta_exponent=ROTATION_DELTA, 
                                  f_rotation=ROTATION_FREQ)
 
-    # sim combined model 
-    psd_post_2 = rotate_powerlaw(freqs, psd_post_0, 
+    # simulate aperiodic model - no peaks present
+    psd_post_2 = rotate_powerlaw(freqs, psd_pre_np, 
+                                 delta_exponent=ROTATION_DELTA, 
+                                 f_rotation=ROTATION_FREQ)
+
+    # simulate combined model 
+    psd_post_3 = rotate_powerlaw(freqs, psd_post_0, 
                                  delta_exponent=ROTATION_DELTA, 
                                  f_rotation=ROTATION_FREQ)
 
     # plot each model
     labels = ['baseline', 'encoding']
-    _, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(WIDTH['2col'], 
-                                                     WIDTH['2col']/3))
+    _, ((ax0, ax1), (ax2, ax3)) = plt.subplots(2, 2, figsize=(WIDTH['1col'], 
+                                                     WIDTH['1col']))
     plot_2_spectra(psd_pre, psd_post_0, freqs, ax=ax0, labels=labels,
                     title='Periodic model')
     plot_2_spectra(psd_pre, psd_post_1, freqs, ax=ax1, labels=labels,
                    title='Aperiodic model')
-    plot_2_spectra(psd_pre, psd_post_2, freqs, ax=ax2, labels=labels,
+    plot_2_spectra(psd_pre_np, psd_post_2, freqs, ax=ax2, labels=labels,
+                   title='Aperiodic model\n(no peaks present)')
+    plot_2_spectra(psd_pre, psd_post_3, freqs, ax=ax3, labels=labels,
                    title='Combined model')
-    
+
     # shade oscillation bands
     for band in ['alpha', 'gamma']:
-        for ax in [ax0, ax1, ax2]:
+        for ax in [ax0, ax1, ax2, ax3]:
             ax.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band], 
                        alpha=0.4)
             
     # annotate rotation frequency
     if ANNOTATE_ROATATION:
-        for ax in [ax1, ax2]:
+        for ax in [ax1, ax2, ax3]:
             idx_rotation = np.argmin(np.abs(freqs - ROTATION_FREQ))
             ax.scatter(freqs[idx_rotation], psd_post_1[idx_rotation], 
                        color='k', s=15, zorder=10)
             
     # remove crowded y-labels
-    for ax in [ax1, ax2]:
+    for ax in [ax1, ax3]:
         ax.set(ylabel='')
             
     # save figure
