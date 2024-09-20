@@ -79,7 +79,7 @@ def main():
              color=[1.0,0.4,0.0], linewidth=0.5)
     ax0.plot(time[FS*N_SECONDS:], signal_evoked[3,FS*N_SECONDS:], 
              color=[1.0,0.8,0.0], linewidth=0.5)
-    ax0.axvline(0, linestyle='--', color='k', linewidth=2)
+    ax0.axvline(0, linestyle='--', color='k', linewidth=0.5)
     ax0.set_yticks([0])
     ax0.set_title('Simulated ERP')
     ax0.set(xlabel='time (s)', ylabel='voltage (au)')
