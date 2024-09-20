@@ -111,7 +111,7 @@ def main():
 
 
     # plot =====================================================================
-    figsize = [WIDTH['2col'], WIDTH['2col']/2.5]
+    figsize = [WIDTH['1col'], WIDTH['1col']/2]
     fig, (ax0, ax1) = plt.subplots(1, 2, figsize=figsize, sharex=True,
                                     constrained_layout=True)
 
@@ -140,8 +140,8 @@ def main():
         ax.legend(loc='lower left')
 
     # save fig
-    fig.savefig(f"{dir_fig}/erp_v_exp")
-    fig.savefig(f"{dir_fig}/erp_v_exp.png")
+    fig.savefig(f"{dir_fig}/figure_s2ab.png")
+    fig.savefig(f"{dir_fig}/figure_s2ab")
 
     # display progress
     print(f"\n\nTotal analysis time:")
