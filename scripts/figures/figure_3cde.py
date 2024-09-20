@@ -12,6 +12,7 @@ D) Group mean power spectra for face block
 import os
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.colors import ListedColormap
@@ -84,6 +85,12 @@ def main():
         coords = df.loc[df[f'sig_all'], ['pos_x', 'pos_y', 'pos_z']].values
         nfig.add_markers(marker_coords=coords, marker_size=1, marker_color='k')
         nfig.annotate(size=7) # must plot with annotate=False, then set size here
+
+        for xyz in nfig.axes:
+            for axx in nfig.axes[xyz].ax.get_children():
+                if type(axx) == mpl.patches.PathPatch:
+                    if axx.get_edgecolor()[0] == 0.6509803921568628:
+                        axx.remove()
 
     # plot spectra: group mean for word and face blocks
     plot_group_spectra(df, [axc, axd])
