@@ -27,7 +27,7 @@ from specparam_utils import knee_freq
 from settings import WIDTH
 
 # settings
-plt.style.use('mplstyle/default.mplstyle')
+plt.style.use('mplstyle/nature_neuro.mplstyle')
 ALPHA = 0.05 # significance level
 FEATURES = ['offset', 'knee', 'exponent', 'alpha', 'alpha_adj', 'gamma',
             'gamma_adj']

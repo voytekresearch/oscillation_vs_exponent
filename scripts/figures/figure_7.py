@@ -30,7 +30,7 @@ LOG_POWER = True # whether to log-transform power
 METHOD = 'mean' # method for computing band power
 
 # settings - figure
-plt.style.use('mplstyle/default.mplstyle')
+plt.style.use('mplstyle/nature_neuro.mplstyle')
 X_LIMITS = [-0.5, 1.0]
 Y_LIMITS = [-2.2, 2.2] # for time-series plots
 

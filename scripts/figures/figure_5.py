@@ -26,7 +26,7 @@ from plots import plot_spectra_2conditions, beautify_ax
 from specparam_utils import compute_band_power
 
 # settings
-plt.style.use('mplstyle/default.mplstyle')
+plt.style.use('mplstyle/nature_neuro.mplstyle')
 figsize = [WIDTH['2col'], WIDTH['2col']/4]
 
 

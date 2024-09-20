@@ -26,7 +26,7 @@ from plots import plot_spectra_2conditions, beautify_ax
 from settings import COLORS, FREQ_RANGE, WIDTH, BCOLORS, BANDS
 
 # settings
-plt.style.use('mplstyle/default.mplstyle')
+plt.style.use('mplstyle/nature_neuro.mplstyle')
 
 
 def main():

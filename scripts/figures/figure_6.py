@@ -21,7 +21,7 @@ from settings import BCOLORS, WIDTH
 from plots import beautify_ax
 
 # settings
-plt.style.use('mplstyle/default.mplstyle')
+plt.style.use('mplstyle/nature_neuro.mplstyle')
 
 
 def main():

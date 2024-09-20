@@ -20,7 +20,7 @@ from plots import beautify_ax
 from utils import get_start_time, print_time_elapsed
 
 # settings
-plt.style.use("mplstyle/default.mplstyle")
+plt.style.use("mplstyle/nature_neuro.mplstyle")
 
 
 def main():

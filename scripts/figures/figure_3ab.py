@@ -23,7 +23,7 @@ from settings import FREQ_RANGE, WIDTH, BANDS, BCOLORS, COLORS
 from plots import beautify_ax
 
 # settings
-plt.style.use('mplstyle/default.mplstyle')
+plt.style.use('mplstyle/nature_neuro.mplstyle')
 
 # settings - example data to visualize
 PATIENT = 'pat11'
