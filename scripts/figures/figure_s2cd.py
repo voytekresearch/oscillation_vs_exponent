@@ -73,22 +73,26 @@ def main():
                                    constrained_layout=True)
 
     # plot evoked response sim
-    ax0.plot(time, signal_evoked[0], color='k', linewidth=0.5)
+    lw = 1
+    ax0.plot(time, signal_evoked[0], color='k', linewidth=lw)
     ax0.plot(time[FS*N_SECONDS:], signal_evoked[1,FS*N_SECONDS:],
-              color=[1.0,0.0,0.0], linewidth=0.5)
+              color=[1.0,0.0,0.0], linewidth=lw)
     ax0.plot(time[FS*N_SECONDS:], signal_evoked[2,FS*N_SECONDS:], 
-             color=[1.0,0.4,0.0], linewidth=0.5)
+             color=[1.0,0.4,0.0], linewidth=lw)
     ax0.plot(time[FS*N_SECONDS:], signal_evoked[3,FS*N_SECONDS:], 
-             color=[1.0,0.8,0.0], linewidth=0.5)
-    ax0.axvline(0, linestyle='--', color='k', linewidth=0.5)
+             color=[1.0,0.8,0.0], linewidth=lw)
+    ax0.axvline(0, linestyle='--', color='k', linewidth=lw)
     ax0.set_yticks([0])
     ax0.set_title('Simulated ERP')
     ax0.set(xlabel='time (s)', ylabel='voltage (au)')
+    ax0.set_xlim([0, 1])
 
-    ax1.loglog(freq_evoked, psd_evoked[0], color='k', linewidth=0.5)
-    ax1.loglog(freq_evoked, psd_evoked[1], color=[1.0,0.0,0.0], linewidth=0.5)
-    ax1.loglog(freq_evoked, psd_evoked[2], color=[1.0,0.4,0.0], linewidth=0.5)
-    ax1.loglog(freq_evoked, psd_evoked[3], color=[1.0,0.8,0.0], linewidth=0.5)
+    # plot power spectra
+    lw = 1
+    ax1.loglog(freq_evoked, psd_evoked[0], color='k', linewidth=lw)
+    ax1.loglog(freq_evoked, psd_evoked[1], color=[1.0,0.0,0.0], linewidth=lw)
+    ax1.loglog(freq_evoked, psd_evoked[2], color=[1.0,0.4,0.0], linewidth=lw)
+    ax1.loglog(freq_evoked, psd_evoked[3], color=[1.0,0.8,0.0], linewidth=lw)
     ax1.set_xticks([10, 100], labels=['10', '100'])
     ax1.set_title('Power spectra')
     ax1.set(xlabel='frequency (Hz)', ylabel='power (au)')
