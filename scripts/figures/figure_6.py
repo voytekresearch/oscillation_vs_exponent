@@ -110,7 +110,7 @@ def main():
         xy = np.vstack([df['exponent_diff'], df[f"{feature}_diff"]])
         z = gaussian_kde(xy)(xy)
         df.plot.scatter(y=f"{feature}_diff", x='exponent_diff', ax=ax, c=[z], 
-                        s=0.5, cmap='hot')
+                        s=0.25, cmap='hot')
         
         # regression line
         draw_regression_results(ax, df['exponent_diff'].values, 
@@ -132,7 +132,7 @@ def main():
         }
         sns.boxplot(**plotting_params, ax=ax, color=BCOLORS[feature], 
                     fliersize=0)
-        sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=3)
+        sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=2)
         ax.set_ylabel('$R^{2}$')
         ax.set_xticks([0, 1], labels=['total\npower','adjusted\npower'])
     ax3.set_xlabel('')
