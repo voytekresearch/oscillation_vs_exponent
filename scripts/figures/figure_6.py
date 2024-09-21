@@ -87,7 +87,7 @@ def main():
     # create figure
     figsize = [WIDTH['1col'], WIDTH['1col']*(3/4)]
     _, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=figsize,
-                                                    width_ratios=[1,1,1],
+                                                    width_ratios=[1.5 ,1.5, 1],
                                                     constrained_layout=True)
     ax2.sharey(ax1)
     ax5.sharey(ax4)
@@ -97,7 +97,7 @@ def main():
     # set titles
     ax1.set_title('Total power')
     ax2.set_title('Adjusted power')
-    ax3.set_title('Linear model fit')
+    ax3.set_title('Linear model')
 
     # plot scatter and regression results
     features = ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']
