@@ -14,6 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from neurodsp.spectral import rotate_powerlaw
 from specparam.sim import sim_power_spectrum
+import scipy.stats as stats
 
 # Imports - custom
 import sys
@@ -102,7 +103,7 @@ def main():
         ax.legend(['baseline', 'encoding', 'intersection'], loc='lower left')
 
     # plot histogram of intersection frequency
-    bins = np.linspace(0, 100, 11)
+    bins = np.linspace(0, 100, 13) # 13 bins based on Freedman-Diaconis rule
     for material, ax in zip(MATERIALS, [ax4, ax6]):
         ax.hist(intersection[material], bins, color=BCOLORS['exponent'], 
                 edgecolor='k', linewidth=0.5)
