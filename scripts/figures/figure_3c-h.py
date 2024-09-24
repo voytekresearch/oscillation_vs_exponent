@@ -54,24 +54,26 @@ def main():
     # create figure and gridspec
     fig = plt.figure(figsize=(WIDTH['2col'], WIDTH['2col']/2), 
                      constrained_layout=True)
-    spec = gridspec.GridSpec(figure=fig, ncols=3, nrows=4,
-                            width_ratios=[1, 3, 1.5])
+    spec = gridspec.GridSpec(figure=fig, ncols=3, nrows=5,
+                            width_ratios=[1, 3, 1.5], 
+                            height_ratios=[1, 1, 0.1, 1, 1])
     ax_u0 = fig.add_subplot(spec[0:2,0])
     ax_u1u = fig.add_subplot(spec[0,1])
     ax_u1l = fig.add_subplot(spec[1,1])
     ax_u2 = fig.add_subplot(spec[0:2,2])
-    ax_l0 = fig.add_subplot(spec[2:,0])
-    ax_l1u = fig.add_subplot(spec[2,1])
-    ax_l1l = fig.add_subplot(spec[3,1])
-    ax_l2 = fig.add_subplot(spec[2:,2])    
+    ax_header = fig.add_subplot(spec[2,:])
+    ax_l0 = fig.add_subplot(spec[3:,0])
+    ax_l1u = fig.add_subplot(spec[3,1])
+    ax_l1l = fig.add_subplot(spec[4,1])
+    ax_l2 = fig.add_subplot(spec[3:,2])
 
     # shift subplot spaceing (nilearn plot including inexplicable whitespace)
     for ax in [ax_u1u, ax_u1l]:
         boxb = ax.get_position()
-        ax.set_position([boxb.x0-0.02, boxb.y0+0.02, boxb.width, boxb.height])
+        ax.set_position([boxb.x0-0.02, boxb.y0+0.05, boxb.width, boxb.height])
     for ax in [ax_l1u, ax_l1l]:
         boxb = ax.get_position()
-        ax.set_position([boxb.x0-0.02, boxb.y0-0.04, boxb.width, boxb.height])
+        ax.set_position([boxb.x0-0.02, boxb.y0-0.05, boxb.width, boxb.height])
 
     # plot barchart: number of task-modulated electrodes
     for df, ax in zip([df_w, df_f], [ax_u0, ax_l0]):
@@ -111,17 +113,26 @@ def main():
     for df, material, ax in zip([df_w, df_f], ['words','faces'], [ax_u2, ax_l2]):
         plot_group_spectra(df, material, ax)
 
+    # add section titles and line between subplot rows
+    ax_header.axis('off')
+    for ypos in [0.48, 1.0]:
+        line = plt.Line2D((0.1, 0.9), (ypos, ypos), color='black', linewidth=1, 
+                        transform=fig.transFigure, figure=fig)
+        fig.add_artist(line)
+    fig.text(0.5, 1.03, "Word-encoding", ha='center', va='top', fontsize=7, fontdict={'fontweight': 'bold'})
+    fig.text(0.5, 0.51, "Face-encoding", ha='center', va='top', fontsize=7, fontdict={'fontweight': 'bold'})
+
     # set titles
-    for ax, material in zip([ax_u0, ax_l0], ['Word', 'Face']):
-        ax.set_title(f"{material}-encoding:\ntask-modulated electrodes")
-    for ax, material in zip([ax_u1u, ax_l1u], ['Word', 'Face']):
-        ax.set_title(f"{material}-encoding:\ntask-modulated electrode locations")
-    for ax, material in zip([ax_u2, ax_l2], ['Word', 'Face']):
-        ax.set_title(f"{material}-encoding:\nmean power spectra")
+    for ax in [ax_u0, ax_l0]:
+        ax.set_title("Task-modulated electrodes")
+    for ax in [ax_u1u, ax_l1u]:
+        ax.set_title("Task-modulated electrode locations")
+    for ax in [ax_u2, ax_l2]:
+        ax.set_title("Mean power spectra")
 
     # save
-    plt.savefig(f"{dir_fig}/figure_3cde")
-    plt.savefig(f"{dir_fig}/figure_3cde.png")
+    plt.savefig(f"{dir_fig}/figure_3cde", bbox_inches='tight')
+    plt.savefig(f"{dir_fig}/figure_3cde.png", bbox_inches='tight')
     plt.close()
 
 
