@@ -42,66 +42,82 @@ def main():
     df = pd.read_csv(fname_in, index_col=0).drop(columns='index')
 
     # load results of step 3 and merge with electrode info
-    fname = f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv"
+    fname = f"{PROJECT_PATH}/data/results/band_power_statistics.csv"
     temp = pd.read_csv(fname, index_col=0)
-    df = df.merge(temp, on=['patient', 'chan_idx'])
+    temp = temp.loc[temp['memory']=='hit']
+    df_w = df.merge(temp.loc[temp['material']=='words'], on=['patient', 'chan_idx'])
+    df_f = df.merge(temp.loc[temp['material']=='faces'], on=['patient', 'chan_idx'])
+    for df in [df_w, df_f]: # compute joint significance
+        df['sig_all'] = df[[f'{band}_sig' for band in BANDS]].all(axis=1)
+        df['sig_any'] = df[[f'{band}_sig' for band in BANDS]].any(axis=1)
 
     # create figure and gridspec
-    fig = plt.figure(figsize=(WIDTH['2col'], WIDTH['2col']/4), 
+    fig = plt.figure(figsize=(WIDTH['2col'], WIDTH['2col']/2), 
                      constrained_layout=True)
-    spec = gridspec.GridSpec(figure=fig, ncols=4, nrows=2,
-                            width_ratios=[0.75, 2.75, 1, 1])
-    axa = fig.add_subplot(spec[:,0])
-    axbu = fig.add_subplot(spec[0,1])
-    axbl = fig.add_subplot(spec[1,1])
-    axc = fig.add_subplot(spec[:,2])
-    axd = fig.add_subplot(spec[:,3])
+    spec = gridspec.GridSpec(figure=fig, ncols=3, nrows=4,
+                            width_ratios=[1, 3, 1.5])
+    ax_u0 = fig.add_subplot(spec[0:2,0])
+    ax_u1u = fig.add_subplot(spec[0,1])
+    ax_u1l = fig.add_subplot(spec[1,1])
+    ax_u2 = fig.add_subplot(spec[0:2,2])
+    ax_l0 = fig.add_subplot(spec[2:,0])
+    ax_l1u = fig.add_subplot(spec[2,1])
+    ax_l1l = fig.add_subplot(spec[3,1])
+    ax_l2 = fig.add_subplot(spec[2:,2])    
 
     # shift subplot spaceing (nilearn plot including inexplicable whitespace)
-    boxb = axbu.get_position()
-    axbu.set_position([boxb.x0 - 0.04, boxb.y0, boxb.width, boxb.height])
-    boxb = axbl.get_position()
-    axbl.set_position([boxb.x0 - 0.04, boxb.y0, boxb.width, boxb.height])
+    for ax in [ax_u1u, ax_u1l]:
+        boxb = ax.get_position()
+        ax.set_position([boxb.x0-0.02, boxb.y0+0.02, boxb.width, boxb.height])
+    for ax in [ax_l1u, ax_l1l]:
+        boxb = ax.get_position()
+        ax.set_position([boxb.x0-0.02, boxb.y0-0.04, boxb.width, boxb.height])
 
     # plot barchart: number of task-modulated electrodes
-    x = [0, 1, 2]
-    y = [df[col].sum() / len(df) * 100 for col in ['sig_alpha', 'sig_gamma', 'sig_all']] 
-    axa.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'k'],
-            edgecolor='black', linewidth=1, width=1)
-    axa.set_xticks(x, labels=['alpha', 'gamma', 'both'])
-    axa.set_ylabel('percentage (%)')
-    axa.set_xlabel('frequency band')
-    beautify_ax(axa)
+    for df, ax in zip([df_w, df_f], [ax_u0, ax_l0]):
+        x = [0, 1, 2]
+        y = [df[col].sum() / len(df) * 100 for col in ['alpha_sig', 'gamma_sig', 'sig_all']] 
+        ax.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'k'],
+                edgecolor='black', linewidth=1, width=1)
+        ax.set_xticks(x, labels=['alpha', 'gamma', 'both'])
+        ax.set_ylabel('percentage (%)')
+        ax.set_xlabel('frequency band')
+        beautify_ax(ax)
     
     # plot glass brain: electrode locations
-    for ax, band in zip([axbu, axbl], ['alpha', 'gamma']):
-        # shift subplot spaceing (nilearn plot including inexplicable whitespace)
-        coords = df.loc[df[f'sig_{band}'], ['pos_x', 'pos_y', 'pos_z']].values
-        nfig = plotting.plot_markers(axes=ax, node_coords=coords, 
-                                     node_values=np.ones(len(coords)), 
-                                     node_cmap=ListedColormap([BCOLORS[band]]),
-                                     display_mode='ortho', node_size=1,
-                                     colorbar=False, annotate=False)
-        coords = df.loc[df[f'sig_all'], ['pos_x', 'pos_y', 'pos_z']].values
-        nfig.add_markers(marker_coords=coords, marker_size=1, marker_color='k')
-        nfig.annotate(size=7) # must plot with annotate=False, then set size here
+    for df, axes in zip([df_w, df_f], [[ax_u1u, ax_u1l], [ax_l1u, ax_l1l]]):
+        for ax, band in zip(axes, ['alpha', 'gamma']):
+            # shift subplot spaceing (nilearn plot including inexplicable whitespace)
+            coords = df.loc[df[f'{band}_sig'], ['pos_x', 'pos_y', 'pos_z']].values
+            nfig = plotting.plot_markers(axes=ax, node_coords=coords, 
+                                        node_values=np.ones(len(coords)), 
+                                        node_cmap=ListedColormap([BCOLORS[band]]),
+                                        display_mode='ortho', colorbar=False, 
+                                        annotate=False, node_size=0.25, 
+                                        node_kwargs={'alpha' : 1})
+            coords = df.loc[df[f'sig_all'], ['pos_x', 'pos_y', 'pos_z']].values
+            nfig.add_markers(marker_coords=coords, marker_size=0.25, 
+                             marker_color='k', alpha=1)
+            nfig.annotate(size=7) # must plot with annotate=False, then set size here
 
-        for xyz in nfig.axes:
-            for axx in nfig.axes[xyz].ax.get_children():
-                if type(axx) == mpl.patches.PathPatch:
-                    if axx.get_edgecolor()[0] == 0.6509803921568628:
-                        axx.remove()
+            # remove gyri/sulci lines
+            for xyz in nfig.axes:
+                for axx in nfig.axes[xyz].ax.get_children():
+                    if type(axx) == mpl.patches.PathPatch:
+                        if axx.get_edgecolor()[0] == 0.6509803921568628:
+                            axx.remove()
 
     # plot spectra: group mean for word and face blocks
-    plot_group_spectra(df, [axc, axd])
+    for df, material, ax in zip([df_w, df_f], ['words','faces'], [ax_u2, ax_l2]):
+        plot_group_spectra(df, material, ax)
 
     # set titles
-    axa.set_title("Task-modulated\nelectrode counts")
-    axbu.set_title("Task-modulated electrode locations")
-    axc.set_title("\nword-encoding block")
-    axd.set_title("\nface-encoding block")
-    fig.text(0.8, 0.97, "Mean power spectra", ha='center', va='center',
-             fontsize=7)
+    for ax, material in zip([ax_u0, ax_l0], ['Word', 'Face']):
+        ax.set_title(f"{material}-encoding:\ntask-modulated electrodes")
+    for ax, material in zip([ax_u1u, ax_l1u], ['Word', 'Face']):
+        ax.set_title(f"{material}-encoding:\ntask-modulated electrode locations")
+    for ax, material in zip([ax_u2, ax_l2], ['Word', 'Face']):
+        ax.set_title(f"{material}-encoding:\nmean power spectra")
 
     # save
     plt.savefig(f"{dir_fig}/figure_3cde")
@@ -109,33 +125,36 @@ def main():
     plt.close()
 
 
-def plot_group_spectra(df, axes):
+def plot_group_spectra(df, material, ax):
+    if material == 'words':
+        color = 'brown'
+    elif material == 'faces':
+        color = 'blue'
 
-    for ax, material, color in zip(axes, MATERIALS, ['brown', 'blue']):
-        # load data
-        fname = f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_{material}_hit_XXXstim.npz"
-        data_pre = np.load(fname.replace("XXX", "pre"))
-        data_post = np.load(fname.replace("XXX", "post"))
-        psd_pre = data_pre['spectra'][df[f"sig_all"]]
-        psd_post = data_post['spectra'][df[f"sig_all"]]
-        freq = data_pre['freq']
+    # load data
+    fname = f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_{material}_hit_XXXstim.npz"
+    data_pre = np.load(fname.replace("XXX", "pre"))
+    data_post = np.load(fname.replace("XXX", "post"))
+    psd_pre = data_pre['spectra'][df[f"sig_all"]]
+    psd_post = data_post['spectra'][df[f"sig_all"]]
+    freq = data_pre['freq']
 
-        # plot
-        # title = f"{material[0].upper()}{material[1:-1]} encoding"
-        colors = [COLORS[f'light_{color}'], COLORS[color]]
-        f_mask = np.logical_and(freq>FREQ_RANGE[0], freq<FREQ_RANGE[1])
-        plot_spectra_2conditions(psd_pre[:, f_mask], psd_post[:, f_mask], 
-                                freq[f_mask], shade_sem=True, ax=ax, 
-                                color=colors)
-        
-        # shade oscillation bands
-        for band in ['alpha', 'gamma']:
-            ax.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band],
-                        alpha=0.4)
-        
-        # beautify
-        ax.grid(False)
-        beautify_ax(ax)
+    # plot
+    # title = f"{material[0].upper()}{material[1:-1]} encoding"
+    colors = [COLORS[f'light_{color}'], COLORS[color]]
+    f_mask = np.logical_and(freq>FREQ_RANGE[0], freq<FREQ_RANGE[1])
+    plot_spectra_2conditions(psd_pre[:, f_mask], psd_post[:, f_mask], 
+                            freq[f_mask], shade_sem=True, ax=ax, 
+                            color=colors)
+    
+    # shade oscillation bands
+    for band in ['alpha', 'gamma']:
+        ax.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band],
+                    alpha=0.4)
+    
+    # beautify
+    ax.grid(False)
+    beautify_ax(ax)
 
         
 if __name__ == "__main__":
