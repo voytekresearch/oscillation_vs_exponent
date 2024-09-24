@@ -22,7 +22,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
 from info import MATERIALS
-from settings import FREQ_RANGE, RGB, WIDTH, BANDS, BCOLORS
+from settings import FREQ_RANGE, RGB, WIDTH, BANDS, BCOLORS, COLORS
 from plots import plot_spectra_2conditions, beautify_ax
 from specparam_utils import compute_band_power
 
@@ -84,13 +84,14 @@ def main():
     simulation_subplot_1(ax2)
 
     # plot empirical spectra
-    for material, ax in zip(MATERIALS, [ax3, ax5]):
+    for material, ax, color in zip(MATERIALS, [ax3, ax5], ['brown', 'blue']):
         # plot spectra
+        colors = [COLORS[f'light_{color}'], COLORS[color]]
         idx_fit = np.logical_and(freq >= FREQ_RANGE[0], freq <= FREQ_RANGE[1])
         plot_spectra_2conditions(spectra_pre[material][:, idx_fit], 
                                  spectra_post[material][:, idx_fit], 
-                                 freq[idx_fit], ax=ax, color=['grey', 'k'], 
-                                 shade_sem=False)
+                                 freq[idx_fit], ax=ax, shade_sem=False,
+                                 color=colors)
         ax.grid(False)
 
         # annotate intersection frequency on power spectra
