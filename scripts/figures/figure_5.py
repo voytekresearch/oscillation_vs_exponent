@@ -29,7 +29,7 @@ from specparam_utils import compute_band_power
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
 figsize = [WIDTH['1col'], WIDTH['1col']*1.5]
-
+IF_SIZE = 10 # intersection frequency marker size
 
 def main():
     # display progress
@@ -99,8 +99,8 @@ def main():
         median_f = np.nanmedian(f_intersection)
         median_idx = np.argmin(np.abs(freq - median_f))
         y_val = np.nanmean(spectra_pre[material][:, median_idx])
-        ax.scatter(freq[median_idx], y_val,
-                    color=BCOLORS['exponent'], s=20, zorder=10)
+        ax.scatter(freq[median_idx], y_val, color=BCOLORS['exponent'], 
+                   s=IF_SIZE, zorder=10)
         ax.legend(['baseline', 'encoding', 'intersection'], loc='lower left')
 
     # plot histogram of intersection frequency
@@ -128,11 +128,12 @@ def main():
         ax.set_xlim([0, 100])
 
     # add text above each row of subplots
-    fig.text(0.5, 1.02, 'Simulation', ha='center', va='center', fontsize=7, fontweight='bold')
-    fig.text(0.5, 0.66, 'Empirical: word-encoding', ha='center', va='center', fontsize=7, fontweight='bold')
-    fig.text(0.5, 0.31, 'Empirical: face-encoding', ha='center', va='center', fontsize=7, fontweight='bold')
+    for title, ypos in zip(['Simulation', 'Empirical: word-encoding', 
+                            'Empirical: face-encoding'], [1.02, 0.66, 0.31]):
+        fig.text(0.5, ypos, title, ha='center', va='center', fontsize=7, 
+                fontweight='bold')
 
-    # save fig - add small margin at top
+    # save figure
     fig.savefig(f"{dir_output}/figure_5", bbox_inches='tight')
     fig.savefig(f"{dir_output}/figure_5.png", bbox_inches='tight')
 
@@ -172,8 +173,10 @@ def simulation_subplot_0(fig, ax):
               label='low IF')
     
     # plot intersection frequency
-    ax.scatter(FREQ_RANGE[0], psd_rot_low[0], color=RGB[0], s=20, zorder=10)
-    ax.scatter(FREQ_RANGE[1], psd_rot_high[-1], color=RGB[2], s=20, zorder=10)
+    ax.scatter(FREQ_RANGE[0], psd_rot_low[0], color=RGB[0], s=IF_SIZE, 
+               zorder=10)
+    ax.scatter(FREQ_RANGE[1], psd_rot_high[-1], color=RGB[2], s=IF_SIZE, 
+               zorder=10)
 
     # shade region between original and rotated spectra
     ax.fill_between(freqs, psd_pre, psd_rot_high, color=RGB[2], alpha=0.3)
