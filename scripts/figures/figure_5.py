@@ -46,8 +46,8 @@ def main():
     df_w = temp.loc[(temp['material']=='words') & (temp['memory']=='hit')]
     df_f = temp.loc[(temp['material']=='faces') & (temp['memory']=='hit')]
     for df in [df_w, df_f]: # compute joint significance
-        df['sig_all'] = df[[f'{band}_sig' for band in BANDS]].all(axis=1)
-        df['sig_any'] = df[[f'{band}_sig' for band in BANDS]].any(axis=1)
+        df.insert(0, 'sig_any', df.get([f'{band}_sig' for band in BANDS]).any(axis=1))
+        df.insert(0, 'sig_all', df.get([f'{band}_sig' for band in BANDS]).all(axis=1))
 
     # load rotation analysis results
     intersection = dict()
@@ -197,7 +197,7 @@ def simulation_subplot_1(ax):
     f_rotations = np.arange(5, 105, 5)
     dfs = []
     for f_rotation in f_rotations:
-        df = run_simulation(f_rotation)
+        df = run_simulation(f_rotation, f_range=FREQ_RANGE)
         df['f_rotation'] = f_rotation
         dfs.append(df)
     results = pd.concat(dfs, axis=0, ignore_index=True)
@@ -224,7 +224,7 @@ def simulation_subplot_1(ax):
 
 
 def run_simulation(f_rotation, delta_exponent=1, aperiodic_params=[10, 2],
-                    f_range=[0, 100]):
+                    f_range=[1, 100]):
     """ 
     Simulate power spectrum and rotate it. Compute band power before and 
     after rotation.
