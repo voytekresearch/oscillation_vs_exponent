@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from specparam import SpectralGroupModel
 from specparam.utils import trim_spectrum
 from scipy import stats
@@ -47,16 +48,30 @@ def main():
 
     # create figure
     figsize = [WIDTH['2col'], WIDTH['2col']/1.5]
-    fig, (axes_w, axes_f) = plt.subplots(2, 3, figsize=figsize,
-                                         constrained_layout=True)
+    fig = plt.figure(figsize=figsize, constrained_layout=True)
+    spec = gridspec.GridSpec(figure=fig, ncols=3, nrows=3,
+                            height_ratios=[1, 0.1, 1])
     
     # loop over materials and plot
-    for axes, material in zip([axes_w, axes_f], MATERIALS):
+    for material, row in zip(MATERIALS, [0, 2]):
+        axes = [fig.add_subplot(spec[row, 0]),
+                fig.add_subplot(spec[row, 1]),
+                fig.add_subplot(spec[row, 2])]
         plot_material(fig, axes, material)
 
+    # add section titles and line between subplot rows
+    ax_header = fig.add_subplot(spec[2, :])
+    ax_header.axis('off')
+    for ypos in [0.48, 1.0]:
+        line = plt.Line2D((0.1, 0.9), (ypos, ypos), color='black', linewidth=1, 
+                        transform=fig.transFigure, figure=fig)
+        fig.add_artist(line)
+    fig.text(0.5, 1.03, "Word-encoding", ha='center', va='top', fontsize=7, fontdict={'fontweight': 'bold'})
+    fig.text(0.5, 0.51, "Face-encoding", ha='center', va='top', fontsize=7, fontdict={'fontweight': 'bold'})
+
     # save figure
-    fig.savefig(f"{dir_output}/figure_7")
-    fig.savefig(f"{dir_output}/figure_7.png")
+    fig.savefig(f"{dir_output}/figure_7", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_7.png", bbox_inches='tight')
 
     # display progress
     print(f"\n\nTotal analysis time:")
