@@ -70,8 +70,8 @@ def main():
     fig.text(0.5, 0.51, "Face-encoding", ha='center', va='top', fontsize=7, fontdict={'fontweight': 'bold'})
 
     # save figure
-    fig.savefig(f"{dir_output}/figure_7", bbox_inches='tight')
-    fig.savefig(f"{dir_output}/figure_7.png", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_7_offset", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_7_offset.png", bbox_inches='tight')
 
     # display progress
     print(f"\n\nTotal analysis time:")
