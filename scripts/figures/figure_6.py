@@ -1,4 +1,6 @@
 """
+Show the relationship between the change in spectral exponent and the change in
+total and aperiodic-adjusted alpha/gamma power.
 
 """
 
@@ -8,6 +10,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import seaborn as sns
 from scipy.stats import ttest_rel, gaussian_kde
 
@@ -38,8 +41,134 @@ def main():
 
     # load speactral results
     df = load_params()
-    df = df.loc[df['material']=='faces']
+    df_w = df.loc[df['material']=='words']
+    df_f = df.loc[df['material']=='faces']
 
+    # create figure
+    fig = plt.figure(figsize=(WIDTH['2col'], WIDTH['2col']/2), 
+                     constrained_layout=True)
+    spec = gridspec.GridSpec(figure=fig, ncols=7, nrows=2,
+                            width_ratios=[1.5 , 1.5, 1, 0.1, 1.5 , 1.5, 1])
+
+    # iterate over materials
+    for cols, df_c in zip([[0,1,2], [4,5,6]], [df_w, df_f]):
+        # run analysis
+        df_ols, results = run_analysis(df, dir_output)
+
+        # create axes
+        ax1 = fig.add_subplot(spec[0,cols[0]])
+        ax2 = fig.add_subplot(spec[0,cols[1]])
+        ax3 = fig.add_subplot(spec[0,cols[2]])
+        ax4 = fig.add_subplot(spec[1,cols[0]])
+        ax5 = fig.add_subplot(spec[1,cols[1]])
+        ax6 = fig.add_subplot(spec[1,cols[2]])
+
+        ax2.sharey(ax1)
+        ax5.sharey(ax4)
+        ax4.sharex(ax1)
+        ax5.sharex(ax2)
+        
+        # set titles
+        ax1.set_title('Total power')
+        ax2.set_title('Adjusted power')
+        ax3.set_title('Linear model')
+
+        # plot scatter and regression results
+        features = ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']
+        for ax, feature in zip([ax1, ax2, ax4, ax5], features):
+            # drop nan
+            df = df_c.dropna(subset=['exponent_diff', f'{feature}_diff'])
+
+            # annotate zero
+            ax.axvline(0, color='grey', linestyle='--', linewidth=1)
+            ax.axhline(0, color='grey', linestyle='--', linewidth=1)
+
+            # scatter plot
+            xy = np.vstack([df['exponent_diff'], df[f"{feature}_diff"]])
+            z = gaussian_kde(xy)(xy)
+            df.plot.scatter(y=f"{feature}_diff", x='exponent_diff', ax=ax, c=[z], 
+                            s=0.25, cmap='hot')
+            
+            # regression line
+            draw_regression_results(ax, df['exponent_diff'].values, 
+                                    results[f'{feature}'], add_text=False)
+
+        # label axes 
+        ax1.set(ylabel='$\Delta$ alpha')
+        ax4.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ gamma')
+        ax5.set(xlabel='$\Delta$ exponent')
+        
+        # plot R-squared
+        for feature, ax in zip(['alpha', 'gamma'], 
+                                        [ax3, ax6]):
+            plotting_params = {
+                'data':    df_ols.loc[((df_ols['feature']==feature) |
+                                        (df_ols['feature']==f"{feature}_adj"))],
+                'x':       'feature',
+                'y':       'rsquared',
+            }
+            sns.boxplot(**plotting_params, ax=ax, color=BCOLORS[feature], 
+                        fliersize=0)
+            sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=2)
+            ax.set_ylabel('$R^{2}$')
+            ax.set_xticks([0, 1], labels=['total\npower','adjusted\npower'])
+        ax3.set_xlabel('')
+        ax6.set_xlabel('regressor')
+
+    # beautify axes
+    for ax in fig.get_axes():
+        beautify_ax(ax)
+
+    # add section titles and line above subplots
+    fig.text(0.29, 1.05, 'Word-encoding', ha='center', va='center', 
+            fontsize=7, fontdict={'fontweight': 'bold'})
+    fig.text(0.77, 1.05, 'Face-encoding', ha='center', va='center',
+            fontsize=7, fontdict={'fontweight': 'bold'})
+    for x_span in [[0.09, 0.5], [0.58, 0.99]]:
+        line = plt.Line2D((x_span[0], x_span[1]), (1.02, 1.02), color='black', 
+                        linewidth=1, transform=fig.transFigure, figure=fig)
+        fig.add_artist(line)
+
+    # add space between subplots (word and face plots)
+    ax_space = fig.add_subplot(spec[:,3])
+    ax_space.axis('off')
+
+    # save figure
+    fname = "figure_6"
+    plt.savefig(f"{dir_figure}/{fname}.png", bbox_inches='tight')
+    plt.savefig(f"{dir_figure}/{fname}", bbox_inches='tight')
+
+    # display progress
+    print(f"\n\nTotal analysis time:")
+    print_time_elapsed(t_start)
+
+
+def draw_regression_results(ax, x_data, results, add_text=True):
+    # regression results
+    x = np.array([np.nanmin(x_data), np.nanmax(x_data)])
+    y = x * results.params.iloc[1] + results.params.iloc[0]
+    
+    # plot
+    ax.plot(x, y, color='k')
+
+    # add text
+    if add_text:
+        if results.f_pvalue < .001:
+            str_p = f"{results.f_pvalue:.1e}"
+        else:
+            str_p = f"{results.f_pvalue:.3f}"
+        if results.rsquared < .001:
+            str_r2 = "<0.001" #"$<e^{-3}$"
+        else:
+            str_r2 = f"{results.rsquared:.3f}"            
+        # s = "$\it{R^{2}}$: " + f"{str_r2}" + "\n$\it{p}$:   " + f"{str_p}"
+        ax.text(0.02, 0.78, f"r = {str_r2}\np = {str_p}",
+                transform=ax.transAxes)
+
+    return ax
+
+
+def run_analysis(df, dir_output):
     # run OLS
     results = {}
     df_ols_list = []
@@ -84,97 +213,7 @@ def main():
             print(f"\tp-value: {results[feature].f_pvalue:.3f}")
         print(results[feature].summary())
 
-    # create figure
-    figsize = [WIDTH['1col'], WIDTH['1col']*(3/4)]
-    _, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(2, 3, figsize=figsize,
-                                                    width_ratios=[1.5 ,1.5, 1],
-                                                    constrained_layout=True)
-    ax2.sharey(ax1)
-    ax5.sharey(ax4)
-    ax4.sharex(ax1)
-    ax5.sharex(ax2)
-    
-    # set titles
-    ax1.set_title('Total power')
-    ax2.set_title('Adjusted power')
-    ax3.set_title('Linear model')
-
-    # plot scatter and regression results
-    features = ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']
-    for ax, feature in zip([ax1, ax2, ax4, ax5], features):
-        # annotate zero
-        ax.axvline(0, color='grey', linestyle='--', linewidth=1)
-        ax.axhline(0, color='grey', linestyle='--', linewidth=1)
-
-        # scatter plot
-        xy = np.vstack([df['exponent_diff'], df[f"{feature}_diff"]])
-        z = gaussian_kde(xy)(xy)
-        df.plot.scatter(y=f"{feature}_diff", x='exponent_diff', ax=ax, c=[z], 
-                        s=0.25, cmap='hot')
-        
-        # regression line
-        draw_regression_results(ax, df['exponent_diff'].values, 
-                                results[f'{feature}'], add_text=False)
-
-    # label axes 
-    ax1.set(ylabel='$\Delta$ alpha')
-    ax4.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ gamma')
-    ax5.set(xlabel='$\Delta$ exponent')
-    
-    # plot R-squared
-    for feature, ax in zip(['alpha', 'gamma'], 
-                                       [ax3, ax6]):
-        plotting_params = {
-            'data':    df_ols.loc[((df_ols['feature']==feature) |
-                                    (df_ols['feature']==f"{feature}_adj"))],
-            'x':       'feature',
-            'y':       'rsquared',
-        }
-        sns.boxplot(**plotting_params, ax=ax, color=BCOLORS[feature], 
-                    fliersize=0)
-        sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=2)
-        ax.set_ylabel('$R^{2}$')
-        ax.set_xticks([0, 1], labels=['total\npower','adjusted\npower'])
-    ax3.set_xlabel('')
-    ax6.set_xlabel('regressor')
-
-    # beautify axes
-    for ax in [ax1, ax2, ax3, ax4, ax5, ax6]:
-        beautify_ax(ax)
-
-    # save figure
-    fname = "figure_6"
-    plt.savefig(f"{dir_figure}/{fname}.png")
-    plt.savefig(f"{dir_figure}/{fname}")
-
-    # display progress
-    print(f"\n\nTotal analysis time:")
-    print_time_elapsed(t_start)
-
-
-def draw_regression_results(ax, x_data, results, add_text=True):
-    # regression results
-    x = np.array([np.nanmin(x_data), np.nanmax(x_data)])
-    y = x * results.params.iloc[1] + results.params.iloc[0]
-    
-    # plot
-    ax.plot(x, y, color='k')
-
-    # add text
-    if add_text:
-        if results.f_pvalue < .001:
-            str_p = f"{results.f_pvalue:.1e}"
-        else:
-            str_p = f"{results.f_pvalue:.3f}"
-        if results.rsquared < .001:
-            str_r2 = "<0.001" #"$<e^{-3}$"
-        else:
-            str_r2 = f"{results.rsquared:.3f}"            
-        s = "$\it{R^{2}}$: " + f"{str_r2}" + "\n$\it{p}$:   " + f"{str_p}"
-        ax.text(0.02, 0.78, f"r = {str_r2}\np = {str_p}",
-                transform=ax.transAxes)
-
-    return ax
+    return df_ols, results
 
 
 def run_ols(df, feature):
