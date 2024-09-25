@@ -48,7 +48,7 @@ def main():
 
     # create figure
     figsize = [WIDTH['2col'], WIDTH['2col']/1.5]
-    fig = plt.figure(figsize=figsize, constrained_layout=True)
+    fig = plt.figure(figsize=figsize, tight_layout=True)
     spec = gridspec.GridSpec(figure=fig, ncols=3, nrows=3,
                             height_ratios=[1, 0.1, 1])
     
@@ -174,12 +174,12 @@ def plot_material(fig, axes, material):
                          color=BCOLORS['exponent'])
 
     # add statistical annotations ==============================================
-    time_ = time[(time < X_LIMITS[1]) & (time > X_LIMITS[0])] 
+    time_ = time[(time > 0) & (time < X_LIMITS[1])] 
     
     for ii, (feature, values) in enumerate(zip(['alpha', 'gamma'],
                                              [power['alpha'], power['gamma']])):
+        values = values[:, ((time > 0) & (time < X_LIMITS[1]))]
         sig = compute_significance(values)
-        sig = sig[(time < X_LIMITS[1]) & (time > X_LIMITS[0])]
         for jj in range(len(sig)-1):
             if sig[jj] and sig[jj+1]:
                 axes[1].plot([time_[jj], time_[jj+1]], 
@@ -189,8 +189,8 @@ def plot_material(fig, axes, material):
     for ii, (feature, values) in enumerate(zip(['exponent', 'alpha', 'gamma'],
                                              [exponent, power_adj['alpha'], 
                                               power_adj['gamma']])):
+        values = values[:, ((time > 0) & (time < X_LIMITS[1]))]
         sig = compute_significance(values)
-        sig = sig[(time < X_LIMITS[1]) & (time > X_LIMITS[0])]
         for jj in range(len(sig)-1):
             if sig[jj] and sig[jj+1]:
                 axes[2].plot([time_[jj], time_[jj+1]], 
