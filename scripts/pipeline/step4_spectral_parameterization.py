@@ -19,7 +19,7 @@ from utils import hour_min_sec
 
 # Settings
 RUN_TFR = True # run TFR parameterization (takes a long time)
-AP_MODE = ['fixed', 'knee'] # aperiodic mode for SpecParam
+AP_MODE = ['knee'] # aperiodic mode for SpecParam
 
 
 def main():
@@ -87,21 +87,26 @@ def parameterize_tfr():
         os.makedirs(f"{dir_output}/reports")
 
     # load alpha/beta bandpower modulation results (resampling ananlysis)
-    results = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv", index_col=0)
-    df = results.loc[results['sig_any']].reset_index(drop=True)
+    results = load_stats()
+    df = results.loc[results['sig_either_both']].reset_index(drop=True)
     
     # loop through significant channels
     for i_chan, row in df.iterrows():
         # display progress
         print(f"    Analyzing file {i_chan}/{len(df)}") 
         t_start_c = timer()
-        
+
         # loop through materials and conditions
         for material in ['words', 'faces']:
             for memory in ['hit', 'miss']:
 
-                # load tfr
+                # check if output file already exists
                 fname = f"{row['patient']}_{material}_{memory}_chan{row['chan_idx']}_tfr.npz"
+                temp = f"{dir_output}/{fname.replace('.npz','_param_knee.npz')}"
+                if os.path.exists(temp):
+                    continue
+
+                # load tfr
                 data_in = np.load(f"{dir_input}/{fname}")
                 tfr_in = data_in['tfr']
                 freq = data_in['freq']
@@ -130,6 +135,35 @@ def parameterize_tfr():
     hour, min, sec = hour_min_sec(timer() - t_start)
     print(f"Total TFR analysis time: {hour} hour, {min} min, and {sec :0.1f} s")
      
-        
+
+def load_stats():
+    # load stats
+    fname = f"{PROJECT_PATH}/data/results/band_power_statistics.csv"
+    df_stats = pd.read_csv(fname, index_col=0)
+    df_stats = df_stats.loc[df_stats['memory']=='hit']
+
+    # compute joint significance within material
+    df_stats['sig_both'] = df_stats['alpha_sig'] & df_stats['gamma_sig'] # both bands within material
+    df_stats['sig_either'] = df_stats['alpha_sig'] | df_stats['gamma_sig'] # either band within material
+
+    # pivot table to compute joint significance across materials
+    values = ['alpha_sig', 'gamma_sig', 'sig_either', 'sig_both']
+    df_stats = df_stats.pivot_table(index=['patient', 'chan_idx'], 
+                                    columns='material', values=values)
+    df_stats.columns = [f"{col[0]}_{col[1]}" for col in df_stats.columns]
+    df_stats.reset_index(inplace=True)
+    for col in df_stats.columns[2:]:
+        df_stats[col] = df_stats[col].astype(bool) # reset to booleen
+
+    # compute joint significance across materials
+    df_stats['sig_any'] = df_stats['sig_either_faces'] | \
+                          df_stats['sig_either_words'] # either band, either material
+    df_stats['sig_either_both'] = df_stats['sig_both_faces'] | \
+                                  df_stats['sig_both_words'] # both band, either material
+    df_stats['sig_all'] = df_stats['sig_both_faces'] & \
+                          df_stats['sig_both_words'] # both band, both material
+    
+    return df_stats
+
 if __name__ == "__main__":
     main()
