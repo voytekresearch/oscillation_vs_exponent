@@ -15,6 +15,7 @@ from pingouin import compute_effsize
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
+from settings import BANDS
 from paired_hierarchical_bootstrap import hierarchical_bootstrap as hb
 from utils import get_start_time, print_time_elapsed
 
@@ -33,7 +34,7 @@ def main():
 
     # load data
     df_params = pd.read_csv(f"{PROJECT_PATH}/data/results/spectral_parameters.csv", index_col=0)
-    df_sig = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv", index_col=0)
+    df_sig = pd.read_csv(f"{PROJECT_PATH}/data/results/band_power_statistics.csv", index_col=0)
 
     # init
     columns = ['material', 'memory', 'feature', 'pvalue', 'cohens_d']
@@ -47,7 +48,7 @@ def main():
             # display progress
             start_time_c = get_start_time()
             print('---------------------------------------')
-            print(f'Analyzing condition: {material} - {memory}')
+            print(f'Analyzing condition: {material} - {memory}...')
             
             # get data for condition
             df_cond = df_params.loc[(df_params['material'] == material) & \
@@ -55,13 +56,16 @@ def main():
             
             # filter for task-modulated channels
             if ACTIVE_ONLY:
-                df_cond = df_cond.merge(df_sig, on=['patient', 'chan_idx'])
+                temp = df_sig.loc[(df_sig['material'] == material) & \
+                                    (df_sig['memory']==memory)].reset_index(drop=True)
+                temp['sig_all'] = temp[[f'{band}_sig' for band in BANDS]].all(axis=1)
+                df_cond = df_cond.merge(temp, on=['patient', 'chan_idx'])
                 df_cond = df_cond.loc[df_cond['sig_all']].reset_index(drop=True)
             
             # compute stats
             for feature in FEATURES:
                 # display progress
-                print(f'\nFeature: {feature}')
+                print(f'\n    feature: {feature}')
                 start_time_f = get_start_time()
             
                 # run bootstrap
