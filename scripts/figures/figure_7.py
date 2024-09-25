@@ -46,23 +46,40 @@ def main():
         os.makedirs(f"{dir_output}")
 
     # create figure
-    fig, axes = plt.subplots(1, 3, figsize=[WIDTH['2col'], WIDTH['2col']/3], 
-                             constrained_layout=True)
+    figsize = [WIDTH['2col'], WIDTH['2col']/1.5]
+    fig, (axes_w, axes_f) = plt.subplots(2, 3, figsize=figsize,
+                                         constrained_layout=True)
+    
+    # loop over materials and plot
+    for axes, material in zip([axes_w, axes_f], MATERIALS):
+        plot_material(fig, axes, material)
 
+    # save figure
+    fig.savefig(f"{dir_output}/figure_7")
+    fig.savefig(f"{dir_output}/figure_7.png")
+
+    # display progress
+    print(f"\n\nTotal analysis time:")
+    print_time_elapsed(t_start)
+
+
+def plot_material(fig, axes, material):
     # Plot normalized spectrogram ==============================================
 
     # load stats
-    fname = f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv"
+    fname = f"{PROJECT_PATH}/data/results/band_power_statistics.csv"
     df_stats = pd.read_csv(fname, index_col=0)
+    df_stats = df_stats.loc[(df_stats['memory']=='hit') & \
+                            (df_stats['material']==material)]
+    df_stats['sig_all'] = df_stats[[f'{band}_sig' for band in BANDS]].all(axis=1)
     df_stats = df_stats.loc[df_stats['sig_all']].reset_index(drop=True)
 
     # # load TFR for active channels 
     tfr_list = []
     for _, row in df_stats.iterrows():
-        for material in MATERIALS:
-            fname = f"{row['patient']}_{material}_hit_chan{row['chan_idx']}_tfr.npz"
-            data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}")
-            tfr_list.append(np.nanmedian(np.squeeze(data_in['tfr']), axis=0))
+        fname = f"{row['patient']}_{material}_hit_chan{row['chan_idx']}_tfr.npz"
+        data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}")
+        tfr_list.append(np.nanmedian(np.squeeze(data_in['tfr']), axis=0))
     tfr = np.nanmean(np.array(tfr_list), axis=0) # average over channels and materials
 
     # plot
@@ -195,14 +212,6 @@ def main():
 
         # remove right and top spines
         beautify_ax(ax)
-
-    # save figure
-    fig.savefig(f"{dir_output}/figure_7")
-    fig.savefig(f"{dir_output}/figure_7.png")
-
-    # display progress
-    print(f"\n\nTotal analysis time:")
-    print_time_elapsed(t_start)
 
 
 def compute_significance(values):
