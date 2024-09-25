@@ -19,7 +19,7 @@ from utils import hour_min_sec
 
 # Settings
 RUN_TFR = True # run TFR parameterization (takes a long time)
-AP_MODE = ['knee'] # aperiodic mode for SpecParam
+AP_MODE = ['fixed', 'knee'] # aperiodic mode for SpecParam
 
 
 def main():
@@ -102,7 +102,7 @@ def parameterize_tfr():
 
                 # check if output file already exists
                 fname = f"{row['patient']}_{material}_{memory}_chan{row['chan_idx']}_tfr.npz"
-                temp = f"{dir_output}/{fname.replace('.npz','_param_knee.npz')}"
+                temp = f"{dir_output}/{fname.replace('.npz','_param_knee.json')}"
                 if os.path.exists(temp):
                     continue
 
