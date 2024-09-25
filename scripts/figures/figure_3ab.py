@@ -94,7 +94,7 @@ def main():
         ax4.spines[loc].set_visible(False)
 
     # label
-    ax0.set_title('Example electrode: raw iEEG time-series')
+    ax0.set_title('Raw iEEG time-series')
     ax4.set_xlabel('time relative to stimulus onset (s)')
 
     # ==================== Fig 2b and 2d ====================
@@ -107,12 +107,19 @@ def main():
         plot_spectra(chan_info, ax, material, color)
     
     # add joint title centered over to B and C
-    fig.text(0.8, 0.97, 'Example electrode: mean power spectra', ha='center', 
+    fig.text(0.8, 0.97, 'Mean power spectra', ha='center', 
              va='center', fontsize=7)
+    
+    # add subplot header
+    line = plt.Line2D((0.1, 0.9), (1.01, 1.01), color='black', linewidth=1, 
+                    transform=fig.transFigure, figure=fig)
+    fig.add_artist(line)
+    fig.text(0.5, 1.07, "Single-channel example", ha='center', va='top', 
+             fontsize=7, fontdict={'fontweight': 'bold'})
 
     # save figure
-    fig.savefig(f"{dir_output}/figure_3ab")
-    fig.savefig(f"{dir_output}/figure_3ab.png")
+    fig.savefig(f"{dir_output}/figure_3ab", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_3ab.png", bbox_inches='tight')
 
     # display progress
     print(f"\n\nTotal analysis time:")
