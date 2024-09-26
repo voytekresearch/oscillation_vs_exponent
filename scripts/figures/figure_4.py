@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import seaborn as sns
 from statsmodels.stats.multitest import multipletests
 
@@ -23,19 +24,16 @@ from paths import PROJECT_PATH
 from info import MATERIALS
 from utils import get_start_time, print_time_elapsed
 from plots import set_custom_colors
-from specparam_utils import knee_freq
-from settings import WIDTH
+from settings import WIDTH, BANDS
 
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
 ALPHA = 0.05 # significance level
-FEATURES = ['offset', 'knee', 'exponent', 'alpha', 'alpha_adj', 'gamma',
-            'gamma_adj']
-TITLES = ['Aperiodic offset', 'Aperiodic knee', 'Aperiodic exponent', 
-          'Total alpha power', 'Adjusted alpha power', 'Total gamma power', 
-            'Adjusted gamma power']
-LABELS = ['offset (a.u.)', 'knee (Hz)', 'exponent', 'power (a.u.)',
-            'power (a.u.)', 'power (a.u.)', 'power (a.u.)']
+PLOT_SWARM = False # plot swarm plot on top of violin plot
+
+FEATURES = ['exponent', 'alpha_adj', 'gamma_adj']
+TITLES = ['Aperiodic exponent', 'Adjusted alpha power', 'Adjusted gamma power']
+LABELS = ['exponent', 'power (\u03BCV\u00b2/Hz)', 'power (\u03BCV\u00b2/Hz)']
 
 
 def main():
@@ -44,178 +42,128 @@ def main():
     t_start = get_start_time()
 
     # identify / create directories
-    dir_output = f"{PROJECT_PATH}/figures/param_violin"
+    dir_output = f"{PROJECT_PATH}/figures/main_figures"
     if not os.path.exists(dir_output): 
         os.makedirs(f"{dir_output}")
+
+    ### load data ##############################################################
 
     # load SpecParam results
     fname = f"{PROJECT_PATH}/data/results/spectral_parameters.csv"
     df = pd.read_csv(fname, index_col=0)
     df = df.loc[df['memory']=='hit'].reset_index(drop=True)
-    df['knee'] = knee_freq(df['knee'], df['exponent']) # convert knee to Hz
 
     # get results for task-modulated channels
-    fname = f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv"
+    fname = f"{PROJECT_PATH}/data/results/band_power_statistics.csv"
     temp = pd.read_csv(fname, index_col=0)
-    df = df.merge(temp, on=['patient', 'chan_idx'])
-    df = df.loc[df['sig_all']].reset_index(drop=True)
+    temp = temp.loc[temp['memory']=='hit']
+    df_w = df.merge(temp.loc[temp['material']=='words'], 
+                    on=['patient', 'chan_idx', 'material', 'memory'])
+    df_f = df.merge(temp.loc[temp['material']=='faces'], 
+                    on=['patient', 'chan_idx', 'material', 'memory'])
+    for df in [df_w, df_f]: # compute joint significance
+        df['sig_all'] = df[[f'{band}_sig' for band in BANDS]].all(axis=1)
 
     # load group-level statistical results
     fname = f"{PROJECT_PATH}/data/ieeg_stats/group_level_hierarchical_bootstrap_active.csv"
     stats = pd.read_csv(fname, index_col=0)
     stats = stats.loc[stats['memory'] =='hit'].reset_index(drop=True)
     stats['p'] = stats['pvalue'].apply(lambda x: min(x, 1-x)) # standardize p-values (currently 0.5 represents equal and <0.05 and >0.95 are both significant)
-    stats['p'].loc[stats['p']==0] = 0.001 # set p=0 to p=0.001
+    stats.loc[stats['p']==0, 'p'] = 0.001 # set p=0 to p=0.001
     mt = multipletests(stats['p'], alpha=0.05, method='holm')
     stats['p_corr'] = mt[1]
     
-    # plot
-    for feature, title, label in zip(FEATURES, TITLES, LABELS):
-        fname_out = f"param_violin_{feature}.png"
-        plot_contrasts_violin(df, stats, feature, title=title, y_label=label,
-                                fname_out=f"{dir_output}/{fname_out}")
+    ### plot ##################################################################
+
+    # create figure and gridspec
+    fig = plt.figure(figsize=[WIDTH['2col'], WIDTH['2col']/2], 
+                     constrained_layout=True)
+    spec = gridspec.GridSpec(figure=fig, ncols=6, nrows=2, 
+                             height_ratios=[2.5,1])
+
+    # loop features
+    x_positions = [0.17, 0.5, 0.85]
+    for i_feature, (feature, label, title, xpos) in \
+        enumerate(zip(FEATURES, LABELS, TITLES, x_positions)):
+
+        # add feature label above pairs of subplots
+        fig.text(xpos, 0.975, title, ha='center', va='center', fontsize=7)
+
+        # loop materials
+        for i_material, (material, df, plot_color) in \
+            enumerate(zip(MATERIALS, [df_w, df_f], ['browns', 'blues'])):
+
+            # get sig chans only
+            df = df.loc[df['sig_all']].reset_index(drop=True)
+
+            # create subplots
+            ax_v = fig.add_subplot(spec[0, i_feature*2+i_material])
+            ax_h = fig.add_subplot(spec[1, i_feature*2+i_material])
+            
+            # set plotting params
+            set_custom_colors(plot_color) # set color palette
+            plotting_params = {
+                'data'  :   df,
+                'hue'   :   'epoch',
+                'y'     :   feature,
+                'dodge' :   True,
+                'split' :   True
+            }
+
+            # plot violin
+            vp = sns.violinplot(**plotting_params, ax=ax_v, inner=None)
+            # for l in ax_v.lines: # remove mean and quartile line
+            #     l.set_linewidth(0)
+            vp.set_xlabel('')
+            vp.set_ylabel(label)
+            vp.set_title(f"\n{material[:-1]}-encoding")
+            vp.set_xticks([])
+            ax_v.legend(loc='upper left', bbox_to_anchor=(0, 0))
+
+            # plot swarm
+            if PLOT_SWARM:
+                plotting_params.pop('split')
+                sns.swarmplot(**plotting_params, ax=ax_v, size=0.5, 
+                                palette='dark:#000000')
+                
+            # plot histogram
+            plot_histogram(ax_h, ax_v, df, feature, label, stats, material)
+
+    # save
+    fig.savefig(f"{dir_output}/figure_4", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_4.png", bbox_inches='tight')
 
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
 
 
-def plot_contrasts_violin(params, stats, y_var, title='', y_label=None, fname_out=None):
-    # plot in each color
-    set_custom_colors('browns')
-    _plot_contrasts_violin(params, stats, y_var, title=title, y_label=y_label, 
-                           loc='left', fname_out=fname_out.replace('.png', '_browns.png'))
-    set_custom_colors('blues')
-    _plot_contrasts_violin(params, stats, y_var, title=title, y_label=y_label, 
-                           loc='right', fname_out=fname_out.replace('.png', '_blues.png'))
-
-    # load each, crop, and join
-    img_0 = plt.imread(fname_out.replace('.png', '_browns.png'))
-    img_1 = plt.imread(fname_out.replace('.png', '_blues.png'))
-    idx_mid = int(img_0.shape[1] * 0.55)
-    image = np.concatenate([img_0[:, :idx_mid], img_1[:, idx_mid:]], axis=1)
-
-    # plot combined image
-    fig, ax = plt.subplots(figsize=[WIDTH['2col']/3, WIDTH['2col']/2])
-    ax.imshow(image)
-    ax.axis('off')
-
-    # save
-    if fname_out:
-        fig.savefig(fname_out)
-        plt.close('all')
-    else:
-        plt.show()
-        
-        
-def _plot_contrasts_violin(params, stats, y_var, title='', y_label=None, 
-                          fname_out=None, plot_swarm=True, loc='left'):
-    # set plotting params
-    plotting_params = {
-        'data'  :   params,
-        'x'     :   'material',
-        'hue'   :   'epoch',
-        'y'     :   y_var,
-        'dodge' :   True,
-        'split' :   True
-    }
-
-    # init
-    if y_label is None:
-        y_label = y_var.lower()
-
-    # create figure
-
-    fig = plt.figure(figsize=[WIDTH['2col']/3, WIDTH['2col']/2])
-    gs = fig.add_gridspec(2,2, height_ratios=[2,1])
-    ax1 = fig.add_subplot(gs[0,:])
-    ax2l = fig.add_subplot(gs[1,0])
-    ax2r = fig.add_subplot(gs[1,1])
-    
-    # ===== Upper Subplot =====
-    # plot violin and swarm
-    vp = sns.violinplot(**plotting_params, ax=ax1)
-    if plot_swarm:
-        plotting_params.pop('split')
-        sns.swarmplot(**plotting_params, ax=ax1, size=2, 
-                        palette='dark:#000000')
-
-    # remove mean and quartile line
-    for l in ax1.lines:
-        l.set_linewidth(0)
-
-    # Label
-    ax1.set_title(title)
-    vp.set_xlabel('')
-    vp.set_ylabel(y_label)
-    vp.set_xticks([0,1], labels=['word block','face block'])
-    vp.xaxis.set_ticks_position('top')
-
-    # add legend (and add space)
-    handles, _ = vp.get_legend_handles_labels()
-    if loc == 'left':
-        vp.legend(handles=handles, labels=['baseline','encoding'],
-                  bbox_to_anchor=(0.05, -0.1, 0.2, 0.1))
-    elif loc == 'right':
-        vp.legend(handles=handles, labels=['baseline','encoding'],
-                  bbox_to_anchor=(0.82, -0.1, 0.2, 0.1))
-        
-    # connect paired data points on swarm plot
-    params_p = params.pivot_table(index=['patient', 'chan_idx', 'material'],
-                                    columns='epoch', values=y_var).reset_index()
-    for i_mat, material in enumerate(MATERIALS):
-        data = params_p.loc[params_p['material']==material, ['pre', 'post']]
-        for i_chan in range(data.shape[0]):
-            ax1.plot([-0.2+i_mat, 0.2+i_mat], data.iloc[i_chan], color='k', 
-                     alpha=0.5, lw=0.5)
-
-    # ===== Lower Subplot =====
-    # plot disributions exponent change)
-    df_p = params.pivot_table(index=['patient', 'chan_idx', 'material'], 
-                              columns='epoch', values=y_var).reset_index()
+def plot_histogram(ax, ax_v, df, feature, label, stats, material):
+    # compute difference
+    df_p = df.pivot_table(index=['patient', 'chan_idx', 'material'], 
+                              columns='epoch', values=feature).reset_index()
     df_p['diff'] = df_p['post'] - df_p['pre']
+
+    # plot
     max_val = np.nanmax(np.abs(df_p['diff']))
     bins = np.linspace(-max_val, max_val, 21)
-    for ax, material in zip([ax2l, ax2r], MATERIALS):
-        diff = df_p.loc[df_p['material']==material, 'diff']
-        ax.hist(diff, bins=bins, color='grey', label=material)
-        ax.set(xlim=[-max_val, max_val])
-        ax.set_xlabel(f"$\Delta$ {y_label}")
-        # ax.set_ylabel('channel count')
-        ax.axvline(0, color='k')
-        ax.axvline(np.nanmean(diff), color='r', linestyle='--')
+    ax.hist(df_p['diff'], bins=bins, color='grey')
+    ax.set(xlim=[-max_val, max_val])
+    ax.set_xlabel(f"$\Delta$ {label}")
+    # ax.set_ylabel('channel count')
+    ax.axvline(0, color='k', linestyle='-', linewidth=0.5)
+    ax.axvline(np.nanmean(df_p['diff']), color='r', linewidth=0.5)
 
-        # add stats
-        if y_var == 'gamma_adj': # prevent overlap with other annotations - only gamma increases
-            x_pos = 0.05
-        else:
-            x_pos = 0.55
-        pval = stats.loc[((stats['material']==material) & 
-                    (stats['feature']==y_var)), 'p_corr'].values
-        if len(pval) == 1:
-            if pval < 0.001:
-                ax.text(x_pos, 0.85, f"*p<0.001", transform=ax.transAxes)
-            elif pval < ALPHA:
-                ax.text(x_pos, 0.85, f"*p={pval[0]:.3f}", transform=ax.transAxes)
-            else:
-                ax.text(x_pos, 0.85, f"p={pval[0]:.3f}", transform=ax.transAxes)
-        else:
-            print(f"Warning: missing or multiple p-values for '{y_var}' in {material} block")
-
-    # adjust axis labels
-    # ax2l.set_ylim([0, ax2l.get_ylim()[1]+1])
-    ax2l.set_ylabel('channel count')
-    ax2r.sharey(ax2l)
-    for ax in [ax1, ax2l]:
-        ax.yaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
-
-    # save figure
-    if fname_out: 
-        fig.savefig(fname_out)
-        plt.close('all')
-        
-    return vp
-
+    # add stats
+    pval = stats.loc[((stats['material']==material) & 
+                (stats['feature']==feature)), 'p_corr'].values
+    pos = [0.6, -0.1]
+    if pval < 0.001:
+        ax_v.text(*pos, f"$*p<0.001", transform=ax_v.transAxes)
+    elif pval < ALPHA:
+        ax_v.text(*pos, f"*p={pval[0]:.3f}", transform=ax_v.transAxes)
+    else:
+        ax_v.text(*pos, f"p={pval[0]:.3f}", transform=ax_v.transAxes)
 
 if __name__ == "__main__":
     main()
