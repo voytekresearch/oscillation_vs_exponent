@@ -111,9 +111,9 @@ def main():
             }
 
             # plot violin
-            vp = sns.violinplot(**plotting_params, ax=ax_v, inner=None)
-            # for l in ax_v.lines: # remove mean and quartile line
-            #     l.set_linewidth(0)
+            vp = sns.violinplot(**plotting_params, ax=ax_v)
+            for l in ax_v.lines: # remove mean and quartile line
+                l.set_linewidth(0)
             vp.set_xlabel('')
             vp.set_ylabel(label)
             vp.set_title(f"\n{material[:-1]}-encoding")
