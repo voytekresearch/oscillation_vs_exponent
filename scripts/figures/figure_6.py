@@ -19,7 +19,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from info import PATIENTS
+from info import PATIENTS, MATERIALS
 from settings import BCOLORS, WIDTH
 from plots import beautify_ax
 
@@ -51,9 +51,9 @@ def main():
                             width_ratios=[1.5 , 1.5, 1, 0.1, 1.5 , 1.5, 1])
 
     # iterate over materials
-    for cols, df_c in zip([[0,1,2], [4,5,6]], [df_w, df_f]):
+    for cols, df_c, material in zip([[0,1,2], [4,5,6]], [df_w, df_f], MATERIALS):
         # run analysis
-        df_ols, results = run_analysis(df, dir_output)
+        df_ols, results = run_analysis(df, dir_output, material)
 
         # create axes
         ax1 = fig.add_subplot(spec[0,cols[0]])
@@ -168,7 +168,7 @@ def draw_regression_results(ax, x_data, results, add_text=True):
     return ax
 
 
-def run_analysis(df, dir_output):
+def run_analysis(df, dir_output, material):
     # run OLS
     results = {}
     df_ols_list = []
@@ -189,6 +189,9 @@ def run_analysis(df, dir_output):
     df_ols.to_csv(f"{dir_output}/confounding_features_ols.csv")
 
     # run t-test on cross-validation R-squared values and print results
+    print("\n\n------------------------------------------------")
+    print(f"{material}-encoding")
+    print("------------------------------------------------")
     sig = {}
     for feature in ['alpha', 'gamma']:
         r2_total = df_ols.loc[df_ols['feature']==feature, 'rsquared'].values
@@ -211,7 +214,7 @@ def run_analysis(df, dir_output):
             print(f"\tp-value: {results[feature].f_pvalue:.3e}")
         else:
             print(f"\tp-value: {results[feature].f_pvalue:.3f}")
-        print(results[feature].summary())
+        # print(results[feature].summary())
 
     return df_ols, results
 
