@@ -179,9 +179,11 @@ def run_analysis(df, dir_output, material):
 
         # cross-validate OLS
         for patient in PATIENTS:
-            results_i = run_ols(df.loc[df['patient']==patient], feature)
+            df_p = df.loc[df['patient']==patient]
+            results_i = run_ols(df_p, feature)
             df_ols_list.append(pd.DataFrame({
-                                            'patient'   :   patient, 
+                                            'patient'   :   patient,
+                                            'n_channels':   len(df_p), 
                                             'feature'   :   feature,
                                             'rsquared'  :   results_i.rsquared},
                                             index=[0]))
