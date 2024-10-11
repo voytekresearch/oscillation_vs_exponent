@@ -64,6 +64,9 @@ def main():
 
 
 def step_4(specparam_settings, i_run, dir_output):
+    # display progress
+    t_start_c = get_start_time()
+
     # identify / create directories
     dir_input = f"{PROJECT_PATH}/data/ieeg_spectral_results"
     
@@ -72,7 +75,6 @@ def step_4(specparam_settings, i_run, dir_output):
     files = [f for f in os.listdir(dir_input) if f.startswith('psd') & (not 'epoch' in f)]
     for i_file, fname in enumerate(files):
         # display progress
-        t_start_c = get_start_time()
         print(f"\tAnalyzing file {i_file+1}/{len(files)}: {fname}")
 
         # load results for condition
