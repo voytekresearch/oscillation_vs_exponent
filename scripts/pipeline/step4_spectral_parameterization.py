@@ -18,7 +18,7 @@ from settings import N_JOBS, SPEC_PARAM_SETTINGS, FREQ_RANGE
 from utils import hour_min_sec
 
 # Settings
-RUN_TFR = True # run TFR parameterization (takes a long time)
+RUN_TFR = False # run TFR parameterization (takes a long time)
 AP_MODE = ['fixed', 'knee'] # aperiodic mode for SpecParam
 
 
@@ -26,7 +26,7 @@ def main():
     
     # parameterize PSDs
     print('\nParameterizing PSDs...')
-    # param_group_psd_results()
+    param_group_psd_results()
 
     # parameterize TFRs
     if RUN_TFR:
@@ -44,7 +44,7 @@ def param_group_psd_results():
     t_start = timer()
     
     # loop through conditions
-    files = [f for f in os.listdir(dir_input) if f.startswith('psd')]
+    files = [f for f in os.listdir(dir_input) if f.startswith('psd') & (not 'epoch' in f)]
     for i_file, fname in enumerate(files):
         # display progress
         t_start_c = timer()
