@@ -53,7 +53,7 @@ def main():
     # iterate over materials
     for cols, df_c, material in zip([[0,1,2], [4,5,6]], [df_w, df_f], MATERIALS):
         # run analysis
-        df_ols, results = run_analysis(df, dir_output, material)
+        df_ols, results = run_analysis(df_c, dir_output, material)
 
         # create axes
         ax1 = fig.add_subplot(spec[0,cols[0]])
@@ -188,7 +188,7 @@ def run_analysis(df, dir_output, material):
                                             'rsquared'  :   results_i.rsquared},
                                             index=[0]))
     df_ols = pd.concat(df_ols_list, axis=0).reset_index(drop=True)
-    df_ols.to_csv(f"{dir_output}/confounding_features_ols.csv")
+    df_ols.to_csv(f"{dir_output}/confounding_features_ols_{material}.csv")
 
     # run t-test on cross-validation R-squared values and print results
     print("\n\n------------------------------------------------")
