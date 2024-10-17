@@ -102,8 +102,8 @@ def main():
         beautify_ax(ax)
 
     # save fig
-    fig.savefig(f"{dir_fig}/figure_s2cd.png")
-    fig.savefig(f"{dir_fig}/figure_s2cd")
+    fig.savefig(f"{dir_fig}/figure_7-1cd.png")
+    fig.savefig(f"{dir_fig}/figure_7-1cd")
 
     # display progress
     print(f"\n\nTotal analysis time:")
