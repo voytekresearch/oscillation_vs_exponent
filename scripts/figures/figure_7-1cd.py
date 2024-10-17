@@ -22,7 +22,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
 from settings import WIDTH
-from plots import beautify_ax
+from plots import beautify_ax, join_two_figures
 
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
@@ -103,7 +103,16 @@ def main():
 
     # save fig
     fig.savefig(f"{dir_fig}/figure_7-1cd.png")
-    fig.savefig(f"{dir_fig}/figure_7-1cd")
+
+    # join subplots
+    join_two_figures(f"{dir_fig}/figure_7-1ab.png", 
+                     f"{dir_fig}/figure_7-1cd.png",
+                     f"{dir_fig}/figure_7-1.png",
+                     figsize=[WIDTH['1col'], WIDTH['1col']])
+    join_two_figures(f"{dir_fig}/figure_7-1ab.png", 
+                     f"{dir_fig}/figure_7-1cd.png",
+                     f"{dir_fig}/figure_7-1",
+                     figsize=[WIDTH['1col'], WIDTH['1col']])
 
     # display progress
     print(f"\n\nTotal analysis time:")
@@ -224,7 +233,7 @@ def comp_gain_effect(gain, exponent, evoked):
         psd_with_evoked.append(np.mean(psd_with_evoked_ii, axis=0))
     
     return time, signal, signal_plus_evoked, freq, psd, psd_with_evoked
-
+        
 
 if __name__ == "__main__":
     main()

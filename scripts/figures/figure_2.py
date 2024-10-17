@@ -30,9 +30,9 @@ def main():
     t_start = get_start_time()
 
     # identify / create directories
-    dir_output = f"{PROJECT_PATH}/figures/main_figures"
-    if not os.path.exists(dir_output): 
-        os.makedirs(f"{dir_output}")
+    dir_fig = f"{PROJECT_PATH}/figures/main_figures"
+    if not os.path.exists(dir_fig): 
+        os.makedirs(f"{dir_fig}")
 
     # load electrode info
     fname_in = f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv"
@@ -66,8 +66,7 @@ def main():
     nfig.annotate(size=7) # must plot with annotate=False, then set size here
 
     # save/show
-    plt.savefig(f"{dir_output}/figure_2bc")
-    plt.savefig(f"{dir_output}/figure_2bc.png")
+    plt.savefig(f"{dir_fig}/figure_2bc.png")
 
     # display progress
     print(f"\n\nTotal analysis time:")

@@ -147,7 +147,6 @@ def main():
 
     # save fig
     fig.savefig(f"{dir_fig}/figure_7-1ab.png")
-    fig.savefig(f"{dir_fig}/figure_7-1ab")
 
     # display progress
     print(f"\n\nTotal analysis time:")

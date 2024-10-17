@@ -9,6 +9,50 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, LogNorm, CenteredNorm, TwoSlopeNorm
 
 
+def join_two_figures(fname_0, fname_1, fname_out=None, axis=0, figsize=None):
+    # load each and join
+    img_0 = plt.imread(fname_0)
+    img_1 = plt.imread(fname_1)
+    image = join_images(img_0, img_1, axis=axis)
+    # image = np.concatenate([img_0, img_1], axis=axis)
+
+    # plot combined image
+    if figsize is None:
+        fig, ax = plt.subplots()
+    else:
+        fig, ax = plt.subplots(figsize=figsize)
+    ax.imshow(image)
+    ax.axis('off')
+
+    # save
+    if fname_out:
+        fig.savefig(fname_out)
+        plt.close('all')
+    else:
+        plt.show()
+
+
+def join_images(img_0, img_1, axis=0):
+    # check if images are the same size and pad if necessary
+    if axis==0:
+        if img_0.shape[1] < img_1.shape[1]:
+            img_0 = np.pad(img_0, ((0,0),(0,img_1.shape[1]-img_0.shape[1]),(0,0)), mode='constant')
+        elif img_0.shape[1] > img_1.shape[1]:
+            img_1 = np.pad(img_1, ((0,0),(0,img_0.shape[1]-img_1.shape[1]),(0,0)), mode='constant')
+    elif axis==1:
+        if img_0.shape[0] < img_1.shape[0]:
+            img_0 = np.pad(img_0, ((0,img_1.shape[0]-img_0.shape[0]),(0,0),(0,0)), mode='constant')
+        elif img_0.shape[0] > img_1.shape[0]:
+            img_1 = np.pad(img_1, ((0,img_0.shape[0]-img_1.shape[0]),(0,0),(0,0)), mode='constant')
+    else:    
+        raise ValueError('Axis must be 0 or 1.')
+    
+    # join images
+    image = np.concatenate([img_0, img_1], axis=axis)
+
+    return image        
+
+
 def beautify_ax(ax):
     """
     Beautify axis by removing top and right spines.

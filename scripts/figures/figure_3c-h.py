@@ -22,8 +22,7 @@ from nilearn import plotting
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from info import MATERIALS
-from plots import plot_spectra_2conditions, beautify_ax
+from plots import plot_spectra_2conditions, beautify_ax, join_two_figures
 from settings import COLORS, FREQ_RANGE, WIDTH, BCOLORS, BANDS
 
 # settings
@@ -131,9 +130,13 @@ def main():
         ax.set_title("Mean power spectra")
 
     # save
-    plt.savefig(f"{dir_fig}/figure_3cde", bbox_inches='tight')
     plt.savefig(f"{dir_fig}/figure_3cde.png", bbox_inches='tight')
     plt.close()
+
+    # join subplots
+    join_two_figures(f"{dir_fig}/figure_3ab.png", f"{dir_fig}/figure_3cde.png",
+                     f"{dir_fig}/figure_3.png", figsize=[WIDTH['2col'], 
+                                                         WIDTH['2col']*3/4])
 
 
 def plot_group_spectra(df, material, ax):

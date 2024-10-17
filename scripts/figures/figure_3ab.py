@@ -118,7 +118,6 @@ def main():
              fontsize=7, fontdict={'fontweight': 'bold'})
 
     # save figure
-    fig.savefig(f"{dir_output}/figure_3ab", bbox_inches='tight')
     fig.savefig(f"{dir_output}/figure_3ab.png", bbox_inches='tight')
 
     # display progress
