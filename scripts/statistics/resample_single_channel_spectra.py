@@ -52,7 +52,7 @@ def main():
             for patient in PATIENTS:
                 # TEMP - skip files that have already been processed
                 files_completed = os.listdir(dir_output)
-                fname_out = f'stats_{patient}_{material}_{memory}_{AP_MODE}.csv'
+                fname_out = f'stats_{patient}_{material}_{memory}.csv'
                 if fname_out in files_completed:
                     print(f'Skipping {fname_out} -  already processed')
                     continue
@@ -82,7 +82,6 @@ def main():
                 dfs.append(df_i)
                 
                 # save results for patient-material-memory
-                fname_out = f'stats_{patient}_{material}_{memory}.csv'
                 df_i.to_csv(f"{dir_output}/{fname_out}", index=False)
 
                 # display progress
@@ -108,7 +107,7 @@ def resampling_analysis(freq, spectra_pre, spectra_post, df_true):
     pvalues = np.zeros([n_chans, len(features)])
 
     # loop through channels
-    for i_chan in range(n_chans):
+    for i_chan in df_true.index: 
         # display progress
         start = timer()
         print(f'    Analyzing channel: {i_chan}/{n_chans}')
