@@ -195,8 +195,7 @@ def check_input(df, variable, condition, level_1, level_2):
                 (df_i[variable].isnull().any()):
                 df = df.drop(df_i.index)
                 n_dropped += 1
-            else:
-                n_instances += 1
+            n_instances += 1
 
     if n_dropped > 0:
         print(f"Warning: {n_dropped}/{n_dropped+n_instances} instances dropped due to missing data.")
