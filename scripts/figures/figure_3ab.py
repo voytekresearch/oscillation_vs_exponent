@@ -106,8 +106,8 @@ def main():
                                    ['brown', 'blue']):
         plot_spectra(chan_info, ax, material, color)
     
-    # add joint title centered over to B and C
-    fig.text(0.8, 0.97, 'Mean power spectra', ha='center', 
+    # add joint title centered over PSD subplots (B)
+    fig.text(0.8, 0.97, 'Power spectra', ha='center', 
              va='center', fontsize=7)
     
     # add subplot header
