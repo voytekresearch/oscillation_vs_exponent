@@ -43,7 +43,7 @@ COLORS = {
 BCOLORS = {
     "alpha"     :   np.array([117,112,179]) / 255, # purple
     "gamma"     :   np.array([102,166,30]) / 255, # green
-    "exponent"  :   np.array([217,95,2]) / 255, # orange
+    "exponent"  :   np.array([255,127,0]) / 255, # orange
 }
 
 MCOLORS = {
