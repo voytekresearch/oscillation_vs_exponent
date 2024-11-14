@@ -104,7 +104,7 @@ def main():
         ax.legend(['baseline', 'encoding', 'intersection'], loc='lower left')
 
     # plot histogram of intersection frequency
-    bins = np.linspace(0, 100, 13) # 13 bins based on Freedman-Diaconis rule
+    bins = np.linspace(0, 100, 14) # 13 bins based on Freedman-Diaconis rule
     for material, ax in zip(MATERIALS, [ax4, ax6]):
         ax.hist(intersection[material], bins, color=BCOLORS['exponent'], 
                 edgecolor='k', linewidth=0.5)
