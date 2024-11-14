@@ -72,12 +72,12 @@ def main():
              fontdict={'fontweight': 'bold'})
 
     # add figure panel labels
-    fig.text(0.05, 0.97, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.38, 0.97, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.71, 0.97, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.05, 0.44, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.38, 0.44, 'e.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.71, 0.44, 'f.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.97, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.38, 0.97, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.71, 0.97, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.44, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.38, 0.44, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.71, 0.44, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save figure
     fig.savefig(f"{dir_output}/figure_7", bbox_inches='tight')

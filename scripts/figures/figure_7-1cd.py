@@ -102,8 +102,8 @@ def main():
         beautify_ax(ax)
 
     # add figure panel labels
-    fig.text(0.05, 0.94, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.55, 0.94, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.94, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.55, 0.94, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save fig
     fig.savefig(f"{dir_fig}/figure_7-1cd.png")

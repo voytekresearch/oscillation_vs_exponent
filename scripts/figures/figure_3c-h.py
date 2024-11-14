@@ -130,12 +130,12 @@ def main():
         ax.set_title("Mean power spectra")
 
     # add figure panel labels
-    fig.text(0.01, 0.96, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.29, 0.96, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.72, 0.96, 'e.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.01, 0.44, 'f.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.29, 0.44, 'g.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.72, 0.44, 'h.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.96, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.29, 0.96, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.72, 0.96, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.44, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.29, 0.44, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.72, 0.44, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
     plt.savefig(f"{dir_fig}/figure_3cde.png", bbox_inches='tight')

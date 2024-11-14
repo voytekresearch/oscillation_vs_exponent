@@ -66,8 +66,8 @@ def main():
     nfig.annotate(size=7) # must plot with annotate=False, then set size here
 
     # add figure panel labels
-    fig.text(0.01, 0.95, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.37, 0.95, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.95, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.37, 0.95, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save/show
     plt.savefig(f"{dir_fig}/figure_2bc.png")

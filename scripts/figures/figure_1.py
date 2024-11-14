@@ -98,10 +98,10 @@ def main():
         ax.set(ylabel='')
 
     # add figure panel labels
-    fig.text(0.05, 0.97, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.55, 0.97, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.05, 0.47, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.55, 0.47, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.97, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.55, 0.97, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.47, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.55, 0.47, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
             
     # save figure
     plt.savefig(f"{path_out}/figure_1")

@@ -134,18 +134,18 @@ def main():
     ax_space.axis('off')
 
     # add figure panel labels
-    fig.text(0.05, 0.97, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.21, 0.97, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.40, 0.97, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.54, 0.97, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.70, 0.97, 'e.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.88, 0.97, 'f.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.05, 0.49, 'g.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.21, 0.49, 'h.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.40, 0.49, 'i.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.54, 0.49, 'j.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.70, 0.49, 'k.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.88, 0.49, 'l.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.97, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.21, 0.97, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.40, 0.97, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.54, 0.97, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.70, 0.97, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.88, 0.97, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.49, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.21, 0.49, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.40, 0.49, 'i', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.54, 0.49, 'j', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.70, 0.49, 'k', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.88, 0.49, 'l', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save figure
     fname = "figure_6"

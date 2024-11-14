@@ -134,12 +134,12 @@ def main():
                 fontweight='bold')
 
     # add figure panel labels
-    fig.text(0.05, 0.97, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.53, 0.97, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.05, 0.62, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.53, 0.62, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.05, 0.28, 'e.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.53, 0.28, 'f.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.97, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.53, 0.97, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.62, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.53, 0.62, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.28, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.53, 0.28, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save figure
     fig.savefig(f"{dir_output}/figure_5", bbox_inches='tight')

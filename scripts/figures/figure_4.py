@@ -130,9 +130,9 @@ def main():
             plot_histogram(ax_h, ax_v, df, feature, label, stats, material)
 
     # add figure panel labels
-    fig.text(0.02, 0.98, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.34, 0.98, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.68, 0.98, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.02, 0.98, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.34, 0.98, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.68, 0.98, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
     fig.savefig(f"{dir_output}/figure_4", bbox_inches='tight')
