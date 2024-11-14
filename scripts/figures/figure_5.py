@@ -117,7 +117,7 @@ def main():
 
     # set titles
     ax1.set_title('Rotations at high and low\nintersection frequency (IF)')
-    ax2.set_title('Effect of intersection frequency\non total band power')
+    ax2.set_title('Relationship between IF\nand total band power')
     for ax in [ax3, ax5]:
         ax.set_title('\n\nAverage power spectra')
     for ax in [ax4, ax6]:
