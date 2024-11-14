@@ -127,7 +127,6 @@ def main():
         print(f"Removed {len(r2_fixed_[r2_fixed_<=outlier_thresh_fixed])} outliers from fixed model")
 
     # plot
-    ax1.set_title('Single-channel fits')
     if REMOVE_OUTLIERS:
         sns.violinplot(data=[r2_knee_[r2_knee_>outlier_thresh_knee], 
                             r2_fixed_[r2_fixed_>outlier_thresh_fixed]], ax=ax1,
@@ -142,7 +141,6 @@ def main():
     ax2.hist(r2_diff, bins=60, alpha=0.5, label='knee - fixed', color='grey')
     ax2.set(xlabel="$R^2_{knee} - R^2_{fixed}$", ylabel="count")
     ax2.axvline(0, color='k', linestyle='--')
-    ax2.set_title('Difference in $R^2$')
 
     # plot subplot 3 - GA PSD --------------------------------------------------
     ax3.plot(freq, psd, label='grand average', color='k')
@@ -156,6 +154,10 @@ def main():
     ax3.set_yscale('log')
     ax3.set_xticks([10, 100], ['10', '100'])
     ax3.legend(loc='lower left')
+
+    # set titles
+    ax1.set_title('Variance explained\nacross models')
+    ax2.set_title('Difference in $R^2$\nbetween models')
 
     # beautify axes
     for ax in [ax1, ax2, ax3]:
