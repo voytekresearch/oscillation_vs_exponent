@@ -21,7 +21,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from settings import WIDTH
+from settings import WIDTH, PANEL_FONTSIZE
 from plots import beautify_ax, join_two_figures
 
 # settings
@@ -100,6 +100,10 @@ def main():
     # beautify axes
     for ax in [ax0, ax1]:
         beautify_ax(ax)
+
+    # add figure panel labels
+    fig.text(0.05, 0.94, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.55, 0.94, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save fig
     fig.savefig(f"{dir_fig}/figure_7-1cd.png")

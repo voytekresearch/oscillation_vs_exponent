@@ -23,7 +23,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from plots import plot_spectra_2conditions, beautify_ax, join_two_figures
-from settings import COLORS, FREQ_RANGE, WIDTH, BCOLORS, BANDS
+from settings import COLORS, FREQ_RANGE, WIDTH, BCOLORS, BANDS, PANEL_FONTSIZE
 
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
@@ -128,6 +128,14 @@ def main():
         ax.set_title("Task-modulated electrode locations")
     for ax in [ax_u2, ax_l2]:
         ax.set_title("Mean power spectra")
+
+    # add figure panel labels
+    fig.text(0.01, 0.96, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.29, 0.96, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.72, 0.96, 'e.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.44, 'f.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.29, 0.44, 'g.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.72, 0.44, 'h.', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
     plt.savefig(f"{dir_fig}/figure_3cde.png", bbox_inches='tight')

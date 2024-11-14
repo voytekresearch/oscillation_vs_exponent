@@ -16,7 +16,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from info import PATIENTS
-from settings import WIDTH
+from settings import WIDTH, PANEL_FONTSIZE
 from plots import beautify_ax
 from utils import get_start_time, print_time_elapsed
 
@@ -39,7 +39,7 @@ def main():
     df = pd.read_csv(fname_in, index_col=0).drop(columns='index')
 
     # initialize figure
-    _, (ax0, ax1) = plt.subplots(1, 2, figsize=(WIDTH['2col'], WIDTH['2col']/4), 
+    fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(WIDTH['2col'], WIDTH['2col']/4), 
                                width_ratios=[1, 3], constrained_layout=True)
 
     # plot bargraph of number of electrodes per patient
@@ -64,6 +64,10 @@ def main():
                 if axx.get_edgecolor()[0] == 0.6509803921568628:
                     axx.remove()
     nfig.annotate(size=7) # must plot with annotate=False, then set size here
+
+    # add figure panel labels
+    fig.text(0.01, 0.95, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.37, 0.95, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save/show
     plt.savefig(f"{dir_fig}/figure_2bc.png")

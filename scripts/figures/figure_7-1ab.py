@@ -17,7 +17,7 @@ from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed, confidence_interval
 from erp_utils import subtract_baseline
 from tfr_utils import crop_tfr
-from settings import SPEC_PARAM_SETTINGS, FREQ_RANGE, N_JOBS, RGB, WIDTH
+from settings import *
 from info import TMIN
 from plots import beautify_ax
 
@@ -144,6 +144,10 @@ def main():
     # beautify axes
     for ax in [ax0, ax1]:
         beautify_ax(ax)
+
+    # add figure panel labels
+    fig.text(0.05, 0.94, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.55, 0.94, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save fig
     fig.savefig(f"{dir_fig}/figure_7-1ab.png")

@@ -19,7 +19,7 @@ from neurodsp.spectral import rotate_powerlaw
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from settings import BANDS, BCOLORS, WIDTH, FREQ_RANGE
+from settings import BANDS, BCOLORS, WIDTH, FREQ_RANGE, PANEL_FONTSIZE
 
 # plotting setting
 plt.style.use('mplstyle/nature_neuro.mplstyle')
@@ -69,7 +69,7 @@ def main():
     # plot each model
     labels = ['baseline', 'encoding']
     figsize = (WIDTH['1col'], WIDTH['1col'])
-    _, ((ax0, ax1), (ax2, ax3)) = plt.subplots(2, 2, sharey=True, 
+    fig, ((ax0, ax1), (ax2, ax3)) = plt.subplots(2, 2, sharey=True, 
                                                figsize=figsize)
     plot_2_spectra(psd_pre, psd_post_0, freqs, ax=ax0, labels=labels,
                     title='Periodic model')
@@ -96,6 +96,12 @@ def main():
     # remove crowded y-labels
     for ax in [ax1, ax3]:
         ax.set(ylabel='')
+
+    # add figure panel labels
+    fig.text(0.05, 0.97, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.55, 0.97, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.47, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.55, 0.47, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
             
     # save figure
     plt.savefig(f"{path_out}/figure_1")

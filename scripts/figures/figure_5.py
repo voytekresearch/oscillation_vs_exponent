@@ -22,7 +22,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
 from info import MATERIALS
-from settings import FREQ_RANGE, RGB, WIDTH, BANDS, BCOLORS, COLORS
+from settings import *
 from plots import plot_spectra_2conditions, beautify_ax
 from specparam_utils import compute_band_power
 
@@ -129,9 +129,17 @@ def main():
 
     # add text above each row of subplots
     for title, ypos in zip(['Simulation', 'Empirical: word-encoding', 
-                            'Empirical: face-encoding'], [1.02, 0.66, 0.31]):
+                            'Empirical: face-encoding'], [1.02, 0.66, 0.32]):
         fig.text(0.5, ypos, title, ha='center', va='center', fontsize=7, 
                 fontweight='bold')
+
+    # add figure panel labels
+    fig.text(0.05, 0.97, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.53, 0.97, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.62, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.53, 0.62, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.28, 'e.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.53, 0.28, 'f.', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save figure
     fig.savefig(f"{dir_output}/figure_5", bbox_inches='tight')

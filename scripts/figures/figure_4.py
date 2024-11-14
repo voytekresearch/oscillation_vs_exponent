@@ -24,7 +24,7 @@ from paths import PROJECT_PATH
 from info import MATERIALS
 from utils import get_start_time, print_time_elapsed
 from plots import set_custom_colors
-from settings import WIDTH, BANDS
+from settings import WIDTH, BANDS, PANEL_FONTSIZE
 
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
@@ -128,6 +128,11 @@ def main():
                 
             # plot histogram
             plot_histogram(ax_h, ax_v, df, feature, label, stats, material)
+
+    # add figure panel labels
+    fig.text(0.02, 0.98, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.34, 0.98, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.68, 0.98, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
     fig.savefig(f"{dir_output}/figure_4", bbox_inches='tight')

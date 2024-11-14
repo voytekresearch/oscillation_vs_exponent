@@ -19,7 +19,7 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from settings import FREQ_RANGE, WIDTH, BANDS, BCOLORS, COLORS
+from settings import FREQ_RANGE, WIDTH, BANDS, BCOLORS, COLORS, PANEL_FONTSIZE
 from plots import beautify_ax
 
 # settings
@@ -116,6 +116,10 @@ def main():
     fig.add_artist(line)
     fig.text(0.5, 1.07, "Single-channel example", ha='center', va='top', 
              fontsize=7, fontdict={'fontweight': 'bold'})
+
+    # add figure panel labels
+    fig.text(0.01, 0.92, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.60, 0.92, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save figure
     fig.savefig(f"{dir_output}/figure_3ab.png", bbox_inches='tight')

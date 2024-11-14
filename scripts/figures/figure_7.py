@@ -22,7 +22,7 @@ from utils import get_start_time, print_time_elapsed, confidence_interval
 from tfr_utils import trim_tfr, subtract_baseline
 from tfr_utils import zscore_tfr as zscore
 from plots import plot_evoked_tfr, beautify_ax
-from settings import BANDS, AP_MODE, FREQ_RANGE, BCOLORS, WIDTH
+from settings import BANDS, AP_MODE, FREQ_RANGE, BCOLORS, WIDTH, PANEL_FONTSIZE
 from specparam_utils import compute_band_power
 from specparam_utils import _compute_adjusted_band_power as compute_adjusted_band_power
 
@@ -66,12 +66,22 @@ def main():
         line = plt.Line2D((0.1, 0.9), (ypos, ypos), color='black', linewidth=1, 
                         transform=fig.transFigure, figure=fig)
         fig.add_artist(line)
-    fig.text(0.5, 1.03, "Word-encoding", ha='center', va='top', fontsize=7, fontdict={'fontweight': 'bold'})
-    fig.text(0.5, 0.51, "Face-encoding", ha='center', va='top', fontsize=7, fontdict={'fontweight': 'bold'})
+    fig.text(0.5, 1.03, "Word-encoding", ha='center', va='top', fontsize=7, 
+             fontdict={'fontweight': 'bold'})
+    fig.text(0.5, 0.51, "Face-encoding", ha='center', va='top', fontsize=7, 
+             fontdict={'fontweight': 'bold'})
+
+    # add figure panel labels
+    fig.text(0.05, 0.97, 'a.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.38, 0.97, 'b.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.71, 0.97, 'c.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.44, 'd.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.38, 0.44, 'e.', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.71, 0.44, 'f.', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save figure
-    fig.savefig(f"{dir_output}/figure_7_offset", bbox_inches='tight')
-    fig.savefig(f"{dir_output}/figure_7_offset.png", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_7", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_7.png", bbox_inches='tight')
 
     # display progress
     print(f"\n\nTotal analysis time:")

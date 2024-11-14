@@ -59,6 +59,8 @@ WIDTH = {
     "2col"    :    7.08661, # 180mm
 }
 
+PANEL_FONTSIZE = 9
+
 # band power settings
 BAND_POWER_METHOD = 'mean'
 LOG_POWER = True
