@@ -114,7 +114,7 @@ def main():
     line = plt.Line2D((0.1, 0.9), (1.01, 1.01), color='black', linewidth=1, 
                     transform=fig.transFigure, figure=fig)
     fig.add_artist(line)
-    fig.text(0.5, 1.07, "Single-channel example", ha='center', va='top', 
+    fig.text(0.5, 1.07, "Single-electrode example", ha='center', va='top', 
              fontsize=7, fontdict={'fontweight': 'bold'})
 
     # add figure panel labels
