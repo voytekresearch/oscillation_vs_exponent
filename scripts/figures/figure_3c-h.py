@@ -24,6 +24,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from plots import plot_spectra_2conditions, beautify_ax, join_two_figures
 from settings import COLORS, FREQ_RANGE, WIDTH, BCOLORS, BANDS, PANEL_FONTSIZE
+from info import MATERIALS
 
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
@@ -50,92 +51,64 @@ def main():
         df['sig_all'] = df[[f'{band}_sig' for band in BANDS]].all(axis=1)
         df['sig_any'] = df[[f'{band}_sig' for band in BANDS]].any(axis=1)
 
-    # create figure and gridspec
-    fig = plt.figure(figsize=(WIDTH['2col'], WIDTH['2col']/2), 
-                     constrained_layout=True)
-    spec = gridspec.GridSpec(figure=fig, ncols=3, nrows=5,
-                            width_ratios=[1, 3, 1.5], 
-                            height_ratios=[1, 1, 0.1, 1, 1])
-    ax_u0 = fig.add_subplot(spec[0:2,0])
-    ax_u1u = fig.add_subplot(spec[0,1])
-    ax_u1l = fig.add_subplot(spec[1,1])
-    ax_u2 = fig.add_subplot(spec[0:2,2])
-    ax_header = fig.add_subplot(spec[2,:])
-    ax_l0 = fig.add_subplot(spec[3:,0])
-    ax_l1u = fig.add_subplot(spec[3,1])
-    ax_l1l = fig.add_subplot(spec[4,1])
-    ax_l2 = fig.add_subplot(spec[3:,2])
+    # create nested gridspec (2 rows that will be further segmented)
+    fig = plt.figure(figsize=(WIDTH['2col'], WIDTH['2col']*1.2))
+    gs = gridspec.GridSpec(figure=fig, ncols=1, nrows=3, 
+                           height_ratios=[1, 0.1, 1])
+    for i_mat, [material, i_gs], in enumerate(zip(MATERIALS, [0, 2])):
+        spec = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[i_gs],
+                                                width_ratios=[1, 3])
 
-    # shift subplot spaceing (nilearn plot including inexplicable whitespace)
-    for ax in [ax_u1u, ax_u1l]:
-        boxb = ax.get_position()
-        ax.set_position([boxb.x0-0.02, boxb.y0+0.05, boxb.width, boxb.height])
-    for ax in [ax_l1u, ax_l1l]:
-        boxb = ax.get_position()
-        ax.set_position([boxb.x0-0.02, boxb.y0-0.05, boxb.width, boxb.height])
+        # plot barchart: number of task-modulated electrodes ###################
+        ax_bar = fig.add_subplot(spec[0, 0])
+        plot_barchart(df, ax_bar)
+        
+        # plot glass brain: electrode locations ################################
+        for i_band, band in enumerate(BANDS.keys()):
+            ax_brain = fig.add_subplot(spec[i_band, 1])
+            boxb = ax_brain.get_position()
+            expand = 1.4
+            y_shift = 0.07
+            x_shift = -0.05
+            if (i_band==0) and (i_mat==0):
+                ax_brain.set_position([boxb.x0+x_shift, boxb.y0+y_shift, 
+                                       boxb.width*expand, boxb.height*expand])
+            elif (i_band==1) and (i_mat==1):
+                ax_brain.set_position([boxb.x0+x_shift, boxb.y0-y_shift, 
+                                       boxb.width*expand, boxb.height*expand])
+            else:
+                ax_brain.set_position([boxb.x0+x_shift, boxb.y0, 
+                                       boxb.width*expand, boxb.height*expand])
+            plot_glass_brain(ax_brain, df, band)
 
-    # plot barchart: number of task-modulated electrodes
-    for df, ax in zip([df_w, df_f], [ax_u0, ax_l0]):
-        x = [0, 1, 2]
-        y = [df[col].sum() / len(df) * 100 for col in ['alpha_sig', 'gamma_sig', 'sig_all']] 
-        ax.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'k'],
-                edgecolor='black', linewidth=1, width=1)
-        ax.set_xticks(x, labels=['alpha', 'gamma', 'both'])
-        ax.set_ylabel('percentage (%)')
-        ax.set_xlabel('frequency band')
-        beautify_ax(ax)
-    
-    # plot glass brain: electrode locations
-    for df, axes in zip([df_w, df_f], [[ax_u1u, ax_u1l], [ax_l1u, ax_l1l]]):
-        for ax, band in zip(axes, ['alpha', 'gamma']):
-            # shift subplot spaceing (nilearn plot including inexplicable whitespace)
-            coords = df.loc[df[f'{band}_sig'], ['pos_x', 'pos_y', 'pos_z']].values
-            nfig = plotting.plot_markers(axes=ax, node_coords=coords, 
-                                        node_values=np.ones(len(coords)), 
-                                        node_cmap=ListedColormap([BCOLORS[band]]),
-                                        display_mode='ortho', colorbar=False, 
-                                        annotate=False, node_size=0.25, 
-                                        node_kwargs={'alpha' : 1})
-            coords = df.loc[df[f'sig_all'], ['pos_x', 'pos_y', 'pos_z']].values
-            nfig.add_markers(marker_coords=coords, marker_size=0.25, 
-                             marker_color='k', alpha=1)
-            nfig.annotate(size=7) # must plot with annotate=False, then set size here
+        # plot spectra: group mean for word and face blocks #
+        ax_psd = fig.add_subplot(spec[1, 0])
+        # boxb = ax_psd.get_position()
+        # ax_psd.set_position([boxb.x0, boxb.y0, boxb.width, boxb.height*0.9])
+        plot_group_spectra(df, material, ax_psd)
 
-            # remove gyri/sulci lines
-            for xyz in nfig.axes:
-                for axx in nfig.axes[xyz].ax.get_children():
-                    if type(axx) == mpl.patches.PathPatch:
-                        if axx.get_edgecolor()[0] == 0.6509803921568628:
-                            axx.remove()
-
-    # plot spectra: group mean for word and face blocks
-    for df, material, ax in zip([df_w, df_f], ['words','faces'], [ax_u2, ax_l2]):
-        plot_group_spectra(df, material, ax)
+        # # beautify axes
+        # for ax in [ax_bar, ax_psd]:
+        for ax in [ax_bar]:
+            beautify_ax(ax)
 
     # add section titles and line between subplot rows
-    ax_header.axis('off')
-    for ypos in [0.48, 1.0]:
+    for ypos in [0.5, 1.03]:
         line = plt.Line2D((0.1, 0.9), (ypos, ypos), color='black', linewidth=1, 
                         transform=fig.transFigure, figure=fig)
         fig.add_artist(line)
-    fig.text(0.5, 1.03, "Word-encoding", ha='center', va='top', fontsize=7, fontdict={'fontweight': 'bold'})
-    fig.text(0.5, 0.51, "Face-encoding", ha='center', va='top', fontsize=7, fontdict={'fontweight': 'bold'})
+    fig.text(0.5, 1.05, "Word-encoding", ha='center', va='top', fontsize=7, 
+             fontdict={'fontweight': 'bold'})
+    fig.text(0.5, 0.52, "Face-encoding", ha='center', va='top', fontsize=7, 
+             fontdict={'fontweight': 'bold'})
 
-    # set titles
-    for ax in [ax_u0, ax_l0]:
-        ax.set_title("Task-modulated electrodes")
-    for ax in [ax_u1u, ax_l1u]:
-        ax.set_title("Task-modulated electrode locations")
-    for ax in [ax_u2, ax_l2]:
-        ax.set_title("Mean power spectra")
-
-    # add figure panel labels
-    fig.text(0.01, 0.96, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.29, 0.96, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.72, 0.96, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.01, 0.44, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.29, 0.44, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.72, 0.44, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    # # add figure panel labels
+    fig.text(0.01, 0.99, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.75, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.32, 0.99, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.47, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.22, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.32, 0.47, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
     plt.savefig(f"{dir_fig}/figure_3c-h.png", bbox_inches='tight')
@@ -144,7 +117,45 @@ def main():
     # join subplots
     join_two_figures(f"{dir_fig}/figure_3ab.png", f"{dir_fig}/figure_3c-h.png",
                      f"{dir_fig}/figure_3.png", figsize=[WIDTH['2col'], 
-                                                         WIDTH['2col']*3/4])
+                                                         WIDTH['2col']*1.25])
+
+
+def plot_barchart(df, ax):
+    # plot
+    x = [0, 1, 2]
+    y = [df[col].sum() / len(df) * 100 for col in ['alpha_sig', 'gamma_sig', 
+                                                   'sig_all']] 
+    ax.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'k'],
+            edgecolor='black', linewidth=1, width=1)
+    
+    # label
+    ax.set_title("Task-modulated electrodes")
+    ax.set_xticks(x, labels=['alpha', 'gamma', 'both'])
+    ax.set_ylabel('percentage (%)')
+    ax.set_xlabel('frequency band')
+
+
+def plot_glass_brain(ax, df, band, node_size=1.5):
+
+    # shift subplot spaceing (nilearn plot including inexplicable whitespace)
+    coords = df.loc[df[f'{band}_sig'], ['pos_x', 'pos_y', 'pos_z']].values
+    nfig = plotting.plot_markers(axes=ax, node_coords=coords, 
+                                node_values=np.ones(len(coords)), 
+                                node_cmap=ListedColormap([BCOLORS[band]]),
+                                display_mode='ortho', colorbar=False, 
+                                annotate=False, node_size=node_size, 
+                                node_kwargs={'alpha' : 1}, alpha=1)
+    coords = df.loc[df[f'sig_all'], ['pos_x', 'pos_y', 'pos_z']].values
+    nfig.add_markers(marker_coords=coords, marker_size=node_size, 
+                        marker_color='k', alpha=1)
+    nfig.annotate(size=7) # must plot with annotate=False, then set size here
+
+    # remove gyri/sulci lines
+    for xyz in nfig.axes:
+        for axx in nfig.axes[xyz].ax.get_children():
+            if type(axx) == mpl.patches.PathPatch:
+                if axx.get_edgecolor()[0] == 0.6509803921568628:
+                    axx.remove()
 
 
 def plot_group_spectra(df, material, ax):
@@ -176,7 +187,6 @@ def plot_group_spectra(df, material, ax):
     
     # beautify
     ax.grid(False)
-    beautify_ax(ax)
 
         
 if __name__ == "__main__":
