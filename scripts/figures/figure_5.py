@@ -99,15 +99,15 @@ def main():
         median_f = np.nanmedian(f_intersection)
         median_idx = np.argmin(np.abs(freq - median_f))
         y_val = np.nanmean(spectra_pre[material][:, median_idx])
-        ax.scatter(freq[median_idx], y_val, color=BCOLORS['exponent'], 
+        ax.scatter(freq[median_idx], y_val, color='k', 
                    s=IF_SIZE, zorder=10)
         ax.legend(['baseline', 'encoding', 'intersection'], loc='lower left')
 
     # plot histogram of intersection frequency
     bins = np.linspace(0, 100, 21)
     for material, ax in zip(MATERIALS, [ax4, ax6]):
-        ax.hist(intersection[material], bins, color=BCOLORS['exponent'], 
-                edgecolor='k', linewidth=0.5)
+        ax.hist(intersection[material], bins, color='grey', edgecolor='k', 
+                linewidth=0.5)
         ax.set_xlabel('frequency (Hz)')
         ax.set_ylabel('electrode count')
     
