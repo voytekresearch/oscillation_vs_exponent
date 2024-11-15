@@ -118,7 +118,9 @@ def main():
             beautify_ax(ax)
 
     # add subplot f: pie chart of significant channels
-    gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=spec[-1])
+    gs = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=spec[-1], 
+                                          height_ratios=[0.2, 1, 0.2, 1],
+                                          hspace=0)
     subplot_f(fig, gs)
 
     # add figure panel labels
@@ -227,8 +229,9 @@ def subplot_f(fig, gs):
     colors = [RGB[0], RGB[2], 'grey']
 
     # plot each material
-    for ii, (material, data) in enumerate(zip(MATERIALS, [data_w, data_f])):
-        ax = fig.add_subplot(gs[ii])
+    ax_w = fig.add_subplot(gs[1])
+    ax_f = fig.add_subplot(gs[3])
+    for material, ax, data in zip(MATERIALS, [ax_w, ax_f], [data_w, data_f]):
         ax.pie(data, labels=labels, colors=colors, autopct='%1.1f%%')
         ax.set_title(f"{material[:-1]}-encoding")
 
