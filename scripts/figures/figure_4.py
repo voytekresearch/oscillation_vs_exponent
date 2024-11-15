@@ -97,7 +97,7 @@ def main():
 
         # create nested gridspec for each feature
         gs = gridspec.GridSpecFromSubplotSpec(2, 2, height_ratios=[2, 0.8],
-                                              subplot_spec=spec[i_feature+1])
+                                              subplot_spec=spec[i_feature])
 
         # plot violin
         ax_v = fig.add_subplot(gs[0, :])
@@ -118,12 +118,12 @@ def main():
             beautify_ax(ax)
 
     # add figure panel labels
-    # fig.text(0.02, 0.98, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.34, 0.98, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.68, 0.98, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.02, 0.48, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.02, 0.98, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.34, 0.98, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.68, 0.98, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.02, 0.48, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
     fig.text(0.34, 0.48, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.68, 0.48, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.68, 0.48, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
     fig.savefig(f"{dir_output}/figure_4", bbox_inches='tight')
