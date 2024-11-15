@@ -138,11 +138,11 @@ def main():
     fig.text(0.72, 0.44, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
-    plt.savefig(f"{dir_fig}/figure_3cde.png", bbox_inches='tight')
+    plt.savefig(f"{dir_fig}/figure_3c-h.png", bbox_inches='tight')
     plt.close()
 
     # join subplots
-    join_two_figures(f"{dir_fig}/figure_3ab.png", f"{dir_fig}/figure_3cde.png",
+    join_two_figures(f"{dir_fig}/figure_3ab.png", f"{dir_fig}/figure_3c-h.png",
                      f"{dir_fig}/figure_3.png", figsize=[WIDTH['2col'], 
                                                          WIDTH['2col']*3/4])
 
