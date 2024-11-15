@@ -24,7 +24,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from info import MATERIALS
 from utils import get_start_time, print_time_elapsed
-from settings import WIDTH, BANDS, PANEL_FONTSIZE
+from settings import WIDTH, BANDS, PANEL_FONTSIZE, RGB
 from plots import beautify_ax
 
 # settings
@@ -116,6 +116,10 @@ def main():
         # beautify axes
         for ax in [ax_v, ax_h0, ax_h1]:
             beautify_ax(ax)
+
+    # add subplot f: pie chart of significant channels
+    gs = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=spec[-1])
+    subplot_f(fig, gs)
 
     # add figure panel labels
     fig.text(0.02, 0.98, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
@@ -212,6 +216,21 @@ def print_stats(axes, stats, feature):
             ax.text(*pos, f"p={pval:.3f}*", transform=ax.transAxes)
         else:
             ax.text(*pos, f"p={pval:.3f}", transform=ax.transAxes)
+
+def subplot_f(fig, gs):
+    # copied stats - TEMPORARY
+    data_w = [22, 0, 82]
+    data_f = [26, 2, 69]
+
+    # settings
+    labels = ['increase', 'decrease', 'no change']
+    colors = [RGB[0], RGB[2], 'grey']
+
+    # plot each material
+    for ii, (material, data) in enumerate(zip(MATERIALS, [data_w, data_f])):
+        ax = fig.add_subplot(gs[ii])
+        ax.pie(data, labels=labels, colors=colors, autopct='%1.1f%%')
+        ax.set_title(f"{material[:-1]}-encoding")
 
 
 if __name__ == "__main__":
