@@ -6,7 +6,6 @@ Justify aperiodic mode
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import seaborn as sns
 from specparam import SpectralModel, SpectralGroupModel
 
@@ -103,16 +102,8 @@ def main():
 
     # plot =====================================================================
     # create figure and gridspec
-    fig = plt.figure(figsize=[WIDTH['1col'], WIDTH['1col']])
-    spec = gridspec.GridSpec(figure=fig, ncols=2, nrows=2, width_ratios=[1, 1], 
-                             height_ratios=[1, 1.5])
-    ax1 = fig.add_subplot(spec[0,0])
-    ax2 = fig.add_subplot(spec[0,1])
-
-    # create nested gridspec for grand average PSD
-    spec2 = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=spec[1,:],
-                                            width_ratios=[0.17, 0.66, 0.17])
-    ax3 = fig.add_subplot(spec2[1])
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=[WIDTH['2col'], 
+                                                       WIDTH['2col']/3])
 
     # plot subplot 1 - violin --------------------------------------------------
     # remove nan
@@ -164,9 +155,9 @@ def main():
         beautify_ax(ax)
 
     # add figure panel labels
-    fig.text(0.02, 0.97, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.52, 0.97, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.18, 0.49, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.02, 0.96, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.35, 0.96, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.68, 0.96, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save fig
     fig.savefig(f"{dir_fig}/figure_4-1.png")
