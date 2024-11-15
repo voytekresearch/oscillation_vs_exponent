@@ -11,6 +11,7 @@ periods as a histogram below the violin plot.
 import os
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.collections import PolyCollection
@@ -235,6 +236,17 @@ def subplot_f(fig, gs):
         ax.pie(data, labels=labels, colors=colors, autopct='%1.1f%%')
         ax.set_title(f"{material[:-1]}-encoding")
 
+        # adjust text labels
+        texts = [x for x in ax.get_children() if type(x)==mpl.text.Text]
+        # adjust font size
+        for i_text, text in enumerate(texts):
+            if i_text % 2 == 0:
+                text.set_fontsize(6)
+            else:
+                text.set_fontsize(6)
+        # shift "no change" % to reduce overlap
+        texts[3].set_position([texts[3].get_position()[0]-0.3, 
+                               texts[3].get_position()[1]]) 
 
 if __name__ == "__main__":
     main()
