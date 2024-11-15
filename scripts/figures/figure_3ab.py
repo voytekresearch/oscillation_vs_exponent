@@ -160,7 +160,7 @@ def plot_spectra(axi, material, color):
                     alpha=0.4)
 
     # subplot 2 - label
-    axi.set_title(f'\n{material[:-1]}-encoding block')
+    axi.set_title(f'\n{material[:-1]}-encoding')
     axi.set_xlabel('frequency (Hz)')
     axi.set_ylabel('power ($\u03bcV^2/Hz$)')
     axi.legend(loc='lower left')
