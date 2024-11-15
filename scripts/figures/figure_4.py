@@ -25,6 +25,7 @@ from paths import PROJECT_PATH
 from info import MATERIALS
 from utils import get_start_time, print_time_elapsed
 from settings import WIDTH, BANDS, PANEL_FONTSIZE
+from plots import beautify_ax
 
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
@@ -111,6 +112,10 @@ def main():
 
         # annotate stats
         print_stats([ax_h0, ax_h1], stats, feature)
+
+        # beautify axes
+        for ax in [ax_v, ax_h0, ax_h1]:
+            beautify_ax(ax)
 
     # add figure panel labels
     # fig.text(0.02, 0.98, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
