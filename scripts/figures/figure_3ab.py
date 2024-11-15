@@ -42,9 +42,6 @@ def main():
 
     # load data ================================================================
 
-    # load channel info
-    chan_info = pd.read_csv(f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv")
-
     # load iEEG time-series results
     fname_in = f"{PATIENT}_{MATERIAL}_hit_epo.fif"
     epochs = read_epochs(f"{PROJECT_PATH}/data/ieeg_epochs/{fname_in}")
@@ -104,7 +101,7 @@ def main():
     for ax, material, color in zip([ax2b, ax2c], 
                                    ['words', 'faces'], 
                                    ['brown', 'blue']):
-        plot_spectra(chan_info, ax, material, color)
+        plot_spectra(ax, material, color)
     
     # add joint title centered over PSD subplots (B)
     fig.text(0.8, 0.97, 'Power spectra', ha='center', 
@@ -129,7 +126,7 @@ def main():
     print_time_elapsed(t_start)
 
 
-def plot_spectra(chan_info, axi, material, color):
+def plot_spectra(axi, material, color):
     # load spectral results
     fname_in = '%s_%s_hit_XXXstim_psd.npz' %(PATIENT, material)
     psd_pre_in = np.load(f"{PROJECT_PATH}/data/ieeg_psd/{fname_in.replace('XXX','pre')}")
