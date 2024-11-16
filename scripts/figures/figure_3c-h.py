@@ -93,22 +93,22 @@ def main():
             beautify_ax(ax)
 
     # add section titles and line between subplot rows
-    for ypos in [0.5, 1.03]:
+    for ypos in [0.5, 1.02]:
         line = plt.Line2D((0.1, 0.9), (ypos, ypos), color='black', linewidth=1, 
                         transform=fig.transFigure, figure=fig)
         fig.add_artist(line)
-    fig.text(0.5, 1.05, "Word-encoding", ha='center', va='top', fontsize=7, 
+    fig.text(0.5, 1.04, "Word-encoding", ha='center', va='top', fontsize=7, 
              fontdict={'fontweight': 'bold'})
     fig.text(0.5, 0.52, "Face-encoding", ha='center', va='top', fontsize=7, 
              fontdict={'fontweight': 'bold'})
 
     # # add figure panel labels
-    fig.text(0.01, 0.99, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 1.00, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
     fig.text(0.01, 0.75, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.32, 0.99, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.01, 0.47, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.01, 0.22, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.32, 0.47, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.32, 1.00, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.48, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.23, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.32, 0.48, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
     plt.savefig(f"{dir_fig}/figure_3c-h.png", bbox_inches='tight')
