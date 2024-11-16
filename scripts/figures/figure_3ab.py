@@ -45,15 +45,15 @@ def main():
     # load iEEG time-series results
     fname_in = f"{PATIENT}_{MATERIAL}_hit_epo.fif"
     epochs = read_epochs(f"{PROJECT_PATH}/data/ieeg_epochs/{fname_in}")
-    signals = epochs.get_data()
+    signals = epochs.get_data(copy=True)
     signal = signals[:, CHAN_IDX]
     time = epochs.times
 
     # plot data =================================================================
 
     # create gridspec and nested gridspec for subplots
-    fig = plt.figure(figsize=[WIDTH['2col'], WIDTH['2col']/4])
-    gs = gridspec.GridSpec(1, 2, figure=fig, width_ratios=[2.75, 2])
+    fig = plt.figure(figsize=[WIDTH['2col'], WIDTH['2col']/3.125])
+    gs = gridspec.GridSpec(1, 2, figure=fig, width_ratios=[0.8,1])
     gs2a = gridspec.GridSpecFromSubplotSpec(5,1, subplot_spec=gs[0])
     gs2bc = gridspec.GridSpecFromSubplotSpec(1,2, subplot_spec=gs[1])
 
@@ -104,7 +104,7 @@ def main():
         plot_spectra(ax, material, color)
     
     # add joint title centered over PSD subplots (B)
-    fig.text(0.8, 0.97, 'Power spectra', ha='center', 
+    fig.text(0.73, 0.97, 'Power spectra', ha='center', 
              va='center', fontsize=7)
     
     # add subplot header
@@ -116,7 +116,7 @@ def main():
 
     # add figure panel labels
     fig.text(0.01, 0.92, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.60, 0.92, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.48, 0.92, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save figure
     fig.savefig(f"{dir_output}/figure_3ab.png", bbox_inches='tight')
