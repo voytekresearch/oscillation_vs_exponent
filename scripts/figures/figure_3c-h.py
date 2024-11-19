@@ -125,7 +125,7 @@ def plot_barchart(df, ax):
     y = [df[col].sum() / len(df) * 100 for col in ['alpha_sig', 'gamma_sig', 
                                                    'sig_all']] 
     ax.bar(x, y, color=[BCOLORS['alpha'], BCOLORS['gamma'], 'k'],
-            edgecolor='black', linewidth=1, width=1)
+            edgecolor='black', linewidth=1)
     
     # label
     ax.set_title("Task-modulated electrodes")
