@@ -88,8 +88,7 @@ def main():
         plot_group_spectra(df, material, ax_psd)
 
         # # beautify axes
-        # for ax in [ax_bar, ax_psd]:
-        for ax in [ax_bar]:
+        for ax in [ax_bar, ax_psd]:
             beautify_ax(ax)
 
     # add section titles and line between subplot rows
