@@ -1,268 +1,272 @@
 """
-Plot intersection frequency results. 
+Show the relationship between the change in spectral exponent and the change in
+total and aperiodic-adjusted alpha/gamma power.
 
-Subplot 0: simulation of 2 spectral rotations (high and low intersection freq.)
-Subplot 1: simulation of the effects of spectral rotation on total band power.
-Subplot 2: grand average power spectra.
-Subplot 3: histogram of intersection frequency.
 """
 
 # Imports - standard
 import os
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 import matplotlib.pyplot as plt
-from neurodsp.spectral import rotate_powerlaw
-from specparam.sim import sim_power_spectrum
-import scipy.stats as stats
+import matplotlib.gridspec as gridspec
+import seaborn as sns
+from scipy.stats import ttest_rel, gaussian_kde
 
 # Imports - custom
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from info import MATERIALS
-from settings import *
-from plots import plot_spectra_2conditions, beautify_ax
-from specparam_utils import compute_band_power
+from info import PATIENTS, MATERIALS
+from settings import BCOLORS, WIDTH, PANEL_FONTSIZE
+from plots import beautify_ax
 
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
-figsize = [WIDTH['1col'], WIDTH['1col']*1.5]
-IF_SIZE = 10 # intersection frequency marker size
+
 
 def main():
+
     # display progress
     t_start = get_start_time()
 
     # identify / create directories
-    dir_output = f"{PROJECT_PATH}/figures/main_figures"
-    if not os.path.exists(dir_output): 
-        os.makedirs(f"{dir_output}")
+    dir_figure = f"{PROJECT_PATH}/figures/main_figures"
+    dir_output = f"{PROJECT_PATH}/data/ieeg_stats"
+    for path in [dir_figure, dir_output]:
+        if not os.path.exists(path): 
+            os.makedirs(path)
 
-    # load task-modulation results
-    # df = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv")
-    fname = f"{PROJECT_PATH}/data/results/band_power_statistics.csv"
-    temp = pd.read_csv(fname, index_col=0)
-    df_w = temp.loc[(temp['material']=='words') & (temp['memory']=='hit')]
-    df_f = temp.loc[(temp['material']=='faces') & (temp['memory']=='hit')]
-    for df in [df_w, df_f]: # compute joint significance
-        df.insert(0, 'sig_any', df.get([f'{band}_sig' for band in BANDS]).any(axis=1))
-        df.insert(0, 'sig_all', df.get([f'{band}_sig' for band in BANDS]).all(axis=1))
-
-    # load rotation analysis results
-    intersection = dict()
-    for df, material in zip([df_w, df_f], MATERIALS):
-        fname = f"intersection_results_{material}_hit_knee.npz"
-        data_in = np.load(f"{PROJECT_PATH}/data/ieeg_intersection_results/{fname}")
-        intersection[material] = data_in['intersection'][df['sig_all']]
-    
-    # load spectal results
-    psd = dict()
-    for material in MATERIALS:
-        for epoch in ['pre','post']:
-            fname = f"psd_{material}_hit_{epoch}stim.npz"
-            data_in = np.load(f"{PROJECT_PATH}/data/ieeg_spectral_results/{fname}")
-            psd[(material, epoch)] = data_in['spectra'][df['sig_all']]
-    freq = data_in['freq']
-
-    # compute grand average spectra
-    spectra_pre = dict()
-    spectra_post = dict()
-    for material in MATERIALS:
-        spectra_pre[material] = psd[material, 'pre']
-        spectra_post[material] = psd[material, 'post']
-
-    # plot =====================================================================
+    # load speactral results
+    df = load_params()
+    df_w = df.loc[df['material']=='words']
+    df_f = df.loc[df['material']=='faces']
 
     # create figure
-    fig, axes = plt.subplots(3, 2, figsize=figsize, constrained_layout=True)
-    ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = axes
+    fig = plt.figure(figsize=(WIDTH['2col'], WIDTH['2col']/2), 
+                     constrained_layout=True)
+    spec = gridspec.GridSpec(figure=fig, ncols=7, nrows=2,
+                            width_ratios=[1.5 , 1.5, 1, 0.1, 1.5 , 1.5, 1])
 
-    # plot simulation: Effects of spectral rotation on total band power
-    simulation_subplot_0(fig, ax1)
-    simulation_subplot_1(ax2)
+    # iterate over materials
+    for cols, df_c, material in zip([[0,1,2], [4,5,6]], [df_w, df_f], MATERIALS):
+        # run analysis
+        df_ols, results = run_analysis(df_c, dir_output, material)
 
-    # plot empirical spectra
-    for material, ax, color in zip(MATERIALS, [ax3, ax5], ['brown', 'blue']):
-        # plot spectra
-        colors = [COLORS[f'light_{color}'], COLORS[color]]
-        idx_fit = np.logical_and(freq >= FREQ_RANGE[0], freq <= FREQ_RANGE[1])
-        plot_spectra_2conditions(spectra_pre[material][:, idx_fit], 
-                                 spectra_post[material][:, idx_fit], 
-                                 freq[idx_fit], ax=ax, shade_sem=False,
-                                 color=colors)
-        ax.grid(False)
+        # create axes
+        ax1 = fig.add_subplot(spec[0,cols[0]])
+        ax2 = fig.add_subplot(spec[0,cols[1]])
+        ax3 = fig.add_subplot(spec[0,cols[2]])
+        ax4 = fig.add_subplot(spec[1,cols[0]])
+        ax5 = fig.add_subplot(spec[1,cols[1]])
+        ax6 = fig.add_subplot(spec[1,cols[2]])
 
-        # annotate intersection frequency on power spectra
-        f_intersection = intersection[material]
-        median_f = np.nanmedian(f_intersection)
-        median_idx = np.argmin(np.abs(freq - median_f))
-        y_val = np.nanmean(spectra_pre[material][:, median_idx])
-        ax.scatter(freq[median_idx], y_val, color='k', 
-                   s=IF_SIZE, zorder=10)
-        ax.legend(['baseline', 'encoding', 'intersection'], loc='lower left')
+        ax2.sharey(ax1)
+        ax5.sharey(ax4)
+        ax4.sharex(ax1)
+        ax5.sharex(ax2)
+        
+        # set titles
+        ax1.set_title('Total power')
+        ax2.set_title('Adjusted power')
+        ax3.set_title('Participant-specific\nvariance explained')
 
-    # plot histogram of intersection frequency
-    bins = np.linspace(0, 100, 21)
-    for material, ax in zip(MATERIALS, [ax4, ax6]):
-        ax.hist(intersection[material], bins, color='grey', edgecolor='k', 
-                linewidth=0.5)
-        ax.set_xlabel('frequency (Hz)')
-        ax.set_ylabel('electrode count')
-    
-    # remove top and right spines
-    for ax in np.ravel(axes):
+        # plot scatter and regression results
+        features = ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']
+        for ax, feature in zip([ax1, ax2, ax4, ax5], features):
+            # drop nan
+            df = df_c.dropna(subset=['exponent_diff', f'{feature}_diff'])
+
+            # annotate zero
+            ax.axvline(0, color='grey', linestyle='--', linewidth=1)
+            ax.axhline(0, color='grey', linestyle='--', linewidth=1)
+
+            # scatter plot
+            xy = np.vstack([df['exponent_diff'], df[f"{feature}_diff"]])
+            z = gaussian_kde(xy)(xy)
+            df.plot.scatter(y=f"{feature}_diff", x='exponent_diff', ax=ax, c=[z], 
+                            s=0.25, cmap='hot')
+            
+            # regression line
+            draw_regression_results(ax, df['exponent_diff'].values, 
+                                    results[f'{feature}'], add_text=False)
+
+        # label axes 
+        ax1.set(ylabel='$\Delta$ alpha')
+        ax4.set(xlabel='$\Delta$ exponent', ylabel='$\Delta$ gamma')
+        ax5.set(xlabel='$\Delta$ exponent')
+        
+        # plot R-squared
+        for feature, ax in zip(['alpha', 'gamma'], 
+                                        [ax3, ax6]):
+            plotting_params = {
+                'data':    df_ols.loc[((df_ols['feature']==feature) |
+                                        (df_ols['feature']==f"{feature}_adj"))],
+                'x':       'feature',
+                'y':       'rsquared',
+            }
+            sns.boxplot(**plotting_params, ax=ax, color=BCOLORS[feature], 
+                        fliersize=0)
+            sns.swarmplot(**plotting_params, color=[0,0,0], ax=ax, size=2)
+            ax.set_ylabel('$R^{2}$')
+            ax.set_xticks([0, 1], labels=['total\npower','adjusted\npower'])
+        ax3.set_xlabel('')
+        ax6.set_xlabel('regressor')
+
+    # beautify axes
+    for ax in fig.get_axes():
         beautify_ax(ax)
 
-    # set titles
-    ax1.set_title('Rotations at high and low\nintersection frequency (IF)')
-    ax2.set_title('Relationship between IF\nand total band power')
-    for ax in [ax3, ax5]:
-        ax.set_title('\n\nAverage power spectra')
-    for ax in [ax4, ax6]:
-        ax.set_title('\n\nIntersection frequency')
+    # add section titles and line above subplots
+    fig.text(0.29, 1.05, 'Word-encoding', ha='center', va='center', 
+            fontsize=7, fontdict={'fontweight': 'bold'})
+    fig.text(0.77, 1.05, 'Face-encoding', ha='center', va='center',
+            fontsize=7, fontdict={'fontweight': 'bold'})
+    for x_span in [[0.09, 0.5], [0.58, 0.99]]:
+        line = plt.Line2D((x_span[0], x_span[1]), (1.02, 1.02), color='black', 
+                        linewidth=1, transform=fig.transFigure, figure=fig)
+        fig.add_artist(line)
 
-    # set xlimits to match across columns
-    for ax in [ax2, ax4, ax6]:
-        ax.set_xlim([0, 100])
-
-    # add text above each row of subplots
-    for title, ypos in zip(['Simulation', 'Empirical: word-encoding', 
-                            'Empirical: face-encoding'], [1.02, 0.66, 0.32]):
-        fig.text(0.5, ypos, title, ha='center', va='center', fontsize=7, 
-                fontweight='bold')
+    # add space between subplots (word and face plots)
+    ax_space = fig.add_subplot(spec[:,3])
+    ax_space.axis('off')
 
     # add figure panel labels
     fig.text(0.05, 0.97, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.53, 0.97, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.05, 0.62, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.53, 0.62, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.05, 0.28, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.53, 0.28, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.21, 0.97, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.38, 0.97, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.54, 0.97, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.70, 0.97, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.87, 0.97, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.05, 0.49, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.21, 0.49, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.38, 0.49, 'i', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.54, 0.49, 'j', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.70, 0.49, 'k', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.87, 0.49, 'l', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save figure
-    fig.savefig(f"{dir_output}/figure_5", bbox_inches='tight')
-    fig.savefig(f"{dir_output}/figure_5.png", bbox_inches='tight')
-
-    # print average intersection frequency and standard deviation
-    for material in MATERIALS:
-        f_intersection = intersection[material]
-        print(f"\n\n{material}-encoding - intersection frequency:")
-        print(f"    Mean:\t{np.nanmean(f_intersection):.3f} Hz")
-        print(f"    Median:\t{np.nanmedian(f_intersection):.3f} Hz")
-        print(f"    STD:\t{np.nanstd(f_intersection):.3f} Hz")
+    fname = "figure_5"
+    plt.savefig(f"{dir_figure}/{fname}.png", bbox_inches='tight')
+    plt.savefig(f"{dir_figure}/{fname}", bbox_inches='tight')
 
     # display progress
     print(f"\n\nTotal analysis time:")
     print_time_elapsed(t_start)
 
 
-def simulation_subplot_0(fig, ax):
-    """ 
-    Simulate a power spectrum and rotate it at a high and a low intersection
-    frequency. Plot the original and rotated power spectra.
-    """
-
-    # simulate power spectrum and rotate
-    freqs, psd_pre = sim_power_spectrum(freq_range=FREQ_RANGE, 
-                                        aperiodic_params=[10, 2], 
-                                        periodic_params=[])
-    psd_rot_low = rotate_powerlaw(freqs, psd_pre, delta_exponent=-0.5, 
-                                  f_rotation=FREQ_RANGE[0])
-    psd_rot_high = rotate_powerlaw(freqs, psd_pre, delta_exponent=-0.5, 
-                                  f_rotation=FREQ_RANGE[1])
+def draw_regression_results(ax, x_data, results, add_text=True):
+    # regression results
+    x = np.array([np.nanmin(x_data), np.nanmax(x_data)])
+    y = x * results.params.iloc[1] + results.params.iloc[0]
     
-    # plot power spectra
-    ax.loglog(freqs, psd_pre, color='k', label='baseline')
-    ax.loglog(freqs, psd_rot_high, color=RGB[2], linestyle='--',
-              label='high IF')
-    ax.loglog(freqs, psd_rot_low, color=RGB[0], linestyle='--',
-              label='low IF')
-    
-    # plot intersection frequency
-    ax.scatter(FREQ_RANGE[0], psd_rot_low[0], color=RGB[0], s=IF_SIZE, 
-               zorder=10)
-    ax.scatter(FREQ_RANGE[1], psd_rot_high[-1], color=RGB[2], s=IF_SIZE, 
-               zorder=10)
+    # plot
+    ax.plot(x, y, color='k')
 
-    # shade region between original and rotated spectra
-    ax.fill_between(freqs, psd_pre, psd_rot_high, color=RGB[2], alpha=0.3)
-    ax.fill_between(freqs, psd_pre, psd_rot_low, color=RGB[0], alpha=0.3)
-    fig.text(0.20, 0.88, 'broadband decrease', ha='center', va='center', 
-             rotation=-40, fontsize=5)
-    fig.text(0.39, 0.805, 'broadband increase', ha='center', va='center', 
-             rotation=-40, fontsize=5)
+    # add text
+    if add_text:
+        if results.f_pvalue < .001:
+            str_p = f"{results.f_pvalue:.1e}"
+        else:
+            str_p = f"{results.f_pvalue:.3f}"
+        if results.rsquared < .001:
+            str_r2 = "<0.001" #"$<e^{-3}$"
+        else:
+            str_r2 = f"{results.rsquared:.3f}"            
+        # s = "$\it{R^{2}}$: " + f"{str_r2}" + "\n$\it{p}$:   " + f"{str_p}"
+        ax.text(0.02, 0.78, f"r = {str_r2}\np = {str_p}",
+                transform=ax.transAxes)
 
-    # label plot
-    ax.set(xlabel='frequency (Hz)', ylabel='power (au)')
-    ax.set_xticks([10, 100], labels=['10', '100'])
-    ax.legend()
-
-    
-def simulation_subplot_1(ax):
-    """ 
-    Run simulation and plot results. Effects of spectral rotation on total band 
-    power.
-    """
-
-    # run simulation with different rotation frequencies
-    f_rotations = np.arange(5, 105, 5)
-    dfs = []
-    for f_rotation in f_rotations:
-        df = run_simulation(f_rotation, f_range=FREQ_RANGE)
-        df['f_rotation'] = f_rotation
-        dfs.append(df)
-    results = pd.concat(dfs, axis=0, ignore_index=True)
-
-    # plot change in power v rotation frequency
-    for band, _ in BANDS.items():
-        df = results.loc[results['band']==band]
-        df.plot(x='f_rotation', y='diff', ax=ax, color=BCOLORS[band])
-
-    # label plot
-    ax.set(xlabel='intersection frequency (Hz)', ylabel='$\Delta$ total band power')
-    ax.axhline(0, color='k')
-    handles, labels = ax.get_legend_handles_labels()
-    labels = [band for band, _ in BANDS.items()]
-    ax.legend(handles, labels)
-
-    # annotate each bands
-    for band, f_range in BANDS.items():
-        # shade band
-        ax.axvspan(f_range[0], f_range[1], color=BCOLORS[band], alpha=0.2)
-
-        # mark center
-        ax.axvline(np.mean(f_range), linestyle='--', color='k', linewidth=1)
+    return ax
 
 
-def run_simulation(f_rotation, delta_exponent=1, aperiodic_params=[10, 2],
-                    f_range=[1, 100]):
-    """ 
-    Simulate power spectrum and rotate it. Compute band power before and 
-    after rotation.
-    """
+def run_analysis(df, dir_output, material):
+    # run OLS
+    results = {}
+    df_ols_list = []
+    for feature in ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']:
+        # OLS
+        results_i = run_ols(df, feature)
+        results[feature] = results_i
 
-    # simulate power spectrum and rotate
-    freqs, psd_pre = sim_power_spectrum(f_range, aperiodic_params, [])
-    psd_post = rotate_powerlaw(freqs, psd_pre, delta_exponent, f_rotation)
-    spectra = np.vstack([psd_pre, psd_post])
+        # cross-validate OLS
+        for patient in PATIENTS:
+            df_p = df.loc[df['patient']==patient]
+            results_i = run_ols(df_p, feature)
+            df_ols_list.append(pd.DataFrame({
+                                            'patient'   :   patient,
+                                            'n_channels':   len(df_p), 
+                                            'feature'   :   feature,
+                                            'rsquared'  :   results_i.rsquared},
+                                            index=[0]))
+    df_ols = pd.concat(df_ols_list, axis=0).reset_index(drop=True)
+    df_ols.to_csv(f"{dir_output}/confounding_features_ols_{material}.csv")
 
-    # compute band power
-    df_list = []
-    for band, f_range in BANDS.items():
-        power = compute_band_power(freqs, spectra, f_range, method='mean', log_power=True)
-        for i_epoch, epoch in enumerate(['pre', 'post']):
-            df_i = pd.DataFrame({'epoch': epoch, 'band': band, 
-                                'power': power[i_epoch]}, index=[0])
-            df_list.append(df_i)
-    df = pd.concat(df_list, axis=0)
+    # run t-test on cross-validation R-squared values and print results
+    print("\n\n------------------------------------------------")
+    print(f"{material}-encoding")
+    print("------------------------------------------------")
+    sig = {}
+    for feature in ['alpha', 'gamma']:
+        r2_total = df_ols.loc[df_ols['feature']==feature, 'rsquared'].values
+        r2_adj = df_ols.loc[df_ols['feature']==f"{feature}_adj", 'rsquared'].values
+        t, p = ttest_rel(r2_total, r2_adj)
+        sig[feature] = p < .05
+        print(f"\n{feature} cross-validation t-test results:")
+        print(f"\tT-statistic: {t:.3f}")
+        if p < .001:
+            print(f"\tp-value: {p:.1e}")
+        else:
+            print(f"\tp-value: {p:.3f}")
 
-    # compute change in power
-    results = df.pivot(index='band', columns='epoch', values='power').reset_index()
-    results['diff'] = results['post'] - results['pre']
+    # print results
+    for feature in ['alpha', 'alpha_adj', 'gamma', 'gamma_adj']:
+        print(f"\n\n{feature} results:")
+        print(f"\tR-squared: {results[feature].rsquared:.3f}")
+        print(f"\tF-statistic: {results[feature].fvalue:.3f}")
+        if results[feature].f_pvalue < .001:
+            print(f"\tp-value: {results[feature].f_pvalue:.3e}")
+        else:
+            print(f"\tp-value: {results[feature].f_pvalue:.3f}")
+        # print(results[feature].summary())
+
+    return df_ols, results
+
+
+def run_ols(df, feature):
+    df_i = df[['exponent_diff', f'{feature}_diff']].dropna() # drop nan
+    X = sm.add_constant(df_i[[f'exponent_diff']]) # add constant term
+    y = df_i[f'{feature}_diff']
+    model = sm.OLS(y, X)
+    results = model.fit()
 
     return results
+
+
+def load_params():
+    # load data
+    df = pd.read_csv(f"{PROJECT_PATH}/data/results/spectral_parameters.csv", index_col=0)
+    df = df[['patient', 'chan_idx', 'material', 'memory', 'epoch', 'exponent', 
+             'alpha', 'alpha_adj', 'gamma', 'gamma_adj']] # drop unneeded columns   
+    df = df.loc[df['memory']=='hit'] # drop unsuccessful trials
+
+    # pivot table (based on epoch)
+    index = ['patient', 'chan_idx', 'material']
+    features = ['exponent', 'alpha', 'alpha_adj', 'gamma', 'gamma_adj']
+    df = df.pivot_table(index=index, columns='epoch', values=features).reset_index()
+
+    # compute difference in parameters
+    for feature in features:
+        df[f"{feature}_diff"] = df[(feature, 'post')] - df[(feature, 'pre')]
+
+    # drop original columns
+    df = df.drop(columns=[(feature, epoch) for feature in features for epoch in 
+                          ['pre', 'post']])
+    df.columns = df.columns.droplevel(1)
+
+    return df
 
 
 if __name__ == "__main__":
