@@ -28,6 +28,7 @@ from info import MATERIALS
 
 # settings
 plt.style.use('mplstyle/nature_neuro.mplstyle')
+NODE_SIZE = 2.5
 
 
 def main():
@@ -57,38 +58,57 @@ def main():
                            height_ratios=[1, 0.1, 1])
     for i_mat, [material, i_gs], in enumerate(zip(MATERIALS, [0, 2])):
         spec = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[i_gs],
-                                                width_ratios=[1, 3])
+                                                width_ratios=[1, 3], 
+                                                height_ratios=[1, 1.5])
 
         # plot barchart: number of task-modulated electrodes ###################
         ax_bar = fig.add_subplot(spec[0, 0])
         plot_barchart(df, ax_bar)
         
         # plot glass brain: electrode locations ################################
-        for i_band, band in enumerate(BANDS.keys()):
-            ax_brain = fig.add_subplot(spec[i_band, 1])
-            boxb = ax_brain.get_position()
-            expand = 1.4
-            y_shift = 0.07
-            x_shift = -0.05
-            if (i_band==0) and (i_mat==0):
-                ax_brain.set_position([boxb.x0+x_shift, boxb.y0+y_shift, 
-                                       boxb.width*expand, boxb.height*expand])
-            elif (i_band==1) and (i_mat==1):
-                ax_brain.set_position([boxb.x0+x_shift, boxb.y0-y_shift, 
-                                       boxb.width*expand, boxb.height*expand])
-            else:
-                ax_brain.set_position([boxb.x0+x_shift, boxb.y0, 
-                                       boxb.width*expand, boxb.height*expand])
-            plot_glass_brain(ax_brain, df, band)
 
-        # plot spectra: group mean for word and face blocks #
-        ax_psd = fig.add_subplot(spec[1, 0])
-        # boxb = ax_psd.get_position()
-        # ax_psd.set_position([boxb.x0, boxb.y0, boxb.width, boxb.height*0.9])
-        plot_group_spectra(df, material, ax_psd)
+        # create axes and adjust position for inexplicable whitespace issue with Nilearn
+        ax_0 = fig.add_subplot(spec[0, 1])
+        boxb = ax_0.get_position()
+        expand = 1.4
+        y_shift = 0.07
+        x_shift = -0.05
+        if i_mat==0:
+            ax_0.set_position([boxb.x0+x_shift, boxb.y0+y_shift, 
+                                    boxb.width*expand, boxb.height*expand])
+        else:
+            ax_0.set_position([boxb.x0+x_shift, boxb.y0, 
+                                    boxb.width*expand, boxb.height*expand])
+
+        plot_glass_brain(ax_0, df, node_size=NODE_SIZE)
+
+        # plot spectra #########################################################
+        # create nested gridspec for spectra (1x3)
+        spec1 = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=spec[1, :], 
+                                                 width_ratios=[1, 1, 1])
+        
+        # plot spectra - group mean
+        ax_psd0 = fig.add_subplot(spec1[0])
+        plot_group_spectra(df, material, ax_psd0)
+        ax_psd0.set_title("Average power spectra")
+
+        # plot spectra - difference in group mean
+        ax_psd1 = fig.add_subplot(spec1[1])
+        plot_group_spectra_diff(df, material, ax_psd1)
+
+        # plot barchart showing total power differnces in each band
+        ax_psd2 = fig.add_subplot(spec1[2])
+        ax_psd2.set_title("Difference in total power")
+        for band in ['alpha', 'gamma']:
+            y = np.log10(df[f'{band}_post']) - np.log10(df[f'{band}_pre'])
+            ax_psd2.bar(band, y.mean(), color=BCOLORS[band], edgecolor='black', 
+                        linewidth=1)
+        ax_psd2.set_ylabel('log power (\u03BCV\u00b2/Hz)')
+        ax_psd2.set_xlabel('frequency band')
+        ax_psd2.axhline(0, color='grey', linestyle='--', linewidth=1)
 
         # # beautify axes
-        for ax in [ax_bar, ax_psd]:
+        for ax in [ax_bar, ax_psd0, ax_psd1]:
             beautify_ax(ax)
 
     # add section titles and line between subplot rows
@@ -102,12 +122,17 @@ def main():
              fontdict={'fontweight': 'bold'})
 
     # # add figure panel labels
-    fig.text(0.01, 1.00, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.01, 0.75, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.32, 1.00, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.01, 0.48, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.01, 0.23, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.32, 0.48, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.02, 1.00, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.32, 1.00, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.02, 0.76, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.34, 0.76, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.68, 0.76, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
+
+    fig.text(0.02, 0.48, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.32, 0.48, 'i', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.02, 0.23, 'j', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.34, 0.23, 'k', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.68, 0.23, 'l', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
     plt.savefig(f"{dir_fig}/figure_3c-h.png", bbox_inches='tight')
@@ -134,16 +159,18 @@ def plot_barchart(df, ax):
     ax.set_xlabel('frequency band')
 
 
-def plot_glass_brain(ax, df, band, node_size=1.5):
-
-    # shift subplot spaceing (nilearn plot including inexplicable whitespace)
-    coords = df.loc[df[f'{band}_sig'], ['pos_x', 'pos_y', 'pos_z']].values
+def plot_glass_brain(ax, df, node_size=1.5):
+    coords = df.loc[df[f'alpha_sig'], ['pos_x', 'pos_y', 'pos_z']].values
     nfig = plotting.plot_markers(axes=ax, node_coords=coords, 
                                 node_values=np.ones(len(coords)), 
-                                node_cmap=ListedColormap([BCOLORS[band]]),
+                                node_cmap=ListedColormap([BCOLORS['alpha']]),
                                 display_mode='ortho', colorbar=False, 
-                                annotate=False, node_size=node_size, 
-                                node_kwargs={'alpha' : 1}, alpha=1)
+                                annotate=False, node_size=node_size, alpha=1)
+
+    coords = df.loc[df[f'gamma_sig'], ['pos_x', 'pos_y', 'pos_z']].values
+    nfig.add_markers(marker_coords=coords, marker_size=node_size, 
+                        marker_color=BCOLORS['gamma'], alpha=1)
+
     coords = df.loc[df[f'sig_all'], ['pos_x', 'pos_y', 'pos_z']].values
     nfig.add_markers(marker_coords=coords, marker_size=node_size, 
                         marker_color='k', alpha=1)
@@ -186,6 +213,75 @@ def plot_group_spectra(df, material, ax):
     
     # beautify
     ax.grid(False)
+
+
+def plot_group_spectra_diff(df, material, ax):
+
+    # load data
+    fname = f"{PROJECT_PATH}/data/ieeg_spectral_results/psd_{material}_hit_XXXstim.npz"
+    data_pre = np.load(fname.replace("XXX", "pre"))
+    data_post = np.load(fname.replace("XXX", "post"))
+    psd_pre = data_pre['spectra'][df[f"sig_all"]]
+    psd_post = data_post['spectra'][df[f"sig_all"]]
+    freq = data_pre['freq']
+
+    # plot
+    f_mask = np.logical_and(freq>FREQ_RANGE[0], freq<FREQ_RANGE[1])
+    psd_diff = np.log10(psd_post[:, f_mask]) - np.log10(psd_pre[:, f_mask])
+    plot_psd_diff(freq[f_mask], psd_diff, ax)
+    
+    # shade oscillation bands
+    for band in ['alpha', 'gamma']:
+        ax.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band],
+                    alpha=0.4)
+    
+    # beautify
+    ax.grid(False)
+
+
+def plot_psd_diff(freq, psd_diff, ax):
+    """ 
+    Plot spectra (or change in spectral power) in semi-log space.
+    The mean spectrum is plotted in black, and the individual spectra are plotted in grey.
+    A horizontal line at power=0 is also plotted.
+
+    Parameters
+    ----------
+    freq : array
+        Frequency values.
+    psd_diff : array
+        Spectral power values (difference in log power between 2 spectra).
+    ax : matplotlib axis, optional
+        Axis to plot on. If None, a new figure is created.
+
+    Returns
+    -------
+    None.
+    
+    """
+
+    # plot mean
+    ax.plot(freq, np.nanmean(psd_diff, axis=0), color='k', linewidth=3,
+                label="mean")
+
+    # shade sem
+    mean = np.nanmean(psd_diff, axis=0)
+    sem = np.nanstd(psd_diff, axis=0) / np.sqrt(psd_diff.shape[0])
+    ax.fill_between(freq, mean - sem, mean + sem,
+                    color='k', alpha=0.2, label="SEM")
+
+    # scale x-axis logarithmically
+    ax.set(xscale="log")
+
+    # set axes ticks and labels
+    ax.set_title(f"Difference in power (encoding - baseline)")
+    ax.set_ylabel('log power (\u03BCV\u00b2/Hz)')
+    ax.set_xlabel('frequency (Hz)')
+    ax.set_xticks([10, 100])
+    ax.set_xticklabels(["10", "100"])
+
+    # annotate power=0
+    ax.axhline(0, color='grey', linestyle='--', linewidth=1)
 
         
 if __name__ == "__main__":
