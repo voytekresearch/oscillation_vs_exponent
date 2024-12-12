@@ -16,12 +16,12 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from info import PATIENTS
-from settings import WIDTH, PANEL_FONTSIZE
+from settings import MPLSTYLE, WIDTH, PANEL_FONTSIZE
 from plots import beautify_ax
 from utils import get_start_time, print_time_elapsed
 
 # settings
-plt.style.use("mplstyle/nature_neuro.mplstyle")
+plt.style.use(MPLSTYLE)
 
 
 def main():

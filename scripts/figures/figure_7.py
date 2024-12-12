@@ -22,7 +22,7 @@ from utils import get_start_time, print_time_elapsed, confidence_interval
 from tfr_utils import trim_tfr, subtract_baseline
 from tfr_utils import zscore_tfr as zscore
 from plots import plot_evoked_tfr, beautify_ax
-from settings import BANDS, AP_MODE, FREQ_RANGE, BCOLORS, WIDTH, PANEL_FONTSIZE
+from settings import *
 from specparam_utils import compute_band_power
 from specparam_utils import _compute_adjusted_band_power as compute_adjusted_band_power
 
@@ -31,7 +31,7 @@ LOG_POWER = True # whether to log-transform power
 METHOD = 'mean' # method for computing band power
 
 # settings - figure
-plt.style.use('mplstyle/nature_neuro.mplstyle')
+plt.style.use(MPLSTYLE)
 X_LIMITS = [-0.5, 1.0]
 Y_LIMITS = [-2.2, 2.2] # for time-series plots
 

@@ -23,11 +23,11 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from plots import plot_spectra_2conditions, beautify_ax, join_two_figures
-from settings import COLORS, FREQ_RANGE, WIDTH, BCOLORS, BANDS, PANEL_FONTSIZE
+from settings import *
 from info import MATERIALS
 
 # settings
-plt.style.use('mplstyle/nature_neuro.mplstyle')
+plt.style.use(MPLSTYLE)
 NODE_SIZE = 2.5
 
 

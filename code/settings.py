@@ -62,6 +62,8 @@ RGB = (
 )
 
 # Journal of Neuroscience
+MPLSTYLE = 'mplstyle/jneuro.mplstyle'
+
 WIDTH = {
     "1col"      :   3.34646,    # 8.5 cm
     "1.5col"    :   4.566929,   # 11.6 cm

@@ -25,11 +25,11 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from info import MATERIALS
 from utils import get_start_time, print_time_elapsed
-from settings import WIDTH, BANDS, PANEL_FONTSIZE, RGB
+from settings import MPLSTYLE, WIDTH, BANDS, PANEL_FONTSIZE, RGB
 from plots import beautify_ax
 
 # settings
-plt.style.use('mplstyle/nature_neuro.mplstyle')
+plt.style.use(MPLSTYLE)
 ALPHA = 0.05 # significance level
 PLOT_SWARM = False # plot swarm plot on top of violin plot
 

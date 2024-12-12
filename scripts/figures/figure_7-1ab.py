@@ -28,7 +28,7 @@ MATERIAL = ['faces', 'faces']
 MEMORY = ['miss', 'hit']
 
 # settings
-plt.style.use('mplstyle/nature_neuro.mplstyle')
+plt.style.use(MPLSTYLE)
 T_PLOT = [-0.5, 1.] # time window to plot
 LOAD_DATA = True # whether to load data or compute
 

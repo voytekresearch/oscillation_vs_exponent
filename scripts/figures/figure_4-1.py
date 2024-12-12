@@ -13,13 +13,13 @@ from specparam import SpectralModel, SpectralGroupModel
 import sys
 sys.path.append(f"code")
 from paths import PROJECT_PATH
-from settings import SPEC_PARAM_SETTINGS, RGB, WIDTH, FREQ_RANGE, PANEL_FONTSIZE
+from settings import *
 from specparam_utils import compute_adj_r2
 from utils import get_start_time, print_time_elapsed
 from plots import beautify_ax
 
 # settings
-plt.style.use('mplstyle/nature_neuro.mplstyle')
+plt.style.use(MPLSTYLE)
 REMOVE_OUTLIERS = True
 
 

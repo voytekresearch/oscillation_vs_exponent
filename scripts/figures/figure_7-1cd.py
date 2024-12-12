@@ -21,11 +21,11 @@ import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
 from utils import get_start_time, print_time_elapsed
-from settings import WIDTH, PANEL_FONTSIZE
+from settings import MPLSTYLE, WIDTH, PANEL_FONTSIZE
 from plots import beautify_ax, join_two_figures
 
 # settings
-plt.style.use('mplstyle/nature_neuro.mplstyle')
+plt.style.use(MPLSTYLE)
 N_TRIALS = 100
 N_SECONDS = 1 # duration of simulated ERP
 FS = 2000 # sampling rate of simulated ERP

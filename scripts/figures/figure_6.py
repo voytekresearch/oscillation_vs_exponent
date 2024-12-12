@@ -27,7 +27,7 @@ from plots import plot_spectra_2conditions, beautify_ax
 from specparam_utils import compute_band_power
 
 # settings
-plt.style.use('mplstyle/nature_neuro.mplstyle')
+plt.style.use(MPLSTYLE)
 figsize = [WIDTH['1col'], WIDTH['1col']*1.5]
 IF_SIZE = 10 # intersection frequency marker size
 
