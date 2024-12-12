@@ -7,7 +7,7 @@ pipeline:
 	python scripts/pipeline/step6_aggregate_results.py
 	python scripts/pipeline/step7_permutation_stats.py
 
-figures:
+main_figures:
 	python scripts/figures/figure_1.py
 	python scripts/figures/figure_2.py
 	python scripts/figures/figure_3ab.py
@@ -20,4 +20,4 @@ figures:
 	python scripts/figures/figure_7-1ab.py
 	python scripts/figures/figure_7-1cd.py
 
-all: pipeline figures
+all: pipeline main_figures
