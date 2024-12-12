@@ -32,6 +32,10 @@ SPEC_PARAM_SETTINGS = {
 }
 AP_MODE = 'knee'
 
+# band power settings
+BAND_POWER_METHOD = 'mean'
+LOG_POWER = True
+
 # Plotting
 COLORS = {
     "brown"         :   np.array([166,97,26]) / 255,
@@ -57,13 +61,12 @@ RGB = (
     np.array([55,126,184]) / 255
 )
 
+# Journal of Neuroscience
 WIDTH = {
-    "1col"  :   3.46457, # 88mm
-    "2col"  :   7.08661, # 180mm
+    "1col"      :   3.34646,    # 8.5 cm
+    "1.5col"    :   4.566929,   # 11.6 cm
+    "2col"      :   6.929134,   # 17.6 mm
 }
 
+# Subplot labels
 PANEL_FONTSIZE = 9
-
-# band power settings
-BAND_POWER_METHOD = 'mean'
-LOG_POWER = True

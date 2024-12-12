@@ -1,0 +1,17 @@
+### Font
+font.family : sans-serif
+font.sans-serif : arial
+font.size : 6
+
+### Text size
+figure.titlesize : 7
+axes.titlesize : 7
+axes.labelsize : 6
+xtick.labelsize : 5
+ytick.labelsize : 5
+legend.fontsize : 5
+
+### Saving
+figure.constrained_layout.use : True
+savefig.dpi : 600
+savefig.format : pdf
