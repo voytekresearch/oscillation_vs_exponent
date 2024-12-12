@@ -63,8 +63,8 @@ def hierarchical_bootstrap(df, variable, condition, level_1, level_2,
     """
 
     # run bootstrap
-    distribution = _hierarchical_bootstrap(df, variable, condition, level_1, 
-                                           level_2, n_iterations)
+    distribution = _hierarchical_resampling(df, variable, condition, level_1, 
+                                            level_2, n_iterations)
 
     # compute p-boot 
     p_value, sign = _compute_p_value(distribution)
@@ -87,8 +87,8 @@ def hierarchical_bootstrap(df, variable, condition, level_1, level_2,
     return p_value, sign, distribution, true_mean
 
 
-def _hierarchical_bootstrap(df, variable, condition, level_1, level_2, 
-                            iterations):
+def _hierarchical_resampling(df, variable, condition, level_1, level_2, 
+                             iterations):
     """
     Perform paired hierarchical bootstrap. This function resamples the data,
     taking into account the paired and hierarchical structure of the dataset. 
@@ -134,8 +134,12 @@ def _hierarchical_bootstrap(df, variable, condition, level_1, level_2,
     # count number of instances per cluster
     instances_per_cluster = np.zeros(n_clusters)
     for i_cluster, cluster_i in enumerate(clusters):
-        instances_per_cluster[i_cluster] = len(df.loc[df[level_1]==cluster_i, level_2].unique())
+        instances_per_cluster[i_cluster] = len(df.loc[df[level_1]==cluster_i, 
+                                                      level_2].unique())
     n_instances = int(np.nanmean(instances_per_cluster)) # use average number of instances per cluster
+
+    # Precompute unique instances for each cluster
+    cluster_instance_map = {cluster: df.loc[df[level_1] == cluster, level_2].unique() for cluster in clusters}
 
     # loop through iterations
     distribution = np.zeros(iterations)
@@ -147,7 +151,7 @@ def _hierarchical_bootstrap(df, variable, condition, level_1, level_2,
         values = np.zeros([n_clusters, n_instances, 2])
         for i_cluster, cluster_i in enumerate(clusters_resampled):
             # resample level 3
-            instances = df.loc[df[level_1]==cluster_i, level_2].unique()
+            instances = cluster_instance_map[cluster_i]
             instances_resampled = np.random.choice(instances, size=n_instances)
 
             # get data for each instance within cluster and average
@@ -155,11 +159,13 @@ def _hierarchical_bootstrap(df, variable, condition, level_1, level_2,
                 values_ii = df.loc[(df[level_1]==cluster_i) & 
                                   (df[level_2]==instance_i)]
                 for i_condtion, condition_i in enumerate(conditions):
-                    value = values_ii.loc[values_ii[condition]==condition_i, variable].values
+                    value = values_ii.loc[values_ii[condition]==condition_i, 
+                                          variable].values
                     values[i_cluster, i_instance, i_condtion] = value
                 
         # compute average for iteration
-        distribution[i_iteration] = mean_difference(values[...,0], values[...,1])
+        distribution[i_iteration] = mean_difference(values[..., 0], 
+                                                    values[..., 1])
 
     return distribution
 
@@ -198,7 +204,7 @@ def check_input(df, variable, condition, level_1, level_2):
             n_instances += 1
 
     if n_dropped > 0:
-        print(f"Warning: {n_dropped}/{n_dropped+n_instances} instances dropped due to missing data.")
+        print(f"Warning: {n_dropped}/{n_instances} instances dropped due to missing data.")
 
     return df
 
