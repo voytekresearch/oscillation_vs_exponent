@@ -1,10 +1,11 @@
 """
 This script reproduces figure 3: Task-modulated electrodes. The results of 
 scripts.3_id_modulated_channels.py are plotted.
-A) Bar chart depicting percentage of task-modulated electrodes
-B) Glass brain plot showing locations of task-modulated electrodes
-C) Group mean power spectra for word block
-D) Group mean power spectra for face block
+
+C/G) Bar chart depicting percentage of task-modulated electrodes
+D/H) Group mean power spectra for word block
+E/H) Group mean power spectra for face block
+F/I) Glass brain plot showing locations of task-modulated electrodes
 
 """
 
@@ -17,18 +18,24 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.colors import ListedColormap
 from nilearn import plotting
+from mne import read_epochs
+from scipy import stats
 
 # Imports - custom
 import sys
 sys.path.append("code")
 from paths import PROJECT_PATH
-from plots import plot_spectra_2conditions, beautify_ax, join_two_figures
+from plots import plot_spectra_2conditions, beautify_ax
 from settings import *
 from info import MATERIALS
 
 # settings
 plt.style.use(MPLSTYLE)
-NODE_SIZE = 2.5
+NODE_SIZE = 2
+
+# settings - example data to visualize
+PATIENT = 'pat11'
+CHAN_IDX = 35
 
 
 def main():
@@ -53,96 +60,184 @@ def main():
         df['sig_any'] = df[[f'{band}_sig' for band in BANDS]].any(axis=1)
 
     # create nested gridspec (2 rows that will be further segmented)
-    fig = plt.figure(figsize=(WIDTH['2col'], WIDTH['2col']*1.2))
+    fig = plt.figure(figsize=(WIDTH['1.5col'], WIDTH['1.5col']*2))
     gs = gridspec.GridSpec(figure=fig, ncols=1, nrows=3, 
                            height_ratios=[1, 0.1, 1])
     for i_mat, [material, i_gs], in enumerate(zip(MATERIALS, [0, 2])):
-        spec = gridspec.GridSpecFromSubplotSpec(2, 2, subplot_spec=gs[i_gs],
-                                                width_ratios=[1, 3], 
-                                                height_ratios=[1, 1.5])
-
-        # plot barchart: number of task-modulated electrodes ###################
-        ax_bar = fig.add_subplot(spec[0, 0])
-        plot_barchart(df, ax_bar)
+        spec = gridspec.GridSpecFromSubplotSpec(3, 3, subplot_spec=gs[i_gs],
+                                                width_ratios=[1, 1, 1], 
+                                                height_ratios=[1, 1, 1.5])
         
-        # plot glass brain: electrode locations ################################
+        # single electrode example #############################################
+        plot_single_electrode(fig, spec, material)
 
+        # plot glass brain: electrode locations ################################
         # create axes and adjust position for inexplicable whitespace issue with Nilearn
-        ax_0 = fig.add_subplot(spec[0, 1])
+        ax_0 = fig.add_subplot(spec[2, :])
         boxb = ax_0.get_position()
-        expand = 1.4
-        y_shift = 0.07
-        x_shift = -0.05
+        expand = 1.1
+        y_shift = -0.04
+        x_shift = -0.02
         if i_mat==0:
             ax_0.set_position([boxb.x0+x_shift, boxb.y0+y_shift, 
                                     boxb.width*expand, boxb.height*expand])
         else:
-            ax_0.set_position([boxb.x0+x_shift, boxb.y0, 
+            ax_0.set_position([boxb.x0+x_shift, boxb.y0+y_shift*3, 
                                     boxb.width*expand, boxb.height*expand])
 
         plot_glass_brain(ax_0, df, node_size=NODE_SIZE)
 
-        # plot spectra #########################################################
-        # create nested gridspec for spectra (1x3)
-        spec1 = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=spec[1, :], 
-                                                 width_ratios=[1, 1, 1])
+        # plot barchart: number of task-modulated electrodes
+        ax_bar = fig.add_subplot(spec[1, 0])
+        plot_barchart(df, ax_bar)
         
         # plot spectra - group mean
-        ax_psd0 = fig.add_subplot(spec1[0])
+        ax_psd0 = fig.add_subplot(spec[1, 1])
         plot_group_spectra(df, material, ax_psd0)
         ax_psd0.set_title("Average power spectra")
 
         # plot spectra - difference in group mean
-        ax_psd1 = fig.add_subplot(spec1[1])
+        ax_psd1 = fig.add_subplot(spec[1, 2])
         plot_group_spectra_diff(df, material, ax_psd1)
-
-        # plot barchart showing total power differnces in each band
-        ax_psd2 = fig.add_subplot(spec1[2])
-        ax_psd2.set_title("Difference in total power")
-        for band in ['alpha', 'gamma']:
-            y = np.log10(df[f'{band}_post']) - np.log10(df[f'{band}_pre'])
-            ax_psd2.bar(band, y.mean(), color=BCOLORS[band], edgecolor='black', 
-                        linewidth=1)
-        ax_psd2.set_ylabel('log power (\u03BCV\u00b2/Hz)')
-        ax_psd2.set_xlabel('frequency band')
-        ax_psd2.axhline(0, color='grey', linestyle='--', linewidth=1)
 
         # # beautify axes
         for ax in [ax_bar, ax_psd0, ax_psd1]:
             beautify_ax(ax)
 
     # add section titles and line between subplot rows
-    for ypos in [0.5, 1.02]:
+    for ypos in [0.49, 1.01]:
         line = plt.Line2D((0.1, 0.9), (ypos, ypos), color='black', linewidth=1, 
                         transform=fig.transFigure, figure=fig)
         fig.add_artist(line)
-    fig.text(0.5, 1.04, "Word-encoding", ha='center', va='top', fontsize=7, 
+    fig.text(0.5, 1.03, "Word-encoding", ha='center', va='top', fontsize=7, 
              fontdict={'fontweight': 'bold'})
-    fig.text(0.5, 0.52, "Face-encoding", ha='center', va='top', fontsize=7, 
+    fig.text(0.5, 0.51, "Face-encoding", ha='center', va='top', fontsize=7, 
              fontdict={'fontweight': 'bold'})
 
-    # # add figure panel labels
-    fig.text(0.02, 1.00, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.32, 1.00, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.02, 0.76, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.34, 0.76, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.68, 0.76, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    # Add subplot a/g y-axis labels
+    fig.text(0.0, 0.93, 'trials', va='center', rotation='vertical', fontsize=6)
+    fig.text(0.0, 0.40, 'trials', va='center', rotation='vertical', fontsize=6)
 
-    fig.text(0.02, 0.48, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.32, 0.48, 'i', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.02, 0.23, 'j', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.34, 0.23, 'k', fontsize=PANEL_FONTSIZE, fontweight='bold')
-    fig.text(0.68, 0.23, 'l', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    # add figure panel labels
+    fig.text(0.01, 0.99, 'a', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.67, 0.99, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.82, 'c', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.35, 0.82, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.68, 0.82, 'e', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.02, 0.65, 'f', fontsize=PANEL_FONTSIZE, fontweight='bold')
+
+    fig.text(0.01, 0.47, 'g', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.67, 0.47, 'h', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.29, 'i', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.35, 0.29, 'j', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.68, 0.29, 'k', fontsize=PANEL_FONTSIZE, fontweight='bold')
+    fig.text(0.01, 0.12, 'l', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save
-    plt.savefig(f"{dir_fig}/figure_3c-h.png", bbox_inches='tight')
+    plt.savefig(f"{dir_fig}/figure_3.png", bbox_inches='tight')
+    plt.savefig(f"{dir_fig}/figure_3", bbox_inches='tight')
     plt.close()
 
-    # join subplots
-    join_two_figures(f"{dir_fig}/figure_3ab.png", f"{dir_fig}/figure_3c-h.png",
-                     f"{dir_fig}/figure_3.png", figsize=[WIDTH['2col'], 
-                                                         WIDTH['2col']*1.25])
 
+def plot_single_electrode(fig, spec, material):
+
+    # load iEEG time-series results
+    fname_in = f"{PATIENT}_{material}_hit_epo.fif"
+    epochs = read_epochs(f"{PROJECT_PATH}/data/ieeg_epochs/{fname_in}")
+    signals = epochs.get_data(copy=True)
+    signal = signals[:, CHAN_IDX]
+    time = epochs.times
+
+    # create subplots
+    gs_a = gridspec.GridSpecFromSubplotSpec(5,1, subplot_spec=spec[0,:2])
+
+    # ==================== Fig 2a ====================
+    # plot raw time-series (baseline and encoding)
+
+    # sererate baseline and encoding
+    mask_b = (time>=-1) & (time<=0)
+    mask_e = (time>=0) & (time<=1)
+
+    # create subplots
+    ax0 = fig.add_subplot(gs_a[0,:])
+    ax1 = fig.add_subplot(gs_a[1,:])
+    ax2 = fig.add_subplot(gs_a[2,:])
+    ax3 = fig.add_subplot(gs_a[3,:])
+    ax4 = fig.add_subplot(gs_a[4,:])
+    axes = [ax0,ax1,ax2,ax3,ax4]
+
+    # plot 5 trials
+    trials = np.random.randint(0, len(signal), 5)
+    for trial, ax in zip(trials, axes):
+        # plot
+        ax.plot(time[mask_b], signal[trial, mask_b], 
+                color='k', linewidth=1)
+        ax.plot(time[mask_e], signal[trial, mask_e], 'k', linewidth=1)
+
+    # remove cluttered axes, ticks, and spines
+    ax4.axes.yaxis.set_ticks([])
+    for ax in axes[:4]:
+        ax.axis('off')
+    for loc in ['top','right','left']:
+        ax4.spines[loc].set_visible(False)
+
+    # label
+    ax0.set_title('Raw iEEG time-series')
+    ax4.set_xlabel('time relative to stimulus onset (s)')
+
+    # ==================== Fig 2b and 2d ====================
+    axb = fig.add_subplot(spec[0, 2])
+
+    if material == 'words':
+        color = 'brown'
+    elif material == 'faces':
+        color = 'blue'
+    plot_spectra(axb, material, color)
+
+
+def plot_spectra(axi, material, color):
+    # load spectral results
+    fname_in = '%s_%s_hit_XXXstim_psd.npz' %(PATIENT, material)
+    psd_pre_in = np.load(f"{PROJECT_PATH}/data/ieeg_psd/{fname_in.replace('XXX','pre')}")
+    psd_post_in = np.load(f"{PROJECT_PATH}/data/ieeg_psd/{fname_in.replace('XXX','post')}")
+    psd_pre_all = psd_pre_in['psd'][:,CHAN_IDX]
+    psd_post_all = psd_post_in['psd'][:,CHAN_IDX]
+    freq = psd_pre_in['freq']
+
+    # calc confidence interval for spectra (across trials)
+    conf_pre = stats.norm.interval(0.95, loc=np.mean(psd_pre_all, 0),
+        scale=np.std(psd_pre_all, 0)/np.sqrt(len(psd_pre_all)))
+    conf_post = stats.norm.interval(0.95, loc=np.mean(psd_post_all, 0),
+        scale=np.std(psd_post_all, 0)/np.sqrt(len(psd_post_all)))
+
+    # Plot spectra
+    axi.loglog(freq, np.nanmean(psd_pre_all, 0), label='baseline',
+                color=COLORS[f'light_{color}'], linewidth=1)
+    axi.loglog(freq, np.nanmean(psd_post_all, 0), label='encoding',
+                color=COLORS[color], linewidth=1)
+    axi.set_xlim(FREQ_RANGE)
+
+    # plot 95% confidence intrval
+    axi.fill_between(freq, conf_pre[0], conf_pre[1], edgecolor=None,
+                    color=COLORS[f'light_{color}'], alpha=0.5)
+    axi.fill_between(freq, conf_post[0], conf_post[1], edgecolor=None,
+                        color=COLORS[color], alpha=0.5)
+
+    # shade oscillation bands
+    for band in ['alpha', 'gamma']:
+        axi.axvspan(BANDS[band][0], BANDS[band][1], facecolor=BCOLORS[band],
+                    alpha=0.4)
+
+    # subplot 2 - label
+    axi.set_title(f'Single-electrode\npower spectra')
+    axi.set_xlabel('frequency (Hz)')
+    axi.set_ylabel('power ($\u03bcV^2/Hz$)')
+    axi.legend(loc='lower left')
+    axi.axvline(1, color='gray', linestyle='--', linewidth=1)
+
+    # beautify
+    beautify_ax(axi)
+    
 
 def plot_barchart(df, ax):
     # plot
@@ -274,7 +369,7 @@ def plot_psd_diff(freq, psd_diff, ax):
     ax.set(xscale="log")
 
     # set axes ticks and labels
-    ax.set_title(f"Difference in power (encoding - baseline)")
+    ax.set_title(f"Difference in power\n(encoding - baseline)")
     ax.set_ylabel('log power (\u03BCV\u00b2/Hz)')
     ax.set_xlabel('frequency (Hz)')
     ax.set_xticks([10, 100])
