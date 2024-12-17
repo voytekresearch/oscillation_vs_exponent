@@ -246,7 +246,10 @@ def subplot_f(fig, gs):
                 text.set_fontsize(6)
         # shift "no change" % to reduce overlap
         texts[3].set_position([texts[3].get_position()[0]-0.3, 
-                               texts[3].get_position()[1]]) 
+                               texts[3].get_position()[1]])
+        
+    # add super title over both pie charts
+    fig.text(0.85, 0.48, 'Task-modulated electrodes', fontsize=7, ha='center')
 
 if __name__ == "__main__":
     main()
