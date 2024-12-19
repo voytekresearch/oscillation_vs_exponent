@@ -104,7 +104,7 @@ def plot_material(fig, axes, material):
     for _, row in df_stats.iterrows():
         fname = f"{row['patient']}_{material}_hit_chan{row['chan_idx']}_tfr.npz"
         data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}")
-        tfr_list.append(np.nanmedian(np.squeeze(data_in['tfr']), axis=0))
+        tfr_list.append(np.nanmean(np.squeeze(data_in['tfr']), axis=0))
     tfr = np.nanmean(np.array(tfr_list), axis=0) # average over channels and materials
 
     # plot
@@ -125,28 +125,27 @@ def plot_material(fig, axes, material):
 
     # aggregate data for all active channels
     for _, row in df_stats.iterrows():
-        for material in MATERIALS:
-            # load exponent
-            fname = f"{row['patient']}_{material}_hit_chan{row['chan_idx']}_tfr_param_{AP_MODE}"
-            sm = SpectralGroupModel()
-            sm.load(f"{PROJECT_PATH}/data/ieeg_tfr_param/{fname}")
-            exp_list.append(sm.get_params('aperiodic','exponent'))
+        # load exponent
+        fname = f"{row['patient']}_{material}_hit_chan{row['chan_idx']}_tfr_param_{AP_MODE}"
+        sm = SpectralGroupModel()
+        sm.load(f"{PROJECT_PATH}/data/ieeg_tfr_param/{fname}")
+        exp_list.append(sm.get_params('aperiodic','exponent'))
+        
+        # load tfr and compute band power
+        fname = f"{row['patient']}_{material}_hit_chan{row['chan_idx']}_tfr.npz"
+        data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}")
+        tfr = np.nanmean(np.squeeze(data_in['tfr']), axis=0)
+        
+        for band, f_range in BANDS.items():
+            temp = compute_band_power(data_in['freq'], tfr.T, f_range, 
+                                        method=METHOD, log_power=LOG_POWER)
+            power[band].append(temp)
             
-            # load tfr and compute band power
-            fname = f"{row['patient']}_{material}_hit_chan{row['chan_idx']}_tfr.npz"
-            data_in = np.load(f"{PROJECT_PATH}/data/ieeg_tfr/{fname}")
-            tfr = np.nanmedian(np.squeeze(data_in['tfr']), axis=0)
-            
-            for band, f_range in BANDS.items():
-                temp = compute_band_power(data_in['freq'], tfr.T, f_range, 
-                                          method=METHOD, log_power=LOG_POWER)
-                power[band].append(temp)
-                
-                freq, spectra = trim_spectrum(data_in['freq'], tfr.T, FREQ_RANGE)
-                temp = compute_adjusted_band_power(freq, spectra, sm, 
-                                                   f_range, method=METHOD, 
-                                                   log_power=LOG_POWER)
-                power_adj[band].append(temp)
+            freq, spectra = trim_spectrum(data_in['freq'], tfr.T, FREQ_RANGE)
+            temp = compute_adjusted_band_power(freq, spectra, sm, 
+                                                f_range, method=METHOD, 
+                                                log_power=LOG_POWER)
+            power_adj[band].append(temp)
     
     # z-score power and subtract baseline
     time = data_in['time']
