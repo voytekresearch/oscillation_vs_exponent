@@ -234,7 +234,8 @@ def plot_spectra(axi, material, color):
     axi.set_xlabel('frequency (Hz)')
     axi.set_ylabel('power ($\u03bcV^2/Hz$)')
     axi.legend(loc='lower left')
-    axi.axvline(1, color='gray', linestyle='--', linewidth=1)
+    axi.set_xticks([10, 100])
+    axi.set_xticklabels(["10", "100"])
 
     # beautify
     beautify_ax(axi)
