@@ -47,14 +47,14 @@ def main():
 
     # load electrode info
     fname_in = f"{PROJECT_PATH}/data/ieeg_metadata/ieeg_channel_info.csv"
-    df = pd.read_csv(fname_in, index_col=0).drop(columns='index')
+    df_in = pd.read_csv(fname_in, index_col=0).drop(columns='index')
 
     # load results of step 3 and merge with electrode info
     fname = f"{PROJECT_PATH}/data/results/band_power_statistics.csv"
     temp = pd.read_csv(fname, index_col=0)
     temp = temp.loc[temp['memory']=='hit']
-    df_w = df.merge(temp.loc[temp['material']=='words'], on=['patient', 'chan_idx'])
-    df_f = df.merge(temp.loc[temp['material']=='faces'], on=['patient', 'chan_idx'])
+    df_w = df_in.merge(temp.loc[temp['material']=='words'], on=['patient', 'chan_idx'])
+    df_f = df_in.merge(temp.loc[temp['material']=='faces'], on=['patient', 'chan_idx'])
     for df in [df_w, df_f]: # compute joint significance
         df['sig_all'] = df[[f'{band}_sig' for band in BANDS]].all(axis=1)
         df['sig_any'] = df[[f'{band}_sig' for band in BANDS]].any(axis=1)
@@ -63,7 +63,8 @@ def main():
     fig = plt.figure(figsize=(WIDTH['1.5col'], WIDTH['1.5col']*2))
     gs = gridspec.GridSpec(figure=fig, ncols=1, nrows=3, 
                            height_ratios=[1, 0.1, 1])
-    for i_mat, [material, i_gs], in enumerate(zip(MATERIALS, [0, 2])):
+    for i_mat, [material, df, i_gs], in enumerate(zip(MATERIALS, [df_w, df_f], 
+                                                      [0, 2])):
         spec = gridspec.GridSpecFromSubplotSpec(3, 3, subplot_spec=gs[i_gs],
                                                 width_ratios=[1, 1, 1], 
                                                 height_ratios=[1, 1, 1.5])
