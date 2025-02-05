@@ -55,8 +55,8 @@ def main():
     fig.text(0.55, 0.97, 'b', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save figure
-    fig.savefig(f"{dir_output}/figure_7-2", bbox_inches='tight')
-    fig.savefig(f"{dir_output}/figure_7-2.png", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_7-1", bbox_inches='tight')
+    fig.savefig(f"{dir_output}/figure_7-1.png", bbox_inches='tight')
 
     # display progress
     print(f"\n\nTotal analysis time:")

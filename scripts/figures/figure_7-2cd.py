@@ -106,16 +106,16 @@ def main():
     fig.text(0.55, 0.94, 'd', fontsize=PANEL_FONTSIZE, fontweight='bold')
 
     # save fig
-    fig.savefig(f"{dir_fig}/figure_7-1cd.png")
+    fig.savefig(f"{dir_fig}/figure_7-2cd.png")
 
     # join subplots
-    join_two_figures(f"{dir_fig}/figure_7-1ab.png", 
-                     f"{dir_fig}/figure_7-1cd.png",
-                     f"{dir_fig}/figure_7-1.png",
+    join_two_figures(f"{dir_fig}/figure_7-2ab.png", 
+                     f"{dir_fig}/figure_7-2cd.png",
+                     f"{dir_fig}/figure_7-2.png",
                      figsize=[WIDTH['1col'], WIDTH['1col']])
-    join_two_figures(f"{dir_fig}/figure_7-1ab.png", 
-                     f"{dir_fig}/figure_7-1cd.png",
-                     f"{dir_fig}/figure_7-1",
+    join_two_figures(f"{dir_fig}/figure_7-2ab.png", 
+                     f"{dir_fig}/figure_7-2cd.png",
+                     f"{dir_fig}/figure_7-2",
                      figsize=[WIDTH['1col'], WIDTH['1col']])
 
     # display progress
