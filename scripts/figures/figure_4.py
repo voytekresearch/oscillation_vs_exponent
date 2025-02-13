@@ -32,6 +32,7 @@ from plots import beautify_ax
 plt.style.use(MPLSTYLE)
 ALPHA = 0.05 # significance level
 PLOT_SWARM = False # plot swarm plot on top of violin plot
+PLOT_STATS = False # requires first running scripts/statistics/group_level_hierarchical_bootstrap.py
 
 FEATURES = ['alpha', 'gamma', 'exponent', 'alpha_adj', 'gamma_adj']
 TITLES = ['Total alpha power', 'Total gamma power', 'Aperiodic exponent', 
@@ -78,14 +79,15 @@ def main():
     df = df.loc[df['sig_all']].reset_index(drop=True)
 
     # load group-level statistical results
-    fname = f"{PROJECT_PATH}/data/ieeg_stats/group_level_hierarchical_bootstrap_active.csv"
-    stats = pd.read_csv(fname, index_col=0)
-    stats = stats.loc[stats['memory'] =='hit'].reset_index(drop=True) # only successful memory trials
-    stats['p'] = stats['pvalue'].apply(lambda x: min(x, 1-x)) # standardize p-values (currently 0.5 represents equal and <0.05 and >0.95 are both significant)
-    stats.loc[stats['p']==0, 'p'] = 0.001 # set p=0 to p=0.001 (lowest possible value with 1000 bootstrap samples)
-    mt = multipletests(stats['p'], alpha=0.05, method='holm') # multiple comparisons correction
-    stats['p_corr'] = mt[1]
-    
+    if PLOT_STATS:
+        fname = f"{PROJECT_PATH}/data/ieeg_stats/group_level_hierarchical_bootstrap_active.csv"
+        stats = pd.read_csv(fname, index_col=0)
+        stats = stats.loc[stats['memory'] =='hit'].reset_index(drop=True) # only successful memory trials
+        stats['p'] = stats['pvalue'].apply(lambda x: min(x, 1-x)) # standardize p-values (currently 0.5 represents equal and <0.05 and >0.95 are both significant)
+        stats.loc[stats['p']==0, 'p'] = 0.001 # set p=0 to p=0.001 (lowest possible value with 1000 bootstrap samples)
+        mt = multipletests(stats['p'], alpha=0.05, method='holm') # multiple comparisons correction
+        stats['p_corr'] = mt[1]
+        
     ### plot ##################################################################
     # create figure and gridspec
     fig = plt.figure(figsize=[WIDTH['2col'], WIDTH['2col']], 
@@ -112,7 +114,8 @@ def main():
         plot_histogram([ax_h0, ax_h1], df, feature, label)
 
         # annotate stats
-        print_stats([ax_h0, ax_h1], stats, feature)
+        if PLOT_STATS:
+            print_stats([ax_h0, ax_h1], stats, feature)
 
         # beautify axes
         for ax in [ax_v, ax_h0, ax_h1]:
