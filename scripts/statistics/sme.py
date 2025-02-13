@@ -15,6 +15,7 @@ sys.path.append("code")
 from paths import PROJECT_PATH
 from paired_hierarchical_bootstrap import hierarchical_bootstrap as hb
 from utils import get_start_time, print_time_elapsed
+from settings import BANDS
 
 # analysis/statistical settings
 N_ITERATIONS = 1000 # number of iterations for permutation test
@@ -31,21 +32,14 @@ def main():
 
     # load data
     df_params = pd.read_csv(f"{PROJECT_PATH}/data/results/spectral_parameters.csv", index_col=0)
-    df_sig = pd.read_csv(f"{PROJECT_PATH}/data/results/ieeg_modulated_channels.csv", index_col=0)
+    df_sig = pd.read_csv(f"{PROJECT_PATH}/data/results/band_power_statistics.csv", index_col=0)
 
-    # filter for task-modulated channels
-    if ACTIVE_ONLY:
-        df = df_params.merge(df_sig, on=['patient', 'chan_idx'])
-        df = df.loc[df['sig_all']].reset_index(drop=True)
-    else:
-        df = df_params
-        
     # init
     columns = ['material', 'feature', 'pvalue']
     results = pd.DataFrame(columns=columns)
 
     # loop through materials
-    for material in ['faces','words']:
+    for material in ['words', 'faces']:
 
         # display progress
         start_time_c = get_start_time()
@@ -53,7 +47,15 @@ def main():
         print(f'Analyzing {material}-encoding')
         
         # get data for condition
-        df_cond = df.loc[df['material']==material].reset_index(drop=True)
+        df_cond = df_params.loc[df_params['material'] == material].reset_index(drop=True).drop(columns=['material'])
+        
+        # filter for task-modulated channels
+        if ACTIVE_ONLY:
+            temp = df_sig.loc[(df_sig['material']==material) & \
+                              (df_sig['memory']=='hit')].reset_index(drop=True).drop(columns=['material','memory'])
+            temp['sig_all'] = temp[[f'{band}_sig' for band in BANDS]].all(axis=1)
+            df_cond = df_cond.merge(temp, on=['patient', 'chan_idx'])
+            df_cond = df_cond.loc[df_cond['sig_all']].reset_index(drop=True)
         
         # run bootstrap for each feature
         for feature in FEATURES:
@@ -68,7 +70,7 @@ def main():
 
             # run bootstrap
             stats = hb(df_f, feature, 'memory', 'patient', 'chan_idx',
-                        n_iterations=N_ITERATIONS, verbose=False, plot=False)
+                        n_iterations=N_ITERATIONS, verbose=True, plot=False)
             data = np.array([[material, feature, stats[0]]])
             results_i = pd.DataFrame(data, index=[0], columns=columns)
             results = pd.concat([results, results_i], ignore_index=True)
