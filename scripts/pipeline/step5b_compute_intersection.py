@@ -8,6 +8,7 @@ scripts.ieeg_7_single_trial_parameterization.py
 
 # Imports - general
 import os
+import numpy as np
 import pandas as pd
 from specparam import SpectralGroupModel
 
@@ -50,19 +51,25 @@ def main():
                         results = compute_intersections(param_pre, param_post)
                         
                         # store results
-                        df_list.append({'patient': patient,
-                                        'material': material,
-                                        'memory': memory, 
-                                        'ap_mode': ap_mode,
-                                        'i_trial': i_trial,
-                                        'intersection': results[0],
-                                        'intersection_idx': results[1]})
+                        chan_idx = np.arange(len(results[0]))
+                        df_i = pd.DataFrame({'patient': patient,
+                                            'chan_idx': chan_idx,
+                                            'material': material,
+                                            'memory': memory, 
+                                            'ap_mode': ap_mode,
+                                            'trial': i_trial,
+                                            'intersection': results[0],
+                                            'intersection_idx': results[1]})
+
+                        df_i = df_i.explode(['intersection', 'intersection_idx', 
+                                             'chan_idx'])
+                        df_list.append(df_i)
                         
                         # iterate trial
                         i_trial += 1
                     
     # save results
-    df = pd.DataFrame(df_list)
+    df = pd.concat(df_list, axis=0)
     df.to_csv(os.path.join(dir_output, 'trial_intersection_results.csv'), index=False)
     
 if __name__ == "__main__":
