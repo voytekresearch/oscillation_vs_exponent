@@ -6,7 +6,7 @@ pipeline:
 	python scripts/pipeline/step5_compute_intersection.py
 	python scripts/pipeline/step6_aggregate_results.py
 
-main_figures:
+figures:
 	python scripts/figures/figure_1.py
 	python scripts/figures/figure_2.py
 	python scripts/figures/figure_3.py
